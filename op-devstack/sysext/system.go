@@ -56,6 +56,13 @@ func (o *Orchestrator) hydrateSupervisorsMaybe(sys stack.ExtensibleSystem) {
 					// so we need to deduplicate
 					continue
 				}
+
+				// TODO(#16127): This is a hack to force direct connection to the Supervisor node.
+				// Only enable this for kurtosis devnet.
+				if endpoint, ok := instance.Endpoints[RPCProtocol]; ok {
+					endpoint.ReverseProxyHeader = map[string][]string{}
+				}
+				// TODO(#16127): Remove this once we have a proper reverse proxy.
 				supervisors[id] = true
 				sys.AddSupervisor(shim.NewSupervisor(shim.SupervisorConfig{
 					CommonConfig: shim.NewCommonConfig(sys.T()),

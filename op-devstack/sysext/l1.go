@@ -41,7 +41,9 @@ func (o *Orchestrator) hydrateL1(system stack.ExtensibleSystem) {
 
 		// TODO(#16127): This is a hack to force direct connection to the L1 node.
 		// Only enable this for kurtosis devnet.
-		elService.Endpoints[RPCProtocol].ReverseProxyHeader = map[string][]string{}
+		if endpoint, ok := elService.Endpoints[RPCProtocol]; ok {
+			endpoint.ReverseProxyHeader = map[string][]string{}
+		}
 		// TODO(#16127): Remove this once we have a proper reverse proxy.
 
 		require.True(ok, "need L1 EL service %d", idx)
