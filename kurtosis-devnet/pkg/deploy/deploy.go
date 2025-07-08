@@ -14,6 +14,7 @@ import (
 	"github.com/ethereum-optimism/optimism/kurtosis-devnet/pkg/kurtosis/api/engine"
 	"github.com/ethereum-optimism/optimism/kurtosis-devnet/pkg/kurtosis/sources/spec"
 	autofixTypes "github.com/ethereum-optimism/optimism/kurtosis-devnet/pkg/types"
+	"github.com/ethereum-optimism/optimism/kurtosis-devnet/pkg/util"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -208,6 +209,16 @@ func (d *Deployer) deployEnvironment(ctx context.Context, r io.Reader) (*kurtosi
 	devnetFS := ktfs.NewDevnetFS(fs)
 	if err := devnetFS.UploadDevnetDescriptor(ctx, info.DevnetEnvironment); err != nil {
 		return nil, fmt.Errorf("error uploading devnet descriptor: %w", err)
+	}
+
+	fmt.Printf("✓ Environment running successfully\n")
+	fmt.Printf("✓ View logs with: kurtosis service logs %s <service_name>\n", d.enclave)
+	fmt.Printf("✓ Stop with: kurtosis enclave stop %s\n", d.enclave)
+
+	// Fix Traefik reverse proxy network configuration
+	if err := util.FixTraefikNetwork(ctx); err != nil {
+		fmt.Printf("⚠ Warning: Failed to fix Traefik network configuration: %v\n", err)
+		fmt.Printf("⚠ The reverse proxy may not work correctly ⚠\n")
 	}
 
 	return info, nil
