@@ -54,7 +54,7 @@ RUN <<-EOF
 EOF
 
 # Display installed version for visibility
-RUN forge --version
+# RUN forge --version
 
 # We may be cross-building for another platform. Specify which platform we need as builder.
 FROM --platform=$BUILDPLATFORM golang:1.24.10-alpine3.21 AS builder
