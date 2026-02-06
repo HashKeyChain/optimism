@@ -5,6 +5,8 @@
 # TARGETPLATFORM
 # BUILDPLATFORM
 
+ARG BUILDPLATFORM="linux/amd64"
+
 # All target images use this as base image, and add the final build results.
 # It will default to the target platform.
 ARG TARGET_BASE_IMAGE=alpine:3.20
