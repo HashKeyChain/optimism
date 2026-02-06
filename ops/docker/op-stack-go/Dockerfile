@@ -73,7 +73,7 @@ RUN echo "go mod cache: $(go env GOMODCACHE)"
 RUN echo "go build cache: $(go env GOCACHE)"
 
 # warm-up the cache
-RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build go mod download
+RUN go mod download
 
 # NOTE: the Dockerfile.dockerignore file effectively describes all dependencies
 COPY . /app
