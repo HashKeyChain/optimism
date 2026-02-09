@@ -43,7 +43,7 @@ func DAFootprintNetworkUpgradeTransactions() ([]hexutil.Bytes, error) {
 		To:                  nil,
 		Mint:                big.NewInt(0),
 		Value:               big.NewInt(0),
-		Gas:                 447_315,
+		Gas:                 1_000_000,
 		IsSystemTransaction: false,
 		Data:                l1BlockJovianDeploymentBytecode,
 	}).MarshalBinary()
