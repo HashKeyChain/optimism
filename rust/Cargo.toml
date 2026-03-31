@@ -44,6 +44,10 @@ members = [
   "op-reth/crates/txpool/",
   "op-reth/examples/*",
 
+  # Local patches
+  "op-revm-local",
+  "reth-codecs-local",
+
   # Alloy OP EVM
   "alloy-op-evm/",
 
