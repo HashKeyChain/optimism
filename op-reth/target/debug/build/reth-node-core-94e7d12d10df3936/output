@@ -1,0 +1,21 @@
+cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2026-03-31T05:35:50.286785000Z
+cargo:rustc-env=VERGEN_CARGO_FEATURES=asm_keccak,jemalloc,keccak_cache_global,otlp
+cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=aarch64-apple-darwin
+cargo:rustc-env=VERGEN_GIT_DESCRIBE=b3d532c
+cargo:rustc-env=VERGEN_GIT_SHA=b3d532ce9d09b925ebbce7bdf213d04c402e124c
+cargo:rustc-env=VERGEN_GIT_DIRTY=true
+cargo:rerun-if-changed=/Users/zhuangqianwei/.cargo/git/checkouts/reth-e231042ee7db3fb7/b3d532c/.git/HEAD
+cargo:rerun-if-changed=/Users/zhuangqianwei/.cargo/git/checkouts/reth-e231042ee7db3fb7/b3d532c/.git/refs/heads/master
+cargo:rerun-if-changed=build.rs
+cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
+cargo:rustc-env=RETH_VERSION_SUFFIX=-dev
+cargo:rustc-env=VERGEN_GIT_SHA_SHORT=b3d532ce
+cargo:rustc-env=RETH_BUILD_PROFILE=debug
+cargo:rustc-env=RETH_SHORT_VERSION=1.10.2-dev (b3d532c)
+cargo:rustc-env=RETH_LONG_VERSION_0=Version: 1.10.2-dev
+cargo:rustc-env=RETH_LONG_VERSION_1=Commit SHA: b3d532ce9d09b925ebbce7bdf213d04c402e124c
+cargo:rustc-env=RETH_LONG_VERSION_2=Build Timestamp: 2026-03-31T05:35:50.286785000Z
+cargo:rustc-env=RETH_LONG_VERSION_3=Build Features: asm_keccak,jemalloc,keccak_cache_global,otlp
+cargo:rustc-env=RETH_LONG_VERSION_4=Build Profile: debug
+cargo:rustc-env=RETH_P2P_CLIENT_VERSION=reth/v1.10.2-b3d532c/aarch64-apple-darwin

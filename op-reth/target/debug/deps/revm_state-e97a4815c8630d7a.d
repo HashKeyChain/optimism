@@ -1,0 +1,11 @@
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-reth/target/debug/deps/revm_state-e97a4815c8630d7a.d: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/revm-state-9.0.0/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/revm-state-9.0.0/src/account_info.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/revm-state-9.0.0/src/bal.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/revm-state-9.0.0/src/bal/account.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/revm-state-9.0.0/src/bal/alloy.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/revm-state-9.0.0/src/bal/writes.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/revm-state-9.0.0/src/types.rs
+
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-reth/target/debug/deps/librevm_state-e97a4815c8630d7a.rmeta: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/revm-state-9.0.0/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/revm-state-9.0.0/src/account_info.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/revm-state-9.0.0/src/bal.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/revm-state-9.0.0/src/bal/account.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/revm-state-9.0.0/src/bal/alloy.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/revm-state-9.0.0/src/bal/writes.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/revm-state-9.0.0/src/types.rs
+
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/revm-state-9.0.0/src/lib.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/revm-state-9.0.0/src/account_info.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/revm-state-9.0.0/src/bal.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/revm-state-9.0.0/src/bal/account.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/revm-state-9.0.0/src/bal/alloy.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/revm-state-9.0.0/src/bal/writes.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/revm-state-9.0.0/src/types.rs:

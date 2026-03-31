@@ -739,7 +739,7 @@ mod tests {
             input: Bytes::new(),
             source_hash: U256::MAX.into(),
             from: Address::random(),
-            mint: u128::MAX,
+            mint: U256::MAX,
             is_system_transaction: false,
         };
         let tx_envelope = OpTxEnvelope::Deposit(tx.seal_slow());

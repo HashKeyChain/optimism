@@ -1,0 +1,12 @@
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-alloy/target/debug/deps/tinystr-a4d8728a4662928f.d: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/macros.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/ascii.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/asciibyte.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/error.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/int_ops.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/unvalidated.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/ule.rs
+
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-alloy/target/debug/deps/libtinystr-a4d8728a4662928f.rmeta: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/macros.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/ascii.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/asciibyte.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/error.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/int_ops.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/unvalidated.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/ule.rs
+
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/lib.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/macros.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/ascii.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/asciibyte.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/error.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/int_ops.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/unvalidated.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tinystr-0.8.2/src/ule.rs:

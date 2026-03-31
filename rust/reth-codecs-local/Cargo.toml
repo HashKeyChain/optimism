@@ -1,0 +1,80 @@
+[package]
+name = "reth-codecs"
+version = "1.11.3"
+edition = "2021"
+rust-version = "1.82"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+reth-codecs-derive = { git = "https://github.com/paradigmxyz/reth", tag = "v1.11.3" }
+reth-zstd-compressors = { git = "https://github.com/paradigmxyz/reth", tag = "v1.11.3", optional = true, default-features = false }
+
+alloy-consensus = { version = "1", optional = true }
+alloy-eips = { version = "1", optional = true, features = ["serde"] }
+alloy-genesis = { version = "1", optional = true }
+alloy-primitives = "1"
+alloy-trie = { version = "0.9", optional = true }
+
+op-alloy-consensus = { version = "0.23", optional = true }
+
+bytes = "1"
+modular-bitfield = "0.13.1"
+visibility = { version = "0.1", optional = true }
+serde = "1"
+arbitrary = { version = "1", features = ["derive"], optional = true }
+
+[dev-dependencies]
+alloy-eips = { version = "1", default-features = false, features = ["arbitrary", "serde"] }
+alloy-primitives = { version = "1", features = ["arbitrary", "serde", "rand"] }
+alloy-consensus = { version = "1", features = ["arbitrary"] }
+test-fuzz = "6"
+serde_json = "1"
+arbitrary = { version = "1", features = ["derive"] }
+proptest = "1"
+proptest-arbitrary-interop = "0.1"
+rstest = "0.25"
+
+[features]
+default = ["std", "alloy"]
+std = [
+    "alloy-primitives/std",
+    "bytes/std",
+    "alloy-consensus?/std",
+    "alloy-eips?/std",
+    "alloy-genesis?/std",
+    "alloy-trie?/std",
+    "serde/std",
+    "op-alloy-consensus?/std",
+    "serde_json/std",
+    "reth-zstd-compressors?/std",
+]
+alloy = [
+    "dep:alloy-consensus",
+    "dep:alloy-eips",
+    "dep:alloy-genesis",
+    "dep:alloy-trie",
+    "dep:reth-zstd-compressors",
+]
+op = ["alloy", "dep:op-alloy-consensus"]
+test-utils = [
+    "std",
+    "alloy",
+    "arbitrary",
+    "dep:visibility",
+    "dep:arbitrary",
+]
+serde = [
+    "alloy-consensus?/serde",
+    "alloy-eips?/serde",
+    "alloy-primitives/serde",
+    "alloy-trie?/serde",
+    "bytes/serde",
+    "op-alloy-consensus?/serde",
+]
+arbitrary = [
+    "alloy-consensus?/arbitrary",
+    "alloy-eips?/arbitrary",
+    "alloy-primitives/arbitrary",
+    "alloy-trie?/arbitrary",
+    "op-alloy-consensus?/arbitrary",
+]

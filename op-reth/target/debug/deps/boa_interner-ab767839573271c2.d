@@ -1,0 +1,10 @@
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-reth/target/debug/deps/boa_interner-ab767839573271c2.d: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/boa_interner-0.21.0/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/boa_interner-0.21.0/src/fixed_string.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/boa_interner-0.21.0/src/interned_str.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/boa_interner-0.21.0/src/raw.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/boa_interner-0.21.0/src/sym.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/boa_interner-0.21.0/src/../ABOUT.md
+
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-reth/target/debug/deps/libboa_interner-ab767839573271c2.rmeta: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/boa_interner-0.21.0/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/boa_interner-0.21.0/src/fixed_string.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/boa_interner-0.21.0/src/interned_str.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/boa_interner-0.21.0/src/raw.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/boa_interner-0.21.0/src/sym.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/boa_interner-0.21.0/src/../ABOUT.md
+
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/boa_interner-0.21.0/src/lib.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/boa_interner-0.21.0/src/fixed_string.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/boa_interner-0.21.0/src/interned_str.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/boa_interner-0.21.0/src/raw.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/boa_interner-0.21.0/src/sym.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/boa_interner-0.21.0/src/../ABOUT.md:

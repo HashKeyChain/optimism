@@ -1,0 +1,12 @@
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-reth/target/debug/deps/core2-2e9e88b6fbf18df1.d: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/error.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/io/mod.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/io/cursor.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/io/error.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/io/impls.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/io/traits.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/io/util.rs
+
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-reth/target/debug/deps/libcore2-2e9e88b6fbf18df1.rmeta: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/error.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/io/mod.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/io/cursor.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/io/error.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/io/impls.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/io/traits.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/io/util.rs
+
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/lib.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/error.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/io/mod.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/io/cursor.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/io/error.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/io/impls.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/io/traits.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/core2-0.4.0/src/io/util.rs:

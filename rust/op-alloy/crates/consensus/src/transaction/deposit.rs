@@ -26,8 +26,8 @@ pub struct TxDeposit {
     #[cfg_attr(feature = "serde", serde(default, skip_serializing_if = "TxKind::is_create"))]
     pub to: TxKind,
     /// The ETH value to mint on L2.
-    #[cfg_attr(feature = "serde", serde(default, with = "alloy_serde::quantity"))]
-    pub mint: u128,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub mint: U256,
     ///  The ETH value to send to the recipient account.
     pub value: U256,
     /// The gas limit for the L2 transaction.
@@ -129,7 +129,7 @@ impl TxDeposit {
         mem::size_of::<B256>() + // source_hash
         mem::size_of::<Address>() + // from
         self.to.size() + // to
-        mem::size_of::<u128>() + // mint
+        mem::size_of::<U256>() + // mint
         mem::size_of::<U256>() + // value
         mem::size_of::<u128>() + // gas_limit
         mem::size_of::<bool>() + // is_system_transaction
@@ -366,8 +366,8 @@ pub trait DepositTransaction: Transaction {
     /// Returns the optional mint value of the deposit transaction.
     ///
     /// # Returns
-    /// An `u128` representing the ETH value to mint on L2, if any.
-    fn mint(&self) -> u128;
+    /// A `U256` representing the ETH value to mint on L2, if any.
+    fn mint(&self) -> U256;
 
     /// Indicates whether the transaction is exempt from the L2 gas limit.
     ///
@@ -383,7 +383,7 @@ impl DepositTransaction for TxDeposit {
     }
 
     #[inline]
-    fn mint(&self) -> u128 {
+    fn mint(&self) -> U256 {
         self.mint
     }
 
@@ -643,7 +643,7 @@ pub(super) mod serde_bincode_compat {
         #[serde(default)]
         to: TxKind,
         #[serde(default)]
-        mint: u128,
+        mint: U256,
         value: U256,
         gas_limit: u64,
         is_system_transaction: bool,

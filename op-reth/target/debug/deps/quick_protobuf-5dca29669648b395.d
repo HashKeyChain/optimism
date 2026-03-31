@@ -1,0 +1,10 @@
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-reth/target/debug/deps/quick_protobuf-5dca29669648b395.d: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quick-protobuf-0.8.1/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quick-protobuf-0.8.1/src/errors.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quick-protobuf-0.8.1/src/message.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quick-protobuf-0.8.1/src/reader.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quick-protobuf-0.8.1/src/sizeofs.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quick-protobuf-0.8.1/src/writer.rs
+
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-reth/target/debug/deps/libquick_protobuf-5dca29669648b395.rmeta: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quick-protobuf-0.8.1/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quick-protobuf-0.8.1/src/errors.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quick-protobuf-0.8.1/src/message.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quick-protobuf-0.8.1/src/reader.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quick-protobuf-0.8.1/src/sizeofs.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quick-protobuf-0.8.1/src/writer.rs
+
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quick-protobuf-0.8.1/src/lib.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quick-protobuf-0.8.1/src/errors.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quick-protobuf-0.8.1/src/message.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quick-protobuf-0.8.1/src/reader.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quick-protobuf-0.8.1/src/sizeofs.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quick-protobuf-0.8.1/src/writer.rs:

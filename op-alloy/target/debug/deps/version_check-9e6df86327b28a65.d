@@ -1,0 +1,10 @@
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-alloy/target/debug/deps/version_check-9e6df86327b28a65.d: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/version_check-0.9.5/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/version_check-0.9.5/src/version.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/version_check-0.9.5/src/channel.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/version_check-0.9.5/src/date.rs
+
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-alloy/target/debug/deps/libversion_check-9e6df86327b28a65.rlib: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/version_check-0.9.5/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/version_check-0.9.5/src/version.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/version_check-0.9.5/src/channel.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/version_check-0.9.5/src/date.rs
+
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-alloy/target/debug/deps/libversion_check-9e6df86327b28a65.rmeta: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/version_check-0.9.5/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/version_check-0.9.5/src/version.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/version_check-0.9.5/src/channel.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/version_check-0.9.5/src/date.rs
+
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/version_check-0.9.5/src/lib.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/version_check-0.9.5/src/version.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/version_check-0.9.5/src/channel.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/version_check-0.9.5/src/date.rs:

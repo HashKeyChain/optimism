@@ -1,0 +1,9 @@
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-reth/target/debug/deps/coins_bip39-98fe57c3b422a7ca.d: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/coins-bip39-0.12.0/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/coins-bip39-0.12.0/src/mnemonic.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/coins-bip39-0.12.0/src/wordlist/mod.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/coins-bip39-0.12.0/src/wordlist/english.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/coins-bip39-0.12.0/src/wordlist/./words/english.txt
+
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-reth/target/debug/deps/libcoins_bip39-98fe57c3b422a7ca.rmeta: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/coins-bip39-0.12.0/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/coins-bip39-0.12.0/src/mnemonic.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/coins-bip39-0.12.0/src/wordlist/mod.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/coins-bip39-0.12.0/src/wordlist/english.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/coins-bip39-0.12.0/src/wordlist/./words/english.txt
+
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/coins-bip39-0.12.0/src/lib.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/coins-bip39-0.12.0/src/mnemonic.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/coins-bip39-0.12.0/src/wordlist/mod.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/coins-bip39-0.12.0/src/wordlist/english.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/coins-bip39-0.12.0/src/wordlist/./words/english.txt:

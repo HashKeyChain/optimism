@@ -1,0 +1,9 @@
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-alloy/target/debug/deps/futures_macro-794832143f7ddc2f.d: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-macro-0.3.31/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-macro-0.3.31/src/executor.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-macro-0.3.31/src/join.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-macro-0.3.31/src/select.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-macro-0.3.31/src/stream_select.rs
+
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-alloy/target/debug/deps/libfutures_macro-794832143f7ddc2f.dylib: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-macro-0.3.31/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-macro-0.3.31/src/executor.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-macro-0.3.31/src/join.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-macro-0.3.31/src/select.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-macro-0.3.31/src/stream_select.rs
+
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-macro-0.3.31/src/lib.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-macro-0.3.31/src/executor.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-macro-0.3.31/src/join.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-macro-0.3.31/src/select.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-macro-0.3.31/src/stream_select.rs:

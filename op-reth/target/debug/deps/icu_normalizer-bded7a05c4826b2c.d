@@ -1,0 +1,10 @@
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-reth/target/debug/deps/icu_normalizer-bded7a05c4826b2c.d: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/icu_normalizer-2.0.1/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/icu_normalizer-2.0.1/src/properties.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/icu_normalizer-2.0.1/src/provider.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/icu_normalizer-2.0.1/src/uts46.rs
+
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-reth/target/debug/deps/libicu_normalizer-bded7a05c4826b2c.rlib: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/icu_normalizer-2.0.1/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/icu_normalizer-2.0.1/src/properties.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/icu_normalizer-2.0.1/src/provider.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/icu_normalizer-2.0.1/src/uts46.rs
+
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-reth/target/debug/deps/libicu_normalizer-bded7a05c4826b2c.rmeta: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/icu_normalizer-2.0.1/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/icu_normalizer-2.0.1/src/properties.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/icu_normalizer-2.0.1/src/provider.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/icu_normalizer-2.0.1/src/uts46.rs
+
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/icu_normalizer-2.0.1/src/lib.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/icu_normalizer-2.0.1/src/properties.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/icu_normalizer-2.0.1/src/provider.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/icu_normalizer-2.0.1/src/uts46.rs:

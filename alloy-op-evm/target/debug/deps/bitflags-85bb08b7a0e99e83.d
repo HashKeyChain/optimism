@@ -1,0 +1,11 @@
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/alloy-op-evm/target/debug/deps/bitflags-85bb08b7a0e99e83.d: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/bitflags-2.10.0/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/bitflags-2.10.0/src/iter.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/bitflags-2.10.0/src/parser.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/bitflags-2.10.0/src/traits.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/bitflags-2.10.0/src/public.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/bitflags-2.10.0/src/internal.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/bitflags-2.10.0/src/external.rs
+
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/alloy-op-evm/target/debug/deps/libbitflags-85bb08b7a0e99e83.rmeta: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/bitflags-2.10.0/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/bitflags-2.10.0/src/iter.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/bitflags-2.10.0/src/parser.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/bitflags-2.10.0/src/traits.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/bitflags-2.10.0/src/public.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/bitflags-2.10.0/src/internal.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/bitflags-2.10.0/src/external.rs
+
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/bitflags-2.10.0/src/lib.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/bitflags-2.10.0/src/iter.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/bitflags-2.10.0/src/parser.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/bitflags-2.10.0/src/traits.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/bitflags-2.10.0/src/public.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/bitflags-2.10.0/src/internal.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/bitflags-2.10.0/src/external.rs:

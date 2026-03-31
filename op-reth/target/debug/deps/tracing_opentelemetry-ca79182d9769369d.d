@@ -1,0 +1,13 @@
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-reth/target/debug/deps/tracing_opentelemetry-ca79182d9769369d.d: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tracing-opentelemetry-0.32.1/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tracing-opentelemetry-0.32.1/src/metrics.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tracing-opentelemetry-0.32.1/src/layer.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tracing-opentelemetry-0.32.1/src/layer/filtered.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tracing-opentelemetry-0.32.1/src/otel_context.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tracing-opentelemetry-0.32.1/src/span_ext.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tracing-opentelemetry-0.32.1/src/stack.rs
+
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-reth/target/debug/deps/libtracing_opentelemetry-ca79182d9769369d.rmeta: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tracing-opentelemetry-0.32.1/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tracing-opentelemetry-0.32.1/src/metrics.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tracing-opentelemetry-0.32.1/src/layer.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tracing-opentelemetry-0.32.1/src/layer/filtered.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tracing-opentelemetry-0.32.1/src/otel_context.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tracing-opentelemetry-0.32.1/src/span_ext.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tracing-opentelemetry-0.32.1/src/stack.rs
+
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tracing-opentelemetry-0.32.1/src/lib.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tracing-opentelemetry-0.32.1/src/metrics.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tracing-opentelemetry-0.32.1/src/layer.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tracing-opentelemetry-0.32.1/src/layer/filtered.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tracing-opentelemetry-0.32.1/src/otel_context.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tracing-opentelemetry-0.32.1/src/span_ext.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tracing-opentelemetry-0.32.1/src/stack.rs:
+
+# env-dep:CARGO_PKG_VERSION=0.32.1

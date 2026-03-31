@@ -661,3 +661,7 @@ op-alloy-rpc-types = { path = "op-alloy/crates/rpc-types" }
 op-alloy = { path = "op-alloy/crates/op-alloy" }
 # Duplicated by: alloy-evm (crates.io)
 alloy-op-hardforks = { path = "alloy-op-hardforks/" }
+op-revm = { path = "op-revm-local/" }
+
+[patch.'https://github.com/paradigmxyz/reth']
+reth-codecs = { path = "reth-codecs-local/" }

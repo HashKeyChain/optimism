@@ -1,0 +1,9 @@
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-alloy/target/debug/deps/jsonrpsee_types-58aba8fe4154f8ae.d: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-types-0.26.0/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-types-0.26.0/src/params.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-types-0.26.0/src/request.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-types-0.26.0/src/response.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-types-0.26.0/src/error.rs
+
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-alloy/target/debug/deps/libjsonrpsee_types-58aba8fe4154f8ae.rmeta: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-types-0.26.0/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-types-0.26.0/src/params.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-types-0.26.0/src/request.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-types-0.26.0/src/response.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-types-0.26.0/src/error.rs
+
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-types-0.26.0/src/lib.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-types-0.26.0/src/params.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-types-0.26.0/src/request.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-types-0.26.0/src/response.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-types-0.26.0/src/error.rs:

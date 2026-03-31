@@ -1,0 +1,9 @@
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-alloy/target/debug/deps/alloy_rpc_types_any-27a49a4ce46a0050.d: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/alloy-rpc-types-any-1.4.3/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/alloy-rpc-types-any-1.4.3/src/transaction/mod.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/alloy-rpc-types-any-1.4.3/src/transaction/receipt.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/alloy-rpc-types-any-1.4.3/src/block.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/alloy-rpc-types-any-1.4.3/src/../README.md
+
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-alloy/target/debug/deps/liballoy_rpc_types_any-27a49a4ce46a0050.rmeta: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/alloy-rpc-types-any-1.4.3/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/alloy-rpc-types-any-1.4.3/src/transaction/mod.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/alloy-rpc-types-any-1.4.3/src/transaction/receipt.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/alloy-rpc-types-any-1.4.3/src/block.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/alloy-rpc-types-any-1.4.3/src/../README.md
+
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/alloy-rpc-types-any-1.4.3/src/lib.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/alloy-rpc-types-any-1.4.3/src/transaction/mod.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/alloy-rpc-types-any-1.4.3/src/transaction/receipt.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/alloy-rpc-types-any-1.4.3/src/block.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/alloy-rpc-types-any-1.4.3/src/../README.md:

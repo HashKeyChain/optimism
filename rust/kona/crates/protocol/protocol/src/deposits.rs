@@ -217,10 +217,7 @@ pub(crate) fn unmarshal_deposit_version0(
 
     let mut offset = 0;
 
-    let raw_mint: [u8; 16] = data[offset + 16..offset + 32].try_into().map_err(|_| {
-        DepositError::MintDecode(Bytes::copy_from_slice(&data[offset + 16..offset + 32]))
-    })?;
-    tx.mint = u128::from_be_bytes(raw_mint);
+    tx.mint = U256::from_be_slice(&data[offset..offset + 32]);
     offset += 32;
 
     // uint256 value

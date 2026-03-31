@@ -1,0 +1,8 @@
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-reth/target/debug/deps/reth_static_file-c62cb5ba59d6a7ee.d: /Users/zhuangqianwei/.cargo/git/checkouts/reth-e231042ee7db3fb7/b3d532c/crates/static-file/static-file/src/lib.rs /Users/zhuangqianwei/.cargo/git/checkouts/reth-e231042ee7db3fb7/b3d532c/crates/static-file/static-file/src/segments/mod.rs /Users/zhuangqianwei/.cargo/git/checkouts/reth-e231042ee7db3fb7/b3d532c/crates/static-file/static-file/src/segments/receipts.rs /Users/zhuangqianwei/.cargo/git/checkouts/reth-e231042ee7db3fb7/b3d532c/crates/static-file/static-file/src/static_file_producer.rs
+
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-reth/target/debug/deps/libreth_static_file-c62cb5ba59d6a7ee.rmeta: /Users/zhuangqianwei/.cargo/git/checkouts/reth-e231042ee7db3fb7/b3d532c/crates/static-file/static-file/src/lib.rs /Users/zhuangqianwei/.cargo/git/checkouts/reth-e231042ee7db3fb7/b3d532c/crates/static-file/static-file/src/segments/mod.rs /Users/zhuangqianwei/.cargo/git/checkouts/reth-e231042ee7db3fb7/b3d532c/crates/static-file/static-file/src/segments/receipts.rs /Users/zhuangqianwei/.cargo/git/checkouts/reth-e231042ee7db3fb7/b3d532c/crates/static-file/static-file/src/static_file_producer.rs
+
+/Users/zhuangqianwei/.cargo/git/checkouts/reth-e231042ee7db3fb7/b3d532c/crates/static-file/static-file/src/lib.rs:
+/Users/zhuangqianwei/.cargo/git/checkouts/reth-e231042ee7db3fb7/b3d532c/crates/static-file/static-file/src/segments/mod.rs:
+/Users/zhuangqianwei/.cargo/git/checkouts/reth-e231042ee7db3fb7/b3d532c/crates/static-file/static-file/src/segments/receipts.rs:
+/Users/zhuangqianwei/.cargo/git/checkouts/reth-e231042ee7db3fb7/b3d532c/crates/static-file/static-file/src/static_file_producer.rs:

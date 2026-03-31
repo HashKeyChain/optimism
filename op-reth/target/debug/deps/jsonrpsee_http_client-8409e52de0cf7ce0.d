@@ -1,0 +1,8 @@
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-reth/target/debug/deps/jsonrpsee_http_client-8409e52de0cf7ce0.d: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-http-client-0.26.0/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-http-client-0.26.0/src/client.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-http-client-0.26.0/src/rpc_service.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-http-client-0.26.0/src/transport.rs
+
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-reth/target/debug/deps/libjsonrpsee_http_client-8409e52de0cf7ce0.rmeta: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-http-client-0.26.0/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-http-client-0.26.0/src/client.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-http-client-0.26.0/src/rpc_service.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-http-client-0.26.0/src/transport.rs
+
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-http-client-0.26.0/src/lib.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-http-client-0.26.0/src/client.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-http-client-0.26.0/src/rpc_service.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/jsonrpsee-http-client-0.26.0/src/transport.rs:

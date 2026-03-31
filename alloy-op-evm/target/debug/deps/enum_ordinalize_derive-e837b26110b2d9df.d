@@ -1,0 +1,9 @@
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/alloy-op-evm/target/debug/deps/enum_ordinalize_derive-e837b26110b2d9df.d: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/enum-ordinalize-derive-4.3.2/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/enum-ordinalize-derive-4.3.2/src/int128.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/enum-ordinalize-derive-4.3.2/src/int_wrapper.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/enum-ordinalize-derive-4.3.2/src/panic.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/enum-ordinalize-derive-4.3.2/src/variant_type.rs
+
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/alloy-op-evm/target/debug/deps/libenum_ordinalize_derive-e837b26110b2d9df.dylib: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/enum-ordinalize-derive-4.3.2/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/enum-ordinalize-derive-4.3.2/src/int128.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/enum-ordinalize-derive-4.3.2/src/int_wrapper.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/enum-ordinalize-derive-4.3.2/src/panic.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/enum-ordinalize-derive-4.3.2/src/variant_type.rs
+
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/enum-ordinalize-derive-4.3.2/src/lib.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/enum-ordinalize-derive-4.3.2/src/int128.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/enum-ordinalize-derive-4.3.2/src/int_wrapper.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/enum-ordinalize-derive-4.3.2/src/panic.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/enum-ordinalize-derive-4.3.2/src/variant_type.rs:

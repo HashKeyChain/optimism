@@ -1,0 +1,14 @@
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-alloy/target/debug/deps/serde-3fc1d129db298a06.d: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/serde-1.0.228/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/serde-1.0.228/src/integer128.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/serde-1.0.228/src/private/mod.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/serde-1.0.228/src/private/de.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/serde-1.0.228/src/private/ser.rs /Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-alloy/target/debug/build/serde-e8a85a7c7b601e58/out/private.rs
+
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-alloy/target/debug/deps/libserde-3fc1d129db298a06.rlib: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/serde-1.0.228/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/serde-1.0.228/src/integer128.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/serde-1.0.228/src/private/mod.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/serde-1.0.228/src/private/de.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/serde-1.0.228/src/private/ser.rs /Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-alloy/target/debug/build/serde-e8a85a7c7b601e58/out/private.rs
+
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-alloy/target/debug/deps/libserde-3fc1d129db298a06.rmeta: /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/serde-1.0.228/src/lib.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/serde-1.0.228/src/integer128.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/serde-1.0.228/src/private/mod.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/serde-1.0.228/src/private/de.rs /Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/serde-1.0.228/src/private/ser.rs /Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-alloy/target/debug/build/serde-e8a85a7c7b601e58/out/private.rs
+
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/serde-1.0.228/src/lib.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/serde-1.0.228/src/integer128.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/serde-1.0.228/src/private/mod.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/serde-1.0.228/src/private/de.rs:
+/Users/zhuangqianwei/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/serde-1.0.228/src/private/ser.rs:
+/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-alloy/target/debug/build/serde-e8a85a7c7b601e58/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/zhuangqianwei/github.com/HashKeyChain/optimism/op-alloy/target/debug/build/serde-e8a85a7c7b601e58/out
