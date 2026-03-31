@@ -2247,6 +2247,15 @@ dependencies = [
 
 [[package]]
 name = "cargo-platform"
+version = "0.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e35af189006b9c0f00a064685c727031e3ed2d8020f7ba284d78cc2671bd36ea"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "cargo-platform"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "87a0c0e6148f11f01f32650a2ea02d532b2ad4e81d8bd41e6e565b5adc5e6082"
@@ -2257,12 +2266,26 @@ dependencies = [
 
 [[package]]
 name = "cargo_metadata"
+version = "0.18.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d886547e41f740c616ae73108f6eb70afe6d940c7bc697cb30f13daec073037"
+dependencies = [
+ "camino",
+ "cargo-platform 0.1.9",
+ "semver 1.0.27",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "cargo_metadata"
 version = "0.23.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ef987d17b0a113becdd19d3d0022d04d7ef41f9efe4f3fb63ac44ba61df3ade9"
 dependencies = [
  "camino",
- "cargo-platform",
+ "cargo-platform 0.3.2",
  "semver 1.0.27",
  "serde",
  "serde_json",
@@ -5541,7 +5564,7 @@ dependencies = [
  "libp2p",
  "metrics-exporter-prometheus 0.18.1",
  "metrics-process",
- "rstest",
+ "rstest 0.26.1",
  "serde",
  "thiserror 2.0.18",
  "tracing",
@@ -5695,7 +5718,7 @@ dependencies = [
  "rand 0.9.2",
  "rollup-boost",
  "rollup-boost-types",
- "rstest",
+ "rstest 0.26.1",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -5732,7 +5755,7 @@ dependencies = [
  "rand 0.9.2",
  "revm",
  "rocksdb",
- "rstest",
+ "rstest 0.26.1",
  "serde",
  "serde_json",
  "tempfile",
@@ -5957,7 +5980,7 @@ dependencies = [
  "op-alloy-rpc-types-engine",
  "reqwest 0.13.2",
  "rollup-boost",
- "rstest",
+ "rstest 0.26.1",
  "serde_json",
  "strum",
  "tabled",
@@ -6021,7 +6044,7 @@ dependencies = [
  "op-alloy-rpc-types-engine",
  "rand 0.9.2",
  "rollup-boost",
- "rstest",
+ "rstest 0.26.1",
  "strum",
  "thiserror 2.0.18",
  "tokio",
@@ -6104,7 +6127,7 @@ dependencies = [
  "op-revm",
  "rand 0.9.2",
  "rayon",
- "rstest",
+ "rstest 0.26.1",
  "serde",
  "serde_json",
  "spin 0.10.0",
@@ -6173,7 +6196,7 @@ dependencies = [
  "op-alloy-rpc-types-engine",
  "proptest",
  "rand 0.9.2",
- "rstest",
+ "rstest 0.26.1",
  "serde",
  "serde_json",
  "spin 0.10.0",
@@ -6233,7 +6256,7 @@ dependencies = [
  "lru 0.16.3",
  "metrics",
  "op-alloy-consensus",
- "rstest",
+ "rstest 0.26.1",
  "thiserror 2.0.18",
  "tokio",
 ]
@@ -7870,9 +7893,14 @@ dependencies = [
 name = "op-revm"
 version = "15.0.0"
 dependencies = [
+ "alloy-primitives",
+ "alloy-sol-types",
  "auto_impl",
  "revm",
+ "rstest 0.26.1",
  "serde",
+ "serde_json",
+ "sha2",
 ]
 
 [[package]]
@@ -9514,9 +9542,14 @@ dependencies = [
  "bytes",
  "modular-bitfield",
  "op-alloy-consensus",
+ "proptest",
+ "proptest-arbitrary-interop",
  "reth-codecs-derive",
  "reth-zstd-compressors",
+ "rstest 0.25.0",
  "serde",
+ "serde_json",
+ "test-fuzz",
  "visibility",
 ]
 
@@ -11430,7 +11463,7 @@ dependencies = [
  "reth-codecs",
  "reth-primitives-traits",
  "reth-zstd-compressors",
- "rstest",
+ "rstest 0.26.1",
  "secp256k1 0.31.1",
  "serde",
  "serde_json",
@@ -12758,6 +12791,7 @@ dependencies = [
  "ripemd",
  "secp256k1 0.31.1",
  "sha2",
+ "substrate-bn",
 ]
 
 [[package]]
@@ -13010,13 +13044,43 @@ checksum = "afab94fb28594581f62d981211a9a4d53cc8130bbcbbb89a0440d9b8e81a7746"
 
 [[package]]
 name = "rstest"
+version = "0.25.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6fc39292f8613e913f7df8fa892b8944ceb47c247b78e1b1ae2f09e019be789d"
+dependencies = [
+ "futures-timer",
+ "futures-util",
+ "rstest_macros 0.25.0",
+ "rustc_version 0.4.1",
+]
+
+[[package]]
+name = "rstest"
 version = "0.26.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f5a3193c063baaa2a95a33f03035c8a72b83d97a54916055ba22d35ed3839d49"
 dependencies = [
  "futures-timer",
  "futures-util",
- "rstest_macros",
+ "rstest_macros 0.26.1",
+]
+
+[[package]]
+name = "rstest_macros"
+version = "0.25.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f168d99749d307be9de54d23fd226628d99768225ef08f6ffb52e0182a27746"
+dependencies = [
+ "cfg-if",
+ "glob",
+ "proc-macro-crate",
+ "proc-macro2",
+ "quote",
+ "regex",
+ "relative-path",
+ "rustc_version 0.4.1",
+ "syn 2.0.117",
+ "unicode-ident",
 ]
 
 [[package]]
@@ -13964,6 +14028,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "substrate-bn"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72b5bbfa79abbae15dd642ea8176a21a635ff3c00059961d1ea27ad04e5b441c"
+dependencies = [
+ "byteorder",
+ "crunchy",
+ "lazy_static",
+ "rand 0.8.5",
+ "rustc-hex",
+]
+
+[[package]]
 name = "subtle"
 version = "2.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -14181,6 +14258,58 @@ dependencies = [
  "quote",
  "syn 2.0.117",
  "test-case-core",
+]
+
+[[package]]
+name = "test-fuzz"
+version = "6.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ab7a9bb33d134e863862ab9dad2ac7e022ac89707914627f498fe0f29248d9b"
+dependencies = [
+ "serde",
+ "test-fuzz-internal",
+ "test-fuzz-macro",
+ "test-fuzz-runtime",
+]
+
+[[package]]
+name = "test-fuzz-internal"
+version = "6.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d0bef5dd380747bd7b6e636a8032a24aa34fcecaf843e59fc97d299681922e86"
+dependencies = [
+ "bincode 1.3.3",
+ "cargo_metadata 0.18.1",
+ "serde",
+]
+
+[[package]]
+name = "test-fuzz-macro"
+version = "6.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a7e6b4c7391a38f0f026972ec2200bcfd1ec45533aa266fdae5858d011afc500"
+dependencies = [
+ "darling 0.20.11",
+ "heck",
+ "itertools 0.13.0",
+ "once_cell",
+ "prettyplease",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
+name = "test-fuzz-runtime"
+version = "6.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c9fbe6fb7481ec6d9bf64ae2c5d49cb1b40f8da624a91031482af7b08168c679"
+dependencies = [
+ "hex",
+ "num-traits",
+ "serde",
+ "sha1",
+ "test-fuzz-internal",
 ]
 
 [[package]]
@@ -15152,7 +15281,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b849a1f6d8639e8de261e81ee0fc881e3e3620db1af9f2e0da015d4382ceaf75"
 dependencies = [
  "anyhow",
- "cargo_metadata",
+ "cargo_metadata 0.23.1",
  "derive_builder",
  "regex",
  "rustversion",
