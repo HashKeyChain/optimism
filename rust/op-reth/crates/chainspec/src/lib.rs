@@ -293,6 +293,12 @@ impl EthChainSpec for OpChainSpec {
     }
 
     fn next_block_base_fee(&self, parent: &Header, target_timestamp: u64) -> Option<u64> {
+        const HSK_FIXED_BASE_FEE: u64 = 1_000_000_000;
+        const HSK_FIXED_BASE_FEE_TIMESTAMP: u64 = 1774254862;
+        if self.chain().id() == 199 && target_timestamp >= HSK_FIXED_BASE_FEE_TIMESTAMP {
+            return Some(HSK_FIXED_BASE_FEE);
+        }
+
         if self.is_jovian_active_at_timestamp(parent.timestamp()) {
             compute_jovian_base_fee(self, parent, target_timestamp).ok()
         } else if self.is_holocene_active_at_timestamp(parent.timestamp()) {
