@@ -40,7 +40,7 @@ use reth_storage_api::{StateProvider, StateProviderFactory, errors::ProviderErro
 use reth_transaction_pool::{BestTransactionsAttributes, PoolTransaction, TransactionPool};
 use revm::context::{Block, BlockEnv};
 use std::{marker::PhantomData, sync::Arc};
-use tracing::{debug, trace, warn};
+use tracing::{debug, info, trace, warn};
 
 /// Optimism's payload builder
 #[derive(Debug)]
@@ -377,7 +377,7 @@ impl<Txs> OpBuilder<'_, Txs> {
         let t_total = t0.elapsed();
 
         let sealed_block = Arc::new(block.sealed_block().clone());
-        let txs_count = block.body().transactions().len();
+        let txs_count = block.body().transactions().count();
         let gas_used = sealed_block.header().gas_used();
         info!(
             target: "payload_builder",
