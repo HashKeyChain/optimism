@@ -334,6 +334,7 @@ impl<Txs> OpBuilder<'_, Txs> {
         Attrs: OpAttributes<Transaction = N::SignedTx>,
     {
         let Self { best } = self;
+        let t0 = std::time::Instant::now();
         debug!(target: "payload_builder", id=%ctx.payload_id(), parent_header = ?ctx.parent().hash(), parent_number = ctx.parent().number(), "building new payload");
 
         let mut db = State::builder().with_database(db).with_bundle_update().build();
@@ -350,9 +351,11 @@ impl<Txs> OpBuilder<'_, Txs> {
             warn!(target: "payload_builder", %err, "failed to apply pre-execution changes");
             PayloadBuilderError::Internal(err.into())
         })?;
+        let t_pre = t0.elapsed();
 
         // 2. execute sequencer transactions
         let mut info = ctx.execute_sequencer_transactions(&mut builder)?;
+        let t_seq = t0.elapsed();
 
         // 3. if mem pool transactions are requested we execute them
         if !ctx.attributes().no_tx_pool() {
@@ -367,12 +370,27 @@ impl<Txs> OpBuilder<'_, Txs> {
                 return Ok(BuildOutcomeKind::Aborted { fees: info.total_fees });
             }
         }
+        let t_pool = t0.elapsed();
 
         let BlockBuilderOutcome { execution_result, hashed_state, trie_updates, block } =
             builder.finish(state_provider)?;
+        let t_total = t0.elapsed();
 
         let sealed_block = Arc::new(block.sealed_block().clone());
-        debug!(target: "payload_builder", id=%ctx.attributes().payload_id(), sealed_block_header = ?sealed_block.header(), "sealed built block");
+        let txs_count = block.body().transactions().len();
+        let gas_used = sealed_block.header().gas_used();
+        info!(
+            target: "payload_builder",
+            id=%ctx.attributes().payload_id(),
+            txs=txs_count,
+            gas_used,
+            pre_ms=t_pre.as_millis(),
+            seq_tx_ms=(t_seq - t_pre).as_millis(),
+            pool_tx_ms=(t_pool - t_seq).as_millis(),
+            finish_ms=(t_total - t_pool).as_millis(),
+            total_ms=t_total.as_millis(),
+            "[PERF] sealed built block"
+        );
 
         let execution_outcome =
             BlockExecutionOutput { state: db.take_bundle(), result: execution_result };
@@ -687,6 +705,12 @@ where
         let tx_da_limit = self.builder_config.da_config.max_da_tx_size();
         let base_fee = builder.evm_mut().block().basefee();
 
+        let t_fill_start = std::time::Instant::now();
+        let mut tx_count: u64 = 0;
+        let mut tx_total_gas: u64 = 0;
+        let mut tx_slowest_ms: u128 = 0;
+        let mut tx_fastest_ms: u128 = u128::MAX;
+
         while let Some(tx) = best_txs.next(()) {
             let interop = tx.interop_deadline();
             let tx_da_size = tx.estimated_da_size();
@@ -735,6 +759,7 @@ where
                 return Ok(Some(()));
             }
 
+            let t_tx_start = std::time::Instant::now();
             let gas_used = match builder.execute_transaction(tx.clone()) {
                 Ok(gas_used) => gas_used,
                 Err(BlockExecutionError::Validation(BlockValidationError::InvalidTx {
@@ -757,6 +782,11 @@ where
                     return Err(PayloadBuilderError::EvmExecutionError(Box::new(err)));
                 }
             };
+            let tx_elapsed = t_tx_start.elapsed().as_millis();
+            tx_count += 1;
+            tx_total_gas += gas_used;
+            if tx_elapsed > tx_slowest_ms { tx_slowest_ms = tx_elapsed; }
+            if tx_elapsed < tx_fastest_ms { tx_fastest_ms = tx_elapsed; }
 
             // add gas used by the transaction to cumulative gas used, before creating the
             // receipt
@@ -768,6 +798,20 @@ where
                 .effective_tip_per_gas(base_fee)
                 .expect("fee is always valid; execution succeeded");
             info.total_fees += U256::from(miner_fee) * U256::from(gas_used);
+        }
+
+        let fill_elapsed = t_fill_start.elapsed();
+        if tx_count > 0 {
+            info!(
+                target: "payload_builder",
+                committed = tx_count,
+                gas_consumed = tx_total_gas,
+                total_ms = fill_elapsed.as_millis(),
+                avg_per_tx_ms = fill_elapsed.as_millis() / tx_count as u128,
+                slowest_tx_ms = tx_slowest_ms,
+                fastest_tx_ms = tx_fastest_ms,
+                "[PERF] commitTransactions summary"
+            );
         }
 
         Ok(None)
