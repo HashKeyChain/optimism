@@ -1,11 +1,9 @@
 [package]
 name = "reth-evm"
-version.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-license.workspace = true
-homepage.workspace = true
-repository.workspace = true
+version = "1.11.3"
+edition = "2021"
+rust-version = "1.82"
+license = "MIT OR Apache-2.0"
 
 [lints]
 workspace = true

@@ -47,6 +47,8 @@ members = [
   # Local patches
   "op-revm-local",
   "reth-codecs-local",
+  "reth-evm-local",
+  "reth-engine-tree-local",
 
   # Alloy OP EVM
   "alloy-op-evm/",
@@ -372,6 +374,13 @@ reth-tracing = { git = "https://github.com/paradigmxyz/reth", tag = "v1.11.3", d
 reth-transaction-pool = { git = "https://github.com/paradigmxyz/reth", tag = "v1.11.3" }
 reth-trie = { git = "https://github.com/paradigmxyz/reth", tag = "v1.11.3" }
 reth-trie-common = { git = "https://github.com/paradigmxyz/reth", tag = "v1.11.3", default-features = false }
+reth-trie-parallel = { git = "https://github.com/paradigmxyz/reth", tag = "v1.11.3" }
+reth-trie-sparse = { git = "https://github.com/paradigmxyz/reth", tag = "v1.11.3", default-features = false }
+reth-ethereum-engine-primitives = { git = "https://github.com/paradigmxyz/reth", tag = "v1.11.3", default-features = false }
+reth-exex-types = { git = "https://github.com/paradigmxyz/reth", tag = "v1.11.3" }
+reth-network-p2p = { git = "https://github.com/paradigmxyz/reth", tag = "v1.11.3" }
+reth-stages-api = { git = "https://github.com/paradigmxyz/reth", tag = "v1.11.3" }
+reth-testing-utils = { git = "https://github.com/paradigmxyz/reth", tag = "v1.11.3" }
 reth-trie-db = { git = "https://github.com/paradigmxyz/reth", tag = "v1.11.3" }
 reth-zstd-compressors = { git = "https://github.com/paradigmxyz/reth", tag = "v1.11.3", default-features = false }
 
@@ -624,6 +633,8 @@ rollup-boost-types = "0.1.0"
 rustc-hash = { version = "2.1", default-features = false }
 rustls = { version = "0.23", default-features = false }
 rustls-pemfile = { version = "2.2", default-features = false }
+crossbeam-channel = "0.5.13"
+fixed-cache = { version = "0.1.7", features = ["stats"] }
 schnellru = "0.2"
 shellexpand = "3.1.1"
 shlex = "1.3"
