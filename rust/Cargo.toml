@@ -670,3 +670,4 @@ op-revm = { path = "op-revm-local/" }
 [patch.'https://github.com/paradigmxyz/reth']
 reth-codecs = { path = "reth-codecs-local/" }
 reth-evm = { path = "reth-evm-local/" }
+reth-engine-tree = { path = "reth-engine-tree-local/" }
