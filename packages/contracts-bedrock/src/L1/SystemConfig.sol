@@ -9,6 +9,7 @@ import { Constants } from "src/libraries/Constants.sol";
 import { OptimismPortal } from "src/L1/OptimismPortal.sol";
 import { GasPayingToken, IGasToken } from "src/libraries/GasPayingToken.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { ISuperchainConfig } from "interfaces/L1/ISuperchainConfig.sol";
 
 /// @title SystemConfig
 /// @notice The SystemConfig contract is used to manage configuration of an Optimism network.
@@ -21,11 +22,19 @@ contract SystemConfig is OwnableUpgradeable, ISemver, IGasToken {
     /// @custom:value GAS_LIMIT            Represents an update to gas limit on L2.
     /// @custom:value UNSAFE_BLOCK_SIGNER  Represents an update to the signer key for unsafe
     ///                                    block distrubution.
+    /// @custom:value EIP_1559_PARAMS     Represents an update to EIP-1559 parameters.
+    /// @custom:value OPERATOR_FEE_PARAMS Represents an update to operator fee parameters.
+    /// @custom:value MIN_BASE_FEE        Represents an update to the minimum base fee.
+    /// @custom:value DA_FOOTPRINT_GAS_SCALAR Represents an update to the DA footprint gas scalar.
     enum UpdateType {
         BATCHER,
         GAS_CONFIG,
         GAS_LIMIT,
-        UNSAFE_BLOCK_SIGNER
+        UNSAFE_BLOCK_SIGNER,
+        EIP_1559_PARAMS,
+        OPERATOR_FEE_PARAMS,
+        MIN_BASE_FEE,
+        DA_FOOTPRINT_GAS_SCALAR
     }
 
     /// @notice Struct representing the addresses of L1 system contracts. These should be the
@@ -116,6 +125,30 @@ contract SystemConfig is OwnableUpgradeable, ISemver, IGasToken {
     ///         Used by the OptimismPortal to meter the cost of buying L2 gas on L1.
     ///         Set as internal with a getter so that the struct is returned instead of a tuple.
     ResourceMetering.ResourceConfig internal _resourceConfig;
+
+    /// @notice The EIP-1559 base fee max change denominator.
+    uint32 public eip1559Denominator;
+
+    /// @notice The EIP-1559 elasticity multiplier.
+    uint32 public eip1559Elasticity;
+
+    /// @notice The operator fee scalar.
+    uint32 public operatorFeeScalar;
+
+    /// @notice The operator fee constant.
+    uint64 public operatorFeeConstant;
+
+    // @notice The DA footprint gas scalar.
+    uint16 public daFootprintGasScalar;
+
+    /// @notice The L2 chain ID that this SystemConfig configures.
+    uint256 public l2ChainId;
+
+    /// @notice The SuperchainConfig contract that manages the pause state.
+    ISuperchainConfig public superchainConfig;
+
+    /// @notice The minimum base fee, in wei.
+    uint64 public minBaseFee;
 
     /// @notice Emitted when configuration is updated.
     /// @param version    SystemConfig version.
@@ -322,7 +355,7 @@ contract SystemConfig is OwnableUpgradeable, ISemver, IGasToken {
                 _decimals: GAS_PAYING_TOKEN_DECIMALS,
                 _name: name,
                 _symbol: symbol
-            });
+                });
         }
     }
 
@@ -427,6 +460,70 @@ contract SystemConfig is OwnableUpgradeable, ISemver, IGasToken {
         if (Storage.getUint(START_BLOCK_SLOT) == 0) {
             Storage.setUint(START_BLOCK_SLOT, block.number);
         }
+    }
+
+    /// @notice Updates the EIP-1559 parameters of the chain. Can only be called by the owner.
+    /// @param _denominator EIP-1559 base fee max change denominator.
+    /// @param _elasticity  EIP-1559 elasticity multiplier.
+    function setEIP1559Params(uint32 _denominator, uint32 _elasticity) external onlyOwner {
+        _setEIP1559Params(_denominator, _elasticity);
+    }
+
+    /// @notice Internal function for updating the EIP-1559 parameters.
+    function _setEIP1559Params(uint32 _denominator, uint32 _elasticity) internal {
+        // require the parameters have sane values:
+        require(_denominator >= 1, "SystemConfig: denominator must be >= 1");
+        require(_elasticity >= 1, "SystemConfig: elasticity must be >= 1");
+        eip1559Denominator = _denominator;
+        eip1559Elasticity = _elasticity;
+
+        bytes memory data = abi.encode(uint256(_denominator) << 32 | uint64(_elasticity));
+        emit ConfigUpdate(VERSION, UpdateType.EIP_1559_PARAMS, data);
+    }
+
+    /// @notice Updates the minimum base fee. Can only be called by the owner.
+    ///         Setting this value to 0 is equivalent to disabling the min base fee feature
+    /// @param _minBaseFee New minimum base fee.
+    function setMinBaseFee(uint64 _minBaseFee) external onlyOwner {
+        _setMinBaseFee(_minBaseFee);
+    }
+
+    /// @notice Internal function for updating the minimum base fee.
+    function _setMinBaseFee(uint64 _minBaseFee) internal {
+        minBaseFee = _minBaseFee;
+
+        bytes memory data = abi.encode(_minBaseFee);
+        emit ConfigUpdate(VERSION, UpdateType.MIN_BASE_FEE, data);
+    }
+
+    /// @notice Updates the operator fee parameters. Can only be called by the owner.
+    /// @param _operatorFeeScalar New operator fee scalar.
+    /// @param _operatorFeeConstant New operator fee constant.
+    function setOperatorFeeScalars(uint32 _operatorFeeScalar, uint64 _operatorFeeConstant) external onlyOwner {
+        _setOperatorFeeScalars(_operatorFeeScalar, _operatorFeeConstant);
+    }
+
+    /// @notice Internal function for updating the operator fee parameters.
+    function _setOperatorFeeScalars(uint32 _operatorFeeScalar, uint64 _operatorFeeConstant) internal {
+        operatorFeeScalar = _operatorFeeScalar;
+        operatorFeeConstant = _operatorFeeConstant;
+
+        bytes memory data = abi.encode(uint256(_operatorFeeScalar) << 64 | _operatorFeeConstant);
+        emit ConfigUpdate(VERSION, UpdateType.OPERATOR_FEE_PARAMS, data);
+    }
+
+    /// @notice Updates the DA footprint gas scalar. Can only be called by the owner.
+    /// @param _daFootprintGasScalar New DA footprint gas scalar.
+    function setDAFootprintGasScalar(uint16 _daFootprintGasScalar) external onlyOwner {
+        _setDAFootprintGasScalar(_daFootprintGasScalar);
+    }
+
+    /// @notice Internal function for updating the DA footprint gas scalar.
+    function _setDAFootprintGasScalar(uint16 _dAFootprintGasScalar) internal {
+        daFootprintGasScalar = _dAFootprintGasScalar;
+
+        bytes memory data = abi.encode(_dAFootprintGasScalar);
+        emit ConfigUpdate(VERSION, UpdateType.DA_FOOTPRINT_GAS_SCALAR, data);
     }
 
     /// @notice A getter for the resource config.
