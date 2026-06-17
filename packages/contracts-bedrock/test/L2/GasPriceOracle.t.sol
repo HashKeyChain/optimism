@@ -4,6 +4,7 @@ pragma solidity 0.8.15;
 // Testing utilities
 import { CommonTest } from "test/setup/CommonTest.sol";
 import { Fork } from "scripts/libraries/Config.sol";
+import { stdError } from "forge-std/Test.sol";
 
 // Libraries
 import { Encoding } from "src/libraries/Encoding.sol";
@@ -27,6 +28,10 @@ contract GasPriceOracle_Test is CommonTest {
     uint256 constant l1FeeScalar = 10;
     uint32 constant blobBaseFeeScalar = 15;
     uint32 constant baseFeeScalar = 20;
+    uint32 constant operatorFeeScalar = 2;
+    uint64 constant operatorFeeConstant = 1;
+    uint16 constant daFootprintGasScalar = 800;
+    uint256 constant maxUint256 = type(uint256).max;
 
     /// @dev Sets up the test suite.
     function setUp() public virtual override {
@@ -328,5 +333,170 @@ contract GasPriceOracleFjordActive_Test is GasPriceOracle_Test {
         // 162_356_900 * (20 * 16 * 2 * 1e6 + 3 * 1e6 * 15) / 1e12 == 111,214.4765
         uint256 upperBound = gasPriceOracle.getL1FeeUpperBound(data.length);
         assertEq(upperBound, 111214);
+    }
+
+    /// @dev Tests that `operatorFee` is 0 when Isthmus is not activated.
+    function test_getOperatorFee_beforeIsthmus_returnsZero() external view {
+        assertEq(gasPriceOracle.isIsthmus(), false);
+        assertEq(gasPriceOracle.getOperatorFee(21_000), 0);
+    }
+}
+
+contract GasPriceOracleIsthmus_Test is GasPriceOracle_Test {
+    /// @dev Sets up the test suite.
+    function setUp() public virtual override {
+        l2Fork = Fork.FJORD;
+        super.setUp();
+
+        bytes memory calldataPacked = Encoding.encodeSetL1BlockValuesIsthmus(
+            baseFeeScalar,
+            blobBaseFeeScalar,
+            sequenceNumber,
+            timestamp,
+            number,
+            baseFee,
+            blobBaseFee,
+            hash,
+            batcherHash,
+            operatorFeeScalar,
+            operatorFeeConstant
+        );
+
+        vm.prank(depositor);
+        (bool success,) = address(l1Block).call(calldataPacked);
+        require(success, "GasPriceOracleIsthmus_Test: L1Block setup failed");
+
+        vm.prank(depositor);
+        gasPriceOracle.setIsthmus();
+    }
+
+    function test_getOperatorFee_isthmusFormula_succeeds() external view {
+        assertEq(gasPriceOracle.getOperatorFee(1_000_000), 3);
+    }
+
+    function test_setIsthmus_wrongCaller_reverts() external {
+        vm.expectRevert("GasPriceOracle: only the depositor account can set isIsthmus flag");
+        gasPriceOracle.setIsthmus();
+    }
+
+    function test_setIsthmus_whenIsthmusActive_reverts() external {
+        vm.prank(depositor);
+        vm.expectRevert("GasPriceOracle: Isthmus already active");
+        gasPriceOracle.setIsthmus();
+    }
+}
+
+contract GasPriceOracleIsthmusActivation_Test is GasPriceOracle_Test {
+    function setUp() public virtual override {
+        l2Fork = Fork.FJORD;
+        super.setUp();
+    }
+
+    function test_setIsthmus_succeeds() external {
+        vm.prank(depositor);
+        gasPriceOracle.setIsthmus();
+        assertEq(gasPriceOracle.isIsthmus(), true);
+    }
+
+    function test_setIsthmus_alreadyActive_reverts() external {
+        vm.startPrank(depositor);
+        gasPriceOracle.setIsthmus();
+        vm.expectRevert("GasPriceOracle: Isthmus already active");
+        gasPriceOracle.setIsthmus();
+        vm.stopPrank();
+    }
+}
+
+contract GasPriceOracleIsthmusBeforeFjord_Test is GasPriceOracle_Test {
+    function setUp() public virtual override {
+        l2Fork = Fork.ECOTONE;
+        super.setUp();
+    }
+
+    function test_setIsthmus_withoutFjord_reverts() external {
+        vm.prank(depositor);
+        vm.expectRevert("GasPriceOracle: Isthmus can only be activated after Fjord");
+        gasPriceOracle.setIsthmus();
+    }
+}
+
+contract GasPriceOracleJovian_Test is GasPriceOracle_Test {
+    function setUp() public virtual override {
+        l2Fork = Fork.FJORD;
+        super.setUp();
+
+        bytes memory calldataPacked = Encoding.encodeSetL1BlockValuesIsthmus(
+            baseFeeScalar,
+            blobBaseFeeScalar,
+            sequenceNumber,
+            timestamp,
+            number,
+            baseFee,
+            blobBaseFee,
+            hash,
+            batcherHash,
+            operatorFeeScalar,
+            operatorFeeConstant
+        );
+
+        vm.prank(depositor);
+        (bool success,) = address(l1Block).call(calldataPacked);
+        require(success, "GasPriceOracleJovian_Test: L1Block setup failed");
+
+        vm.prank(depositor);
+        gasPriceOracle.setIsthmus();
+    }
+
+    function test_getOperatorFee_isthmusFormula_succeeds() external view {
+        assertEq(gasPriceOracle.getOperatorFee(1_000_000), 3);
+    }
+
+    function test_getOperatorFee_isthmusFormulaSaturates_succeeds() external view {
+        assertEq(gasPriceOracle.getOperatorFee(maxUint256), maxUint256 / 1e6 + operatorFeeConstant);
+    }
+
+    function test_setJovian_succeeds() external {
+        vm.prank(depositor);
+        gasPriceOracle.setJovian();
+        assertEq(gasPriceOracle.isJovian(), true);
+    }
+
+    function test_setJovian_wrongCaller_reverts() external {
+        vm.expectRevert("GasPriceOracle: only the depositor account can set isJovian flag");
+        gasPriceOracle.setJovian();
+    }
+
+    function test_setJovian_alreadyActive_reverts() external {
+        vm.startPrank(depositor);
+        gasPriceOracle.setJovian();
+        vm.expectRevert("GasPriceOracle: Jovian already active");
+        gasPriceOracle.setJovian();
+        vm.stopPrank();
+    }
+
+    function test_getOperatorFee_jovianFormula_succeeds() external {
+        vm.prank(depositor);
+        gasPriceOracle.setJovian();
+        assertEq(gasPriceOracle.getOperatorFee(21_000), 4_200_001);
+    }
+
+    function test_getOperatorFee_jovianFormulaOverflow_reverts() external {
+        vm.prank(depositor);
+        gasPriceOracle.setJovian();
+        vm.expectRevert(stdError.arithmeticError);
+        gasPriceOracle.getOperatorFee(maxUint256);
+    }
+}
+
+contract GasPriceOracleJovianBeforeIsthmus_Test is GasPriceOracle_Test {
+    function setUp() public virtual override {
+        l2Fork = Fork.FJORD;
+        super.setUp();
+    }
+
+    function test_setJovian_withoutIsthmus_reverts() external {
+        vm.prank(depositor);
+        vm.expectRevert("GasPriceOracle: Jovian can only be activated after Isthmus");
+        gasPriceOracle.setJovian();
     }
 }

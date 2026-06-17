@@ -473,9 +473,37 @@ contract Specification_Test is CommonTest {
             _sel: _getSel("setGasConfigEcotone(uint32,uint32)"),
             _auth: Role.SYSTEMCONFIGOWNER
         });
+        _addSpec({
+            _name: "SystemConfig",
+            _sel: _getSel("setEIP1559Params(uint32,uint32)"),
+            _auth: Role.SYSTEMCONFIGOWNER
+        });
+        _addSpec({
+            _name: "SystemConfig",
+            _sel: _getSel("setOperatorFeeScalars(uint32,uint64)"),
+            _auth: Role.SYSTEMCONFIGOWNER
+        });
+        _addSpec({
+            _name: "SystemConfig",
+            _sel: _getSel("setMinBaseFee(uint64)"),
+            _auth: Role.SYSTEMCONFIGOWNER
+        });
+        _addSpec({
+            _name: "SystemConfig",
+            _sel: _getSel("setDAFootprintGasScalar(uint16)"),
+            _auth: Role.SYSTEMCONFIGOWNER
+        });
         _addSpec({ _name: "SystemConfig", _sel: _getSel("basefeeScalar()") });
         _addSpec({ _name: "SystemConfig", _sel: _getSel("blobbasefeeScalar()") });
         _addSpec({ _name: "SystemConfig", _sel: _getSel("maximumGasLimit()") });
+        _addSpec({ _name: "SystemConfig", _sel: _getSel("eip1559Denominator()") });
+        _addSpec({ _name: "SystemConfig", _sel: _getSel("eip1559Elasticity()") });
+        _addSpec({ _name: "SystemConfig", _sel: _getSel("operatorFeeScalar()") });
+        _addSpec({ _name: "SystemConfig", _sel: _getSel("operatorFeeConstant()") });
+        _addSpec({ _name: "SystemConfig", _sel: _getSel("daFootprintGasScalar()") });
+        _addSpec({ _name: "SystemConfig", _sel: _getSel("l2ChainId()") });
+        _addSpec({ _name: "SystemConfig", _sel: _getSel("superchainConfig()") });
+        _addSpec({ _name: "SystemConfig", _sel: _getSel("minBaseFee()") });
 
         // SystemConfigInterop
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("UNSAFE_BLOCK_SIGNER_SLOT()") });
@@ -541,9 +569,37 @@ contract Specification_Test is CommonTest {
             _sel: _getSel("setGasConfigEcotone(uint32,uint32)"),
             _auth: Role.SYSTEMCONFIGOWNER
         });
+        _addSpec({
+            _name: "SystemConfigInterop",
+            _sel: _getSel("setEIP1559Params(uint32,uint32)"),
+            _auth: Role.SYSTEMCONFIGOWNER
+        });
+        _addSpec({
+            _name: "SystemConfigInterop",
+            _sel: _getSel("setOperatorFeeScalars(uint32,uint64)"),
+            _auth: Role.SYSTEMCONFIGOWNER
+        });
+        _addSpec({
+            _name: "SystemConfigInterop",
+            _sel: _getSel("setMinBaseFee(uint64)"),
+            _auth: Role.SYSTEMCONFIGOWNER
+        });
+        _addSpec({
+            _name: "SystemConfigInterop",
+            _sel: _getSel("setDAFootprintGasScalar(uint16)"),
+            _auth: Role.SYSTEMCONFIGOWNER
+        });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("basefeeScalar()") });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("blobbasefeeScalar()") });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("maximumGasLimit()") });
+        _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("eip1559Denominator()") });
+        _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("eip1559Elasticity()") });
+        _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("operatorFeeScalar()") });
+        _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("operatorFeeConstant()") });
+        _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("daFootprintGasScalar()") });
+        _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("l2ChainId()") });
+        _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("superchainConfig()") });
+        _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("minBaseFee()") });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("addDependency(uint256)"), _auth: Role.DEPENDENCYMANAGER });
         _addSpec({
             _name: "SystemConfigInterop",

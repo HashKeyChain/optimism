@@ -595,3 +595,114 @@ contract SystemConfig_Setters_Test is SystemConfig_Init {
         assertEq(systemConfig.unsafeBlockSigner(), newUnsafeSigner);
     }
 }
+
+contract SystemConfig_SetEIP1559Params_Test is SystemConfig_Init {
+    function test_eip1559Params_defaultToZero_succeeds() external view {
+        assertEq(systemConfig.eip1559Denominator(), 0);
+        assertEq(systemConfig.eip1559Elasticity(), 0);
+    }
+
+    function test_setEIP1559Params_succeeds() external {
+        vm.expectEmit(address(systemConfig));
+        emit ConfigUpdate(
+            0, ISystemConfig.UpdateType.EIP_1559_PARAMS, abi.encode(uint256(uint32(500)) << 32 | uint64(12))
+        );
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setEIP1559Params(500, 12);
+
+        assertEq(systemConfig.eip1559Denominator(), 500);
+        assertEq(systemConfig.eip1559Elasticity(), 12);
+    }
+
+    function test_setEIP1559Params_notOwner_reverts() external {
+        vm.expectRevert("Ownable: caller is not the owner");
+        systemConfig.setEIP1559Params(500, 12);
+    }
+
+    function test_setEIP1559Params_zeroDenominator_reverts() external {
+        vm.prank(systemConfig.owner());
+        vm.expectRevert("SystemConfig: denominator must be >= 1");
+        systemConfig.setEIP1559Params(0, 12);
+    }
+
+    function test_setEIP1559Params_zeroElasticity_reverts() external {
+        vm.prank(systemConfig.owner());
+        vm.expectRevert("SystemConfig: elasticity must be >= 1");
+        systemConfig.setEIP1559Params(500, 0);
+    }
+}
+
+contract SystemConfig_SetMinBaseFee_Test is SystemConfig_Init {
+    function test_minBaseFee_defaultToZero_succeeds() external view {
+        assertEq(systemConfig.minBaseFee(), 0);
+    }
+
+    function test_setMinBaseFee_succeeds() external {
+        vm.expectEmit(address(systemConfig));
+        emit ConfigUpdate(0, ISystemConfig.UpdateType.MIN_BASE_FEE, abi.encode(uint64(10_000)));
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setMinBaseFee(10_000);
+
+        assertEq(systemConfig.minBaseFee(), 10_000);
+    }
+
+    function test_setMinBaseFee_notOwner_reverts() external {
+        vm.expectRevert("Ownable: caller is not the owner");
+        systemConfig.setMinBaseFee(10_000);
+    }
+}
+
+contract SystemConfig_SetOperatorFeeScalars_Test is SystemConfig_Init {
+    function test_operatorFeeScalars_defaultToZero_succeeds() external view {
+        assertEq(systemConfig.operatorFeeScalar(), 0);
+        assertEq(systemConfig.operatorFeeConstant(), 0);
+    }
+
+    function test_setOperatorFeeScalars_succeeds() external {
+        vm.expectEmit(address(systemConfig));
+        emit ConfigUpdate(
+            0, ISystemConfig.UpdateType.OPERATOR_FEE_PARAMS, abi.encode(uint256(uint32(2)) << 64 | uint64(1))
+        );
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setOperatorFeeScalars(2, 1);
+
+        assertEq(systemConfig.operatorFeeScalar(), 2);
+        assertEq(systemConfig.operatorFeeConstant(), 1);
+    }
+
+    function test_setOperatorFeeScalars_notOwner_reverts() external {
+        vm.expectRevert("Ownable: caller is not the owner");
+        systemConfig.setOperatorFeeScalars(2, 1);
+    }
+}
+
+contract SystemConfig_SetDAFootprintGasScalar_Test is SystemConfig_Init {
+    function test_daFootprintGasScalar_defaultToZero_succeeds() external view {
+        assertEq(systemConfig.daFootprintGasScalar(), 0);
+    }
+
+    function test_setDAFootprintGasScalar_succeeds() external {
+        vm.expectEmit(address(systemConfig));
+        emit ConfigUpdate(0, ISystemConfig.UpdateType.DA_FOOTPRINT_GAS_SCALAR, abi.encode(uint16(800)));
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setDAFootprintGasScalar(800);
+
+        assertEq(systemConfig.daFootprintGasScalar(), 800);
+    }
+
+    function test_setDAFootprintGasScalar_notOwner_reverts() external {
+        vm.expectRevert("Ownable: caller is not the owner");
+        systemConfig.setDAFootprintGasScalar(800);
+    }
+}
+
+contract SystemConfig_ReservedSlots_Test is SystemConfig_Init {
+    function test_reservedSlots_defaultToZero_succeeds() external view {
+        assertEq(systemConfig.l2ChainId(), 0);
+        assertEq(address(systemConfig.superchainConfig()), address(0));
+    }
+}
