@@ -196,6 +196,19 @@
   },
   {
     "inputs": [],
+    "name": "daFootprintGasScalar",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "dependencyManager",
     "outputs": [
       {
@@ -215,6 +228,32 @@
         "internalType": "address",
         "name": "addr_",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "eip1559Denominator",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "eip1559Elasticity",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
       }
     ],
     "stateMutability": "view",
@@ -580,6 +619,19 @@
   },
   {
     "inputs": [],
+    "name": "l2ChainId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "maximumGasLimit",
     "outputs": [
       {
@@ -593,12 +645,51 @@
   },
   {
     "inputs": [],
+    "name": "minBaseFee",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "minimumGasLimit",
     "outputs": [
       {
         "internalType": "uint64",
         "name": "",
         "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "operatorFeeConstant",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "operatorFeeScalar",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
       }
     ],
     "stateMutability": "view",
@@ -750,6 +841,37 @@
   {
     "inputs": [
       {
+        "internalType": "uint16",
+        "name": "_daFootprintGasScalar",
+        "type": "uint16"
+      }
+    ],
+    "name": "setDAFootprintGasScalar",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "_denominator",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "_elasticity",
+        "type": "uint32"
+      }
+    ],
+    "name": "setEIP1559Params",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "_overhead",
         "type": "uint256"
@@ -799,6 +921,37 @@
   {
     "inputs": [
       {
+        "internalType": "uint64",
+        "name": "_minBaseFee",
+        "type": "uint64"
+      }
+    ],
+    "name": "setMinBaseFee",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "_operatorFeeScalar",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint64",
+        "name": "_operatorFeeConstant",
+        "type": "uint64"
+      }
+    ],
+    "name": "setOperatorFeeScalars",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "_unsafeBlockSigner",
         "type": "address"
@@ -817,6 +970,19 @@
         "internalType": "uint256",
         "name": "startBlock_",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "superchainConfig",
+    "outputs": [
+      {
+        "internalType": "contract ISuperchainConfig",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",

@@ -79,6 +79,19 @@
   },
   {
     "inputs": [],
+    "name": "daFootprintGasScalar",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "gasPayingToken",
     "outputs": [
       {
@@ -188,6 +201,32 @@
   },
   {
     "inputs": [],
+    "name": "operatorFeeConstant",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "operatorFeeScalar",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "sequenceNumber",
     "outputs": [
       {
@@ -278,6 +317,20 @@
   {
     "inputs": [],
     "name": "setL1BlockValuesEcotone",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "setL1BlockValuesIsthmus",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "setL1BlockValuesJovian",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
