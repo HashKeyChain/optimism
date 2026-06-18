@@ -59,14 +59,14 @@ func TestIsthmusNetworkTransactions(t *testing.T) {
 	require.Equal(t, deployL1BlockSender, common.HexToAddress("0x4210000000000000000000000000000000000003"))
 	require.Equal(t, deployIsthmusL1BlockSource.SourceHash(), deployL1Block.SourceHash())
 	require.Nil(t, deployL1Block.To())
-	require.Equal(t, uint64(425_000), deployL1Block.Gas()) // TODO
+	require.Equal(t, uint64(1_000_000), deployL1Block.Gas())
 	require.Equal(t, l1BlockIsthmusDeploymentBytecode, deployL1Block.Data())
 
 	deployGasPriceOracleSender, deployGasPriceOracle := toDepositTxn(t, upgradeTxns[1])
 	require.Equal(t, deployGasPriceOracleSender, common.HexToAddress("0x4210000000000000000000000000000000000004"))
 	require.Equal(t, deployIsthmusGasPriceOracleSource.SourceHash(), deployGasPriceOracle.SourceHash())
 	require.Nil(t, deployGasPriceOracle.To())
-	require.Equal(t, uint64(1_625_000), deployGasPriceOracle.Gas())
+	require.Equal(t, uint64(1_750_714), deployGasPriceOracle.Gas())
 	require.Equal(t, gasPriceOracleIsthmusDeploymentBytecode, deployGasPriceOracle.Data())
 
 	deployOperatorFeeVaultSender, deployOperatorFeeVault := toDepositTxn(t, upgradeTxns[2])

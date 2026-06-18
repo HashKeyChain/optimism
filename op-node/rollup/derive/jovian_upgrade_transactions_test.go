@@ -17,7 +17,7 @@ func TestJovianNetworkTransactions(t *testing.T) {
 	require.Equal(t, deployL1BlockSender, common.HexToAddress("0x4210000000000000000000000000000000000006"))
 	require.Equal(t, deployJovianL1BlockSource.SourceHash(), deployL1Block.SourceHash())
 	require.Nil(t, deployL1Block.To())
-	require.Equal(t, uint64(447_315), deployL1Block.Gas())
+	require.Equal(t, uint64(1_000_000), deployL1Block.Gas())
 	require.Equal(t, l1BlockJovianDeploymentBytecode, deployL1Block.Data())
 
 	updateL1BlockProxySender, updateL1BlockProxy := toDepositTxn(t, upgradeTxns[1])
