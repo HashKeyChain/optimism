@@ -134,6 +134,12 @@ RUN just --version
 
 FROM --platform=$BUILDPLATFORM builder AS op-node-builder
 ARG OP_NODE_VERSION=v0.0.0
+# ARG 跨 stage 会失效，必须在本 stage 重新声明，否则 GIT_COMMIT/GIT_DATE/TARGET* 为空，
+# 版本信息（GitCommit/GitDate）不会被 ldflags 编进二进制。
+ARG GIT_COMMIT
+ARG GIT_DATE
+ARG TARGETOS
+ARG TARGETARCH
 RUN cd op-node && make op-node  \
   GOOS=$TARGETOS GOARCH=$TARGETARCH GITCOMMIT=$GIT_COMMIT GITDATE=$GIT_DATE VERSION="$OP_NODE_VERSION"
 
