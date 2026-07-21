@@ -100,32 +100,29 @@ RUN just --version
 # The "id" defaults to the value of "target", the cache will thus be reused during this build.
 # "sharing" defaults to "shared", the cache will thus be available to other concurrent docker builds.
 
-# FROM --platform=$BUILDPLATFORM us-docker.pkg.dev/oplabs-tools-artifacts/images/cannon:v1.0.0 AS cannon-builder-v1-0-0
-# FROM --platform=$BUILDPLATFORM us-docker.pkg.dev/oplabs-tools-artifacts/images/cannon:v1.2.0 AS cannon-builder-v1-2-0
-# FROM --platform=$BUILDPLATFORM us-docker.pkg.dev/oplabs-tools-artifacts/images/cannon:v1.3.0 AS cannon-builder-v1-3-0
-# FROM --platform=$BUILDPLATFORM us-docker.pkg.dev/oplabs-tools-artifacts/images/cannon:v1.4.0 AS cannon-builder-v1-4-0
-# FROM --platform=$BUILDPLATFORM us-docker.pkg.dev/oplabs-tools-artifacts/images/cannon:v1.6.0 AS cannon-builder-v1-6-0
+# 只构建当前版本 cannon（去掉需要拉取外部镜像的 legacy embeds）。
+# 当前 make cannon 会把 cannon64-impl 嵌入 multicannon/embeds/cannon-8，支持当前 StateVersion。
+# 如需兼容旧版本游戏，再补 COPY --from=cannon:vX.Y.Z 的 legacy embeds。
+FROM --platform=$BUILDPLATFORM builder AS cannon-builder
+ARG CANNON_VERSION=v0.0.0
+# ARG 跨 stage 会失效，必须在本 stage 重新声明，否则 GIT_COMMIT/GIT_DATE/TARGET* 为空。
+ARG GIT_COMMIT
+ARG GIT_DATE
+ARG TARGETOS
+ARG TARGETARCH
+RUN cd cannon && make cannon  \
+  GOOS=$TARGETOS GOARCH=$TARGETARCH GITCOMMIT=$GIT_COMMIT GITDATE=$GIT_DATE VERSION="$CANNON_VERSION"
 
-# FROM --platform=$BUILDPLATFORM builder AS cannon-builder
-# ARG CANNON_VERSION=v0.0.0
-# # Copy cannon binaries from previous versions
-# COPY --from=cannon-builder-v1-0-0 /usr/local/bin/cannon ./cannon/multicannon/embeds/cannon-0
-# COPY --from=cannon-builder-v1-3-0 /usr/local/bin/cannon-1 ./cannon/multicannon/embeds/cannon-1
-# COPY --from=cannon-builder-v1-4-0 /usr/local/bin/cannon-2 ./cannon/multicannon/embeds/cannon-2
-# COPY --from=cannon-builder-v1-2-0 /usr/local/bin/cannon-3 ./cannon/multicannon/embeds/cannon-3
-# COPY --from=cannon-builder-v1-3-0 /usr/local/bin/cannon-4 ./cannon/multicannon/embeds/cannon-4
-# COPY --from=cannon-builder-v1-4-0 /usr/local/bin/cannon-5 ./cannon/multicannon/embeds/cannon-5
-# COPY --from=cannon-builder-v1-4-0 /usr/local/bin/cannon-6 ./cannon/multicannon/embeds/cannon-6
-# COPY --from=cannon-builder-v1-6-0 /usr/local/bin/cannon-7 ./cannon/multicannon/embeds/cannon-7
-# Build current binaries
-# RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build cd cannon && make cannon  \
-#   GOOS=$TARGETOS GOARCH=$TARGETARCH GITCOMMIT=$GIT_COMMIT GITDATE=$GIT_DATE VERSION="$CANNON_VERSION"
-
-# FROM --platform=$BUILDPLATFORM builder AS op-program-builder
-# ARG OP_PROGRAM_VERSION=v0.0.0
-# # note: we only build the host, that's all the user needs. No Go MIPS cross-build in docker
-# RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build cd op-program && make op-program-host  \
-#   GOOS=$TARGETOS GOARCH=$TARGETARCH GITCOMMIT=$GIT_COMMIT GITDATE=$GIT_DATE VERSION="$OP_PROGRAM_VERSION"
+FROM --platform=$BUILDPLATFORM builder AS op-program-builder
+ARG OP_PROGRAM_VERSION=v0.0.0
+# ARG 跨 stage 会失效，必须在本 stage 重新声明，否则 GIT_COMMIT/GIT_DATE/TARGET* 为空。
+ARG GIT_COMMIT
+ARG GIT_DATE
+ARG TARGETOS
+ARG TARGETARCH
+# note: we only build the host, that's all the user needs. No Go MIPS cross-build in docker
+RUN cd op-program && make op-program-host  \
+  GOOS=$TARGETOS GOARCH=$TARGETARCH GITCOMMIT=$GIT_COMMIT GITDATE=$GIT_DATE VERSION="$OP_PROGRAM_VERSION"
 
 # FROM --platform=$BUILDPLATFORM builder AS op-wheel-builder
 # ARG OP_WHEEL_VERSION=v0.0.0
@@ -143,10 +140,15 @@ ARG TARGETARCH
 RUN cd op-node && make op-node  \
   GOOS=$TARGETOS GOARCH=$TARGETARCH GITCOMMIT=$GIT_COMMIT GITDATE=$GIT_DATE VERSION="$OP_NODE_VERSION"
 
-# FROM --platform=$BUILDPLATFORM builder AS op-challenger-builder
-# ARG OP_CHALLENGER_VERSION=v0.0.0
-# RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build cd op-challenger && make op-challenger  \
-#   GOOS=$TARGETOS GOARCH=$TARGETARCH GITCOMMIT=$GIT_COMMIT GITDATE=$GIT_DATE  VERSION="$OP_CHALLENGER_VERSION"
+FROM --platform=$BUILDPLATFORM builder AS op-challenger-builder
+ARG OP_CHALLENGER_VERSION=v0.0.0
+# ARG 跨 stage 会失效，必须在本 stage 重新声明，否则 GIT_COMMIT/GIT_DATE/TARGET* 为空。
+ARG GIT_COMMIT
+ARG GIT_DATE
+ARG TARGETOS
+ARG TARGETARCH
+RUN cd op-challenger && make op-challenger  \
+  GOOS=$TARGETOS GOARCH=$TARGETARCH GITCOMMIT=$GIT_COMMIT GITDATE=$GIT_DATE  VERSION="$OP_CHALLENGER_VERSION"
 
 # FROM --platform=$BUILDPLATFORM builder AS op-dispute-mon-builder
 # ARG OP_DISPUTE_MON_VERSION=v0.0.0
@@ -228,28 +230,18 @@ FROM $TARGET_BASE_IMAGE AS op-node-target
 COPY --from=op-node-builder /app/op-node/bin/op-node /usr/local/bin/
 CMD ["op-node"]
 
-# Make the kona docker image published by upstream available as a source to copy kona from.
-# FROM ghcr.io/op-rs/kona/kona-host:$KONA_VERSION AS kona
-# # Make the asterisc docker image published by upstream available as a source to copy asterisc from.
-# FROM us-docker.pkg.dev/oplabs-tools-artifacts/images/asterisc:$ASTERISC_VERSION AS asterisc
-
-# # Also produce an op-challenger loaded with kona and asterisc using ubuntu
-# FROM $UBUNTU_TARGET_BASE_IMAGE AS op-challenger-target
-# RUN apt-get update && apt-get install -y --no-install-recommends musl openssl ca-certificates
-# COPY --from=op-challenger-builder /app/op-challenger/bin/op-challenger /usr/local/bin/
-# # Copy in op-program and cannon
-# COPY --from=op-program-builder /app/op-program/bin/op-program /usr/local/bin/
-# ENV OP_CHALLENGER_ASTERISC_SERVER=/usr/local/bin/op-program
-# ENV OP_CHALLENGER_CANNON_SERVER=/usr/local/bin/op-program
-# COPY --from=cannon-builder /app/cannon/bin/cannon /usr/local/bin/
-# ENV OP_CHALLENGER_CANNON_BIN=/usr/local/bin/cannon
-# # Copy in kona and asterisc
-# COPY --from=kona /usr/local/bin/kona-host /usr/local/bin/
-# ENV OP_CHALLENGER_ASTERISC_KONA_SERVER=/usr/local/bin/kona-host
-# ENV OP_CHALLENGER_CANNON_KONA_SERVER=/usr/local/bin/kona-host
-# COPY --from=asterisc /usr/local/bin/asterisc /usr/local/bin/
-# ENV OP_CHALLENGER_ASTERISC_BIN=/usr/local/bin/asterisc
-# CMD ["op-challenger"]
+# op-challenger 镜像：内置 cannon + op-program(host)，用于运行 cannon 证明系统。
+# 已裁掉 kona / asterisc（无需拉取外部镜像），故用默认的 alpine TARGET_BASE_IMAGE。
+# builder 基于 golang:alpine，产出的二进制链接 musl，可直接在 alpine 运行。
+FROM $TARGET_BASE_IMAGE AS op-challenger-target
+RUN apk add --no-cache ca-certificates
+COPY --from=op-challenger-builder /app/op-challenger/bin/op-challenger /usr/local/bin/
+# Copy in op-program and cannon
+COPY --from=op-program-builder /app/op-program/bin/op-program /usr/local/bin/
+ENV OP_CHALLENGER_CANNON_SERVER=/usr/local/bin/op-program
+COPY --from=cannon-builder /app/cannon/bin/cannon /usr/local/bin/
+ENV OP_CHALLENGER_CANNON_BIN=/usr/local/bin/cannon
+CMD ["op-challenger"]
 
 # FROM $TARGET_BASE_IMAGE AS op-dispute-mon-target
 # COPY --from=op-dispute-mon-builder /app/op-dispute-mon/bin/op-dispute-mon /usr/local/bin/
