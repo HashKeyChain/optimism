@@ -104,7 +104,7 @@ impl Jovian {
                 to: TxKind::Create,
                 mint: 0,
                 value: U256::ZERO,
-                gas_limit: 447_315,
+                gas_limit: 1_000_000,
                 is_system_transaction: false,
                 input: Self::l1_block_deployment_bytecode(),
             },
@@ -169,6 +169,7 @@ mod tests {
     use crate::test_utils::check_deployment_code;
 
     use super::*;
+    use alloc::vec;
     use alloy_primitives::b256;
 
     #[test]
@@ -218,12 +219,40 @@ mod tests {
     }
 
     #[test]
+    fn test_jovian_txs_encoded() {
+        let jovian_upgrade_txs = Jovian.txs().collect::<Vec<_>>();
+        assert_eq!(jovian_upgrade_txs.len(), 5);
+
+        let expected_txs: Vec<Bytes> = vec![
+            hex::decode(include_str!("./bytecode/jovian_tx_0.hex").replace('\n', ""))
+                .unwrap()
+                .into(),
+            hex::decode(include_str!("./bytecode/jovian_tx_1.hex").replace('\n', ""))
+                .unwrap()
+                .into(),
+            hex::decode(include_str!("./bytecode/jovian_tx_2.hex").replace('\n', ""))
+                .unwrap()
+                .into(),
+            hex::decode(include_str!("./bytecode/jovian_tx_3.hex").replace('\n', ""))
+                .unwrap()
+                .into(),
+            hex::decode(include_str!("./bytecode/jovian_tx_4.hex").replace('\n', ""))
+                .unwrap()
+                .into(),
+        ];
+
+        for (actual, expected) in jovian_upgrade_txs.iter().zip(expected_txs) {
+            assert_eq!(*actual, expected);
+        }
+    }
+
+    #[test]
     fn test_verify_jovian_l1_block_deployment_code_hash() {
         let txs = Jovian::deposits().collect::<Vec<_>>();
         check_deployment_code(
             txs[0].clone(),
             Jovian::l1_block_address(),
-            hex!("5f885ca815d2cf27a203123e50b8ae204fdca910b6995d90b2d7700cbb9240d1").into(),
+            hex!("61f8d705018f105013dda524440781d0093c94862b46e46b7fe02d64c04313f1").into(),
         );
     }
 
@@ -240,7 +269,7 @@ mod tests {
         check_deployment_code(
             txs[2].clone(),
             Jovian::gas_price_oracle_address(),
-            hex!("e9fc7c96c4db0d6078e3d359d7e8c982c350a513cb2c31121adf5e1e8a446614").into(),
+            hex!("732c34b4d8d2e05f4326bc8386ae95cec203843beb29a801126bc8a8c7dd58b8").into(),
         );
     }
 }
