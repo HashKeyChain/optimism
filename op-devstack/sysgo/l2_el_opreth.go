@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -102,13 +105,67 @@ type OpReth struct {
 	execPath string
 	args     []string
 	// Each entry is of the form "key=value".
-	env []string
+	env             []string
+	dataDir         string
+	proofHistoryDir string
 
 	p devtest.T
 
 	sub *SubProcess
 
 	l2MetricsRegistrar L2MetricsRegistrar
+}
+
+// SnapshotState copies the stopped node's execution database and proof-history
+// database into dst. The snapshot is intentionally filesystem-level so recovery
+// tests exercise the same persistent artifacts used by production processes.
+func (n *OpReth) SnapshotState(dst string) error {
+	if n.Running() {
+		return fmt.Errorf("op-reth must be stopped before snapshot")
+	}
+	if err := os.RemoveAll(dst); err != nil {
+		return err
+	}
+	if err := copyTree(n.dataDir, filepath.Join(dst, "data")); err != nil {
+		return fmt.Errorf("snapshot data dir: %w", err)
+	}
+	if err := copyTree(n.proofHistoryDir, filepath.Join(dst, "proof-history")); err != nil {
+		return fmt.Errorf("snapshot proof history: %w", err)
+	}
+	return nil
+}
+
+// RestoreState replaces the stopped node's databases with a prior SnapshotState.
+func (n *OpReth) RestoreState(src string) error {
+	if n.Running() {
+		return fmt.Errorf("op-reth must be stopped before restore")
+	}
+	for _, item := range []struct{ from, to string }{
+		{filepath.Join(src, "data"), n.dataDir},
+		{filepath.Join(src, "proof-history"), n.proofHistoryDir},
+	} {
+		if err := os.RemoveAll(item.to); err != nil {
+			return err
+		}
+		if err := copyTree(item.from, item.to); err != nil {
+			return fmt.Errorf("restore %s: %w", filepath.Base(item.to), err)
+		}
+	}
+	return nil
+}
+
+func copyTree(src, dst string) error {
+	if err := os.MkdirAll(dst, 0o755); err != nil {
+		return err
+	}
+	// MDBX preallocates large sparse files. A byte-for-byte userspace copy expands
+	// their holes and can consume hundreds of gigabytes. GNU cp preserves holes and
+	// uses a copy-on-write reflink when the filesystem supports it.
+	cmd := exec.Command("cp", "-a", "--reflink=auto", "--sparse=always", src+string(os.PathSeparator)+".", dst)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("sparse copy: %w: %s", err, string(out))
+	}
+	return nil
 }
 
 var _ L2ELNode = (*OpReth)(nil)

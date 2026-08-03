@@ -1,5 +1,6 @@
 //! Sync start algorithm for the OP Stack rollup node.
 
+use alloy_primitives::B256;
 use kona_genesis::RollupConfig;
 use kona_protocol::L2BlockInfo;
 
@@ -12,6 +13,10 @@ pub use error::SyncStartError;
 use tracing::info;
 
 use crate::EngineClient;
+
+fn canonical_l1_hash_matches(canonical_hash: Option<B256>, expected_hash: B256) -> bool {
+    canonical_hash == Some(expected_hash)
+}
 
 /// Searches for the latest [`L2ForkchoiceState`] that we can use to start the sync process with.
 ///
@@ -40,8 +45,12 @@ pub async fn find_starting_forkchoice<EngineClient_: EngineClient>(
 
     // Search for the highest `unsafe` block, relative to the initial `unsafe` block's L1 origin,
     loop {
-        let l1_origin =
-            engine_client.get_l1_block(current_fc.un_safe.l1_origin.hash.into()).await?;
+        // A block that was reorged out may remain queryable by hash in the L1 EL.
+        // Canonicality must therefore be checked by number and hash together. A
+        // hash-only lookup would incorrectly keep an unsafe L2 head whose origin
+        // is now an orphan, preventing the reset FCU from reorging the L2 EL.
+        let canonical_l1 =
+            engine_client.get_l1_block(current_fc.un_safe.l1_origin.number.into()).await?;
         info!(
             target: "sync_start",
             l1_origin = %current_fc.un_safe.l1_origin.number,
@@ -49,9 +58,14 @@ pub async fn find_starting_forkchoice<EngineClient_: EngineClient>(
             "Searching for L2 unsafe block with canonical L1 origin"
         );
 
-        match l1_origin {
-            Some(_) => {
-                // Unsafe block has existing L1 origin. Continue with this head.
+        match canonical_l1 {
+            Some(block)
+                if canonical_l1_hash_matches(
+                    Some(block.header.hash),
+                    current_fc.un_safe.l1_origin.hash,
+                ) =>
+            {
+                // Unsafe block has a canonical L1 origin. Continue with this head.
                 info!(
                     target: "sync_start",
                     l2_unsafe = %current_fc.un_safe.block_info.number,
@@ -59,7 +73,7 @@ pub async fn find_starting_forkchoice<EngineClient_: EngineClient>(
                 );
                 break;
             }
-            None => {
+            _ => {
                 let l2_parent_hash = current_fc.un_safe.block_info.parent_hash.into();
                 let l2_parent = engine_client
                     .get_l2_block(l2_parent_hash)
@@ -85,8 +99,8 @@ pub async fn find_starting_forkchoice<EngineClient_: EngineClient>(
         );
 
         let is_behind_sequence_window =
-            current_fc.un_safe.l1_origin.number.saturating_sub(cfg.seq_window_size) >
-                safe_cursor.l1_origin.number;
+            current_fc.un_safe.l1_origin.number.saturating_sub(cfg.seq_window_size)
+                > safe_cursor.l1_origin.number;
         let is_finalized = safe_cursor.block_info.hash == current_fc.finalized.block_info.hash;
         let is_genesis = safe_cursor.block_info.hash == cfg.genesis.l2.hash;
         if is_behind_sequence_window || is_finalized || is_genesis {
@@ -115,6 +129,7 @@ pub async fn find_starting_forkchoice<EngineClient_: EngineClient>(
 
 #[cfg(test)]
 mod test {
+    use alloy_primitives::B256;
     use alloy_provider::Network;
     use alloy_rpc_types_eth::Block;
     use kona_protocol::L2BlockInfo;
@@ -144,5 +159,15 @@ mod test {
         let l2_block_info =
             L2BlockInfo::from_block_and_genesis(&consensus_block, &rollup_config.genesis).unwrap();
         assert_eq!(rpc_reported_hash, l2_block_info.block_info.hash);
+    }
+
+    #[test]
+    fn test_canonical_l1_origin_requires_hash_at_same_height() {
+        let orphan = B256::repeat_byte(0x11);
+        let canonical = B256::repeat_byte(0x22);
+
+        assert!(super::canonical_l1_hash_matches(Some(orphan), orphan));
+        assert!(!super::canonical_l1_hash_matches(Some(canonical), orphan));
+        assert!(!super::canonical_l1_hash_matches(None, orphan));
     }
 }

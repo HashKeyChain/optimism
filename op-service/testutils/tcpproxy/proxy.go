@@ -43,6 +43,17 @@ func (p *Proxy) SetUpstream(addr string) {
 	p.mu.Unlock()
 }
 
+// DisconnectAll closes every active downstream and upstream connection without
+// stopping the listener. New connections continue to use the currently configured
+// upstream. This is useful for deterministic transient-network fault injection.
+func (p *Proxy) DisconnectAll() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	for conn := range p.conns {
+		_ = conn.Close()
+	}
+}
+
 func (p *Proxy) Start() error {
 	lis, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
@@ -143,11 +154,7 @@ func (p *Proxy) Close() error {
 	// Close all tracked connections under the lock. handleConn checks
 	// p.stopped under p.mu before adding new connections, so after this
 	// iteration no new connections can appear in p.conns.
-	p.mu.Lock()
-	for conn := range p.conns {
-		conn.Close()
-	}
-	p.mu.Unlock()
+	p.DisconnectAll()
 
 	p.wg.Wait()
 	return nil

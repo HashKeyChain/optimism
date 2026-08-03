@@ -28,6 +28,7 @@ import (
 	opmetrics "github.com/ethereum-optimism/optimism/op-service/metrics"
 	"github.com/ethereum-optimism/optimism/op-service/oppprof"
 	oprpc "github.com/ethereum-optimism/optimism/op-service/rpc"
+	"github.com/ethereum-optimism/optimism/op-service/testutils/tcpproxy"
 	sequencerConfig "github.com/ethereum-optimism/optimism/op-test-sequencer/config"
 	testmetrics "github.com/ethereum-optimism/optimism/op-test-sequencer/metrics"
 	"github.com/ethereum-optimism/optimism/op-test-sequencer/sequencer"
@@ -185,6 +186,9 @@ type MixedSingleChainNodeSpec struct {
 	ELKind      MixedL2ELKind
 	CLKind      MixedL2CLKind
 	IsSequencer bool
+	// SequencerStopped starts a sequencer-capable node in follow mode. Tests can
+	// later promote it through the admin_startSequencer RPC to exercise failover.
+	SequencerStopped bool
 	// IsolateFromL2P2P keeps this node off the L2 CL/EL P2P mesh: it is never peered with the
 	// other nodes, so it receives no gossiped or req-resp'd unsafe blocks and must advance purely
 	// by deriving from L1. Used to exercise the derivation/force-build path (FCU-with-attributes)
@@ -276,11 +280,12 @@ func NewMixedSingleChainRuntime(t devtest.T, cfg MixedSingleChainPresetConfig) *
 		switch spec.CLKind {
 		case MixedL2CLOpNode:
 			cl = startL2CLNode(t, keys, l1Net, l2Net, l1EL, l1CL, el, jwtSecret, l2CLNodeStartConfig{
-				Key:           spec.CLKey,
-				IsSequencer:   spec.IsSequencer,
-				NoDiscovery:   true,
-				EnableReqResp: true,
-				DependencySet: depSet,
+				Key:              spec.CLKey,
+				IsSequencer:      spec.IsSequencer,
+				NoDiscovery:      true,
+				EnableReqResp:    true,
+				DependencySet:    depSet,
+				SequencerStopped: spec.SequencerStopped,
 			})
 		case MixedL2CLKona:
 			cl = startMixedKonaNode(
@@ -294,6 +299,7 @@ func NewMixedSingleChainRuntime(t devtest.T, cfg MixedSingleChainPresetConfig) *
 				spec.CLKey,
 				spec.ELKey,
 				spec.IsSequencer,
+				spec.SequencerStopped,
 				depSet,
 			)
 		default:
@@ -503,6 +509,8 @@ func buildMixedOpRethNode(
 		execPath:           execPath,
 		args:               args,
 		env:                []string{},
+		dataDir:            dataDirPath,
+		proofHistoryDir:    proofHistoryDir,
 		p:                  t,
 		l2MetricsRegistrar: metricsRegistrar,
 	}
@@ -560,6 +568,7 @@ func startMixedKonaNode(
 	clKey string,
 	elKey string,
 	isSequencer bool,
+	sequencerStopped bool,
 	depSet coredepset.DependencySet,
 ) *KonaNode {
 	tempKonaDir := t.TempDirWithPrefix("l2-cl-kona-" + NewComponentTarget(clKey, l2Net.ChainID()).String())
@@ -578,8 +587,14 @@ func startMixedKonaNode(
 	t.Require().NoError(err, "must write l1 chain config")
 	t.Require().NoError(os.WriteFile(tempL1CfgPath, l1CfgData, 0o640))
 
+	l1RPCProxy := tcpproxy.New(t.Logger().New("component", "kona-l1-rpc-proxy", "name", clKey))
+	t.Require().NoError(l1RPCProxy.Start())
+	l1RPCUpstream := ProxyAddr(t.Require(), l1EL.UserRPC())
+	l1RPCProxy.SetUpstream(l1RPCUpstream)
+	t.Cleanup(func() { _ = l1RPCProxy.Close() })
+
 	envVars := []string{
-		"KONA_NODE_L1_ETH_RPC=" + l1EL.UserRPC(),
+		"KONA_NODE_L1_ETH_RPC=http://" + l1RPCProxy.Addr(),
 		"KONA_NODE_L1_BEACON=" + l1CL.beaconHTTPAddr,
 		"KONA_NODE_L2_ENGINE_RPC=" + strings.ReplaceAll(l2EL.EngineRPC(), "ws://", "http://"),
 		"KONA_NODE_L2_ENGINE_AUTH=" + l2EL.JWTPath(),
@@ -621,6 +636,7 @@ func startMixedKonaNode(
 			"KONA_NODE_P2P_SEQUENCER_KEY_PATH="+tempSeqKeyPath,
 			"KONA_NODE_SEQUENCER_L1_CONFS=2",
 			"KONA_NODE_MODE=Sequencer",
+			fmt.Sprintf("KONA_NODE_SEQUENCER_STOPPED=%t", sequencerStopped),
 		)
 	} else {
 		envVars = append(envVars, "KONA_NODE_MODE=Validator")
@@ -635,13 +651,15 @@ func startMixedKonaNode(
 	t.Require().NotEmpty(execPath, "kona-node binary path resolved")
 
 	k := &KonaNode{
-		name:     clKey,
-		chainID:  l2Net.ChainID(),
-		userRPC:  "",
-		execPath: execPath,
-		args:     []string{"node"},
-		env:      envVars,
-		p:        t,
+		name:          clKey,
+		chainID:       l2Net.ChainID(),
+		userRPC:       "",
+		execPath:      execPath,
+		args:          []string{"node"},
+		env:           envVars,
+		p:             t,
+		l1RPCProxy:    l1RPCProxy,
+		l1RPCUpstream: l1RPCUpstream,
 	}
 	t.Logger().Info("Starting kona-node", "name", clKey, "chain", l2Net.ChainID(), "el", elKey)
 	k.Start()
