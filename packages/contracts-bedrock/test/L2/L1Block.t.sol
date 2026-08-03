@@ -205,3 +205,184 @@ contract L1BlockCustomGasToken_Test is L1BlockTest {
         l1Block.setGasPayingToken(address(this), 18, "Test", "TST");
     }
 }
+
+contract L1Block_SetL1BlockValuesIsthmus_Test is L1BlockTest {
+    function testFuzz_setL1BlockValuesIsthmus_succeeds(
+        uint32 baseFeeScalar,
+        uint32 blobBaseFeeScalar,
+        uint64 sequenceNumber,
+        uint64 timestamp,
+        uint64 number,
+        uint256 baseFee,
+        uint256 blobBaseFee,
+        bytes32 hash,
+        bytes32 batcherHash,
+        uint32 operatorFeeScalar,
+        uint64 operatorFeeConstant
+    )
+        external
+    {
+        bytes memory functionCallDataPacked = Encoding.encodeSetL1BlockValuesIsthmus(
+            baseFeeScalar,
+            blobBaseFeeScalar,
+            sequenceNumber,
+            timestamp,
+            number,
+            baseFee,
+            blobBaseFee,
+            hash,
+            batcherHash,
+            operatorFeeScalar,
+            operatorFeeConstant
+        );
+
+        vm.prank(depositor);
+        (bool success,) = address(l1Block).call(functionCallDataPacked);
+        assertTrue(success, "Function call failed");
+
+        assertEq(l1Block.baseFeeScalar(), baseFeeScalar);
+        assertEq(l1Block.blobBaseFeeScalar(), blobBaseFeeScalar);
+        assertEq(l1Block.sequenceNumber(), sequenceNumber);
+        assertEq(l1Block.timestamp(), timestamp);
+        assertEq(l1Block.number(), number);
+        assertEq(l1Block.basefee(), baseFee);
+        assertEq(l1Block.blobBaseFee(), blobBaseFee);
+        assertEq(l1Block.hash(), hash);
+        assertEq(l1Block.batcherHash(), batcherHash);
+        assertEq(l1Block.operatorFeeScalar(), operatorFeeScalar);
+        assertEq(l1Block.operatorFeeConstant(), operatorFeeConstant);
+    }
+
+    function test_setL1BlockValuesIsthmus_isDepositorMax_succeeds() external {
+        bytes memory functionCallDataPacked = Encoding.encodeSetL1BlockValuesIsthmus(
+            type(uint32).max,
+            type(uint32).max,
+            type(uint64).max,
+            type(uint64).max,
+            type(uint64).max,
+            type(uint256).max,
+            type(uint256).max,
+            bytes32(type(uint256).max),
+            bytes32(type(uint256).max),
+            type(uint32).max,
+            type(uint64).max
+        );
+
+        vm.prank(depositor);
+        (bool success,) = address(l1Block).call(functionCallDataPacked);
+        assertTrue(success, "function call failed");
+    }
+
+    function test_setL1BlockValuesIsthmus_notDepositor_reverts() external {
+        bytes memory functionCallDataPacked = Encoding.encodeSetL1BlockValuesIsthmus(
+            type(uint32).max,
+            type(uint32).max,
+            type(uint64).max,
+            type(uint64).max,
+            type(uint64).max,
+            type(uint256).max,
+            type(uint256).max,
+            bytes32(type(uint256).max),
+            bytes32(type(uint256).max),
+            type(uint32).max,
+            type(uint64).max
+        );
+
+        (bool success, bytes memory data) = address(l1Block).call(functionCallDataPacked);
+        assertTrue(!success, "function call should have failed");
+        assertEq(data, hex"3cc50b45");
+    }
+}
+
+contract L1Block_SetL1BlockValuesJovian_Test is L1BlockTest {
+    struct L1BlockValuesJovianParams {
+        uint32 baseFeeScalar;
+        uint32 blobBaseFeeScalar;
+        uint64 sequenceNumber;
+        uint64 timestamp;
+        uint64 number;
+        uint256 baseFee;
+        uint256 blobBaseFee;
+        bytes32 hash;
+        bytes32 batcherHash;
+        uint32 operatorFeeScalar;
+        uint64 operatorFeeConstant;
+        uint16 daFootprintGasScalar;
+    }
+
+    function testFuzz_setL1BlockValuesJovian_succeeds(L1BlockValuesJovianParams memory params) external {
+        bytes memory functionCallDataPacked = Encoding.encodeSetL1BlockValuesJovian(
+            params.baseFeeScalar,
+            params.blobBaseFeeScalar,
+            params.sequenceNumber,
+            params.timestamp,
+            params.number,
+            params.baseFee,
+            params.blobBaseFee,
+            params.hash,
+            params.batcherHash,
+            params.operatorFeeScalar,
+            params.operatorFeeConstant,
+            params.daFootprintGasScalar
+        );
+
+        vm.prank(depositor);
+        (bool success,) = address(l1Block).call(functionCallDataPacked);
+        assertTrue(success, "Function call failed");
+
+        assertEq(l1Block.baseFeeScalar(), params.baseFeeScalar);
+        assertEq(l1Block.blobBaseFeeScalar(), params.blobBaseFeeScalar);
+        assertEq(l1Block.sequenceNumber(), params.sequenceNumber);
+        assertEq(l1Block.timestamp(), params.timestamp);
+        assertEq(l1Block.number(), params.number);
+        assertEq(l1Block.basefee(), params.baseFee);
+        assertEq(l1Block.blobBaseFee(), params.blobBaseFee);
+        assertEq(l1Block.hash(), params.hash);
+        assertEq(l1Block.batcherHash(), params.batcherHash);
+        assertEq(l1Block.operatorFeeScalar(), params.operatorFeeScalar);
+        assertEq(l1Block.operatorFeeConstant(), params.operatorFeeConstant);
+        assertEq(l1Block.daFootprintGasScalar(), params.daFootprintGasScalar);
+    }
+
+    function test_setL1BlockValuesJovian_isDepositorMax_succeeds() external {
+        bytes memory functionCallDataPacked = Encoding.encodeSetL1BlockValuesJovian(
+            type(uint32).max,
+            type(uint32).max,
+            type(uint64).max,
+            type(uint64).max,
+            type(uint64).max,
+            type(uint256).max,
+            type(uint256).max,
+            bytes32(type(uint256).max),
+            bytes32(type(uint256).max),
+            type(uint32).max,
+            type(uint64).max,
+            type(uint16).max
+        );
+
+        vm.prank(depositor);
+        (bool success,) = address(l1Block).call(functionCallDataPacked);
+        assertTrue(success, "function call failed");
+    }
+
+    function test_setL1BlockValuesJovian_notDepositor_reverts() external {
+        bytes memory functionCallDataPacked = Encoding.encodeSetL1BlockValuesJovian(
+            type(uint32).max,
+            type(uint32).max,
+            type(uint64).max,
+            type(uint64).max,
+            type(uint64).max,
+            type(uint256).max,
+            type(uint256).max,
+            bytes32(type(uint256).max),
+            bytes32(type(uint256).max),
+            type(uint32).max,
+            type(uint64).max,
+            type(uint16).max
+        );
+
+        (bool success, bytes memory data) = address(l1Block).call(functionCallDataPacked);
+        assertTrue(!success, "function call should have failed");
+        assertEq(data, hex"3cc50b45");
+    }
+}
