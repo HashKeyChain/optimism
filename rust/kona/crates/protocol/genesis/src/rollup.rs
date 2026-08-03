@@ -5,6 +5,7 @@ use alloy_chains::Chain;
 use alloy_hardforks::{EthereumHardfork, EthereumHardforks, ForkCondition};
 use alloy_op_hardforks::{OpHardfork, OpHardforks};
 use alloy_primitives::Address;
+use hsk_b20_config::{B20Config, B20ConfigError};
 
 /// The max rlp bytes per channel for the Bedrock hardfork.
 pub const MAX_RLP_BYTES_PER_CHANNEL_BEDROCK: u64 = 10_000_000;
@@ -62,6 +63,15 @@ pub struct RollupConfig {
     pub l1_chain_id: u64,
     /// The L2 chain ID
     pub l2_chain_id: Chain,
+    /// First L2 timestamp at which Base Beryl B20 v1 is active.
+    ///
+    /// B20 is a chain-specific execution feature and is deliberately not represented as an
+    /// [`OpHardfork`] or `OpSpecId`.
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
+    pub b20_time: Option<u64>,
+    /// Static administrator installed by the Beryl `ActivationRegistry` precompile.
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
+    pub b20_activation_admin: Option<Address>,
     /// Hardfork timestamps.
     #[cfg_attr(feature = "serde", serde(flatten))]
     pub hardforks: HardForkConfig,
@@ -104,6 +114,15 @@ impl<'a> arbitrary::Arbitrary<'a> for RollupConfig {
             1 => OP_SEPOLIA_BASE_FEE_CONFIG,
             _ => BASE_SEPOLIA_BASE_FEE_CONFIG,
         };
+        let (b20_time, b20_activation_admin) = if bool::arbitrary(u)? {
+            let mut admin = Address::arbitrary(u)?;
+            if admin.is_zero() {
+                admin = Address::repeat_byte(1);
+            }
+            (Some(u.arbitrary()?), Some(admin))
+        } else {
+            (None, None)
+        };
 
         Ok(Self {
             genesis: ChainGenesis::arbitrary(u)?,
@@ -116,6 +135,8 @@ impl<'a> arbitrary::Arbitrary<'a> for RollupConfig {
             fjord_max_sequencer_drift: u.arbitrary()?,
             l1_chain_id: u.arbitrary()?,
             l2_chain_id: u.arbitrary()?,
+            b20_time,
+            b20_activation_admin,
             hardforks: HardForkConfig::arbitrary(u)?,
             batch_inbox_address: Address::arbitrary(u)?,
             deposit_contract_address: Address::arbitrary(u)?,
@@ -143,6 +164,8 @@ impl Default for RollupConfig {
             fjord_max_sequencer_drift: FJORD_MAX_SEQUENCER_DRIFT,
             l1_chain_id: 0,
             l2_chain_id: Chain::from_id(0),
+            b20_time: None,
+            b20_activation_admin: None,
             hardforks: HardForkConfig::default(),
             batch_inbox_address: Address::ZERO,
             deposit_contract_address: Address::ZERO,
@@ -193,6 +216,12 @@ impl RollupConfig {
 }
 
 impl RollupConfig {
+    /// Returns the validated Base Beryl B20 v1 consensus configuration carried by proof boot
+    /// information.
+    pub fn b20_config(&self) -> Result<B20Config, B20ConfigError> {
+        B20Config::new(self.b20_time, self.b20_activation_admin)
+    }
+
     /// Returns true if Regolith is active at the given timestamp.
     pub fn is_regolith_active(&self, timestamp: u64) -> bool {
         self.hardforks.regolith_time.is_some_and(|t| timestamp >= t) ||
@@ -522,6 +551,41 @@ mod tests {
     use alloy_primitives::address;
     #[cfg(feature = "serde")]
     use alloy_primitives::{U256, b256};
+
+    #[cfg(feature = "revm")]
+    #[test]
+    fn b20_config_is_independent_from_op_hardfork_selection() {
+        let admin = Address::repeat_byte(0x11);
+        let config = RollupConfig {
+            b20_time: Some(100),
+            b20_activation_admin: Some(admin),
+            ..Default::default()
+        };
+        let b20 = config.b20_config().unwrap();
+        assert!(!b20.is_active_at(99));
+        assert!(b20.is_active_at(100));
+        assert_eq!(config.spec_id(100), op_revm::OpSpecId::BEDROCK);
+    }
+
+    #[test]
+    fn incomplete_b20_boot_config_is_rejected() {
+        let config = RollupConfig { b20_time: Some(100), ..Default::default() };
+        assert!(config.b20_config().is_err());
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn b20_boot_config_round_trips_in_rollup_json() {
+        let config = RollupConfig {
+            b20_time: Some(100),
+            b20_activation_admin: Some(Address::repeat_byte(0x11)),
+            ..Default::default()
+        };
+        let json = serde_json::to_string(&config).unwrap();
+        assert!(json.contains("\"b20_time\":100"));
+        assert!(json.contains("\"b20_activation_admin\""));
+        assert_eq!(serde_json::from_str::<RollupConfig>(&json).unwrap(), config);
+    }
 
     #[test]
     #[cfg(feature = "arbitrary")]
@@ -978,6 +1042,8 @@ mod tests {
             fjord_max_sequencer_drift: FJORD_MAX_SEQUENCER_DRIFT,
             l1_chain_id: 3151908,
             l2_chain_id: Chain::from_id(1337),
+            b20_time: None,
+            b20_activation_admin: None,
             hardforks: HardForkConfig {
                 regolith_time: Some(0),
                 canyon_time: Some(0),

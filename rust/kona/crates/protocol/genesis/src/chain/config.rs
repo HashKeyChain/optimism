@@ -154,6 +154,8 @@ impl ChainConfig {
             genesis: self.genesis,
             l1_chain_id: self.l1_chain_id,
             l2_chain_id: Chain::from(self.chain_id),
+            b20_time: None,
+            b20_activation_admin: None,
             block_time: self.block_time,
             seq_window_size: self.seq_window_size,
             max_sequencer_drift: self.max_sequencer_drift,

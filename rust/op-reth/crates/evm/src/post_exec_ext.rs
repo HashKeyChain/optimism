@@ -22,7 +22,7 @@ use reth_optimism_primitives::DepositReceipt;
 use reth_primitives_traits::{NodePrimitives, SealedBlock, SealedHeader, SignedTransaction};
 use revm::{context::BlockEnv, database::State};
 
-use crate::{OpBlockExecutorFactory, OpEvmConfig, OpEvmFactory, OpTx, PostExecMode};
+use crate::{B20OpEvmFactory, OpBlockExecutorFactory, OpEvmConfig, OpTx, PostExecMode};
 
 /// Optimism-specific EVM helpers that expose post-exec-aware executors and builders.
 #[allow(clippy::type_complexity)]
@@ -152,7 +152,7 @@ where
 
         Ok(BasicBlockBuilder::<
             'a,
-            OpBlockExecutorFactory<R, Arc<ChainSpec>, OpEvmFactory<OpTx>>,
+            OpBlockExecutorFactory<R, Arc<ChainSpec>, B20OpEvmFactory<OpTx>>,
             _,
             _,
             N,

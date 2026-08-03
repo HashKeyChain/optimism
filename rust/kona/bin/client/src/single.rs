@@ -1,7 +1,10 @@
 //! Single-chain fault proof program entrypoint.
 
 use crate::fpvm_evm::FpvmOpEvmFactory;
-use alloc::sync::Arc;
+use alloc::{
+    string::{String, ToString},
+    sync::Arc,
+};
 use alloy_op_evm::post_exec::PostExecEvmFactoryAdapter;
 use alloy_primitives::B256;
 use core::fmt::Debug;
@@ -34,6 +37,9 @@ pub enum FaultProofProgramError {
     /// An error occurred in the driver.
     #[error(transparent)]
     Driver(#[from] DriverError<ExecutorError>),
+    /// The rollup config contains an incomplete or invalid B20 configuration.
+    #[error("Invalid B20 consensus configuration: {0}")]
+    InvalidB20Config(String),
 }
 
 /// Executes the fault proof program with the given [PreimageOracleClient] and [HintWriterClient].
@@ -52,6 +58,10 @@ where
     let oracle =
         Arc::new(CachingOracle::new(ORACLE_LRU_SIZE, oracle_client.clone(), hint_client.clone()));
     let boot = BootInfo::load(oracle.as_ref()).await?;
+    let b20_config = boot
+        .rollup_config
+        .b20_config()
+        .map_err(|err| FaultProofProgramError::InvalidB20Config(err.to_string()))?;
     let rollup_config = Arc::new(boot.rollup_config.clone());
     let beacon = OracleBlobProvider::new(oracle.clone());
 
@@ -98,8 +108,10 @@ where
 
     let l1_config = boot.l1_config;
 
-    let evm_factory =
-        PostExecEvmFactoryAdapter::new(FpvmOpEvmFactory::new(hint_client, oracle_client));
+    let evm_factory = PostExecEvmFactoryAdapter::new(
+        FpvmOpEvmFactory::new(hint_client, oracle_client)
+            .with_b20_config(rollup_config.l2_chain_id.id(), b20_config),
+    );
     let da_provider =
         EthereumDataSource::new_from_parts(l1_provider.clone(), beacon, &rollup_config);
     let pipeline = OraclePipeline::new(

@@ -56,4 +56,6 @@ serde.workspace = true
 [dev-dependencies]
 reth-optimism-chainspec = { workspace = true, features = ["superchain-configs"] }
 reth-revm = { workspace = true, features = ["test-utils"] }
+alloy-genesis.workspace = true
 alloy-rpc-types-eth.workspace = true
+serde_json.workspace = true

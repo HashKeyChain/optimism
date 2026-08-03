@@ -4,11 +4,14 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -41,6 +44,50 @@ import (
 	"github.com/ethereum-optimism/optimism/op-test-sequencer/sequencer/backend/work/signers/noopsigner"
 	"github.com/ethereum-optimism/optimism/op-test-sequencer/sequencer/seqtypes"
 )
+
+const (
+	b20TimeEnv  = "DEVSTACK_B20_TIME"
+	b20AdminEnv = "DEVSTACK_B20_ACTIVATION_ADMIN"
+)
+
+// injectB20Config adds the HSK B20 consensus fields to a JSON object when the
+// devstack-specific environment variables are configured. The Go OP types do
+// not own these HSK extension fields, so preserving the extension at the JSON
+// boundary keeps upstream deployment and rollup types unchanged.
+func injectB20Config(data []byte, genesis bool) ([]byte, error) {
+	timeValue, timeOK := os.LookupEnv(b20TimeEnv)
+	admin, adminOK := os.LookupEnv(b20AdminEnv)
+	if timeOK != adminOK {
+		return nil, fmt.Errorf("%s and %s must be configured together", b20TimeEnv, b20AdminEnv)
+	}
+	if !timeOK {
+		return data, nil
+	}
+	timestamp, err := strconv.ParseUint(timeValue, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid %s: %w", b20TimeEnv, err)
+	}
+	if !common.IsHexAddress(admin) || common.HexToAddress(admin) == (common.Address{}) {
+		return nil, fmt.Errorf("%s must be a non-zero address", b20AdminEnv)
+	}
+
+	var root map[string]any
+	if err := json.Unmarshal(data, &root); err != nil {
+		return nil, err
+	}
+	if genesis {
+		config, ok := root["config"].(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("genesis config is not a JSON object")
+		}
+		config["b20Time"] = timestamp
+		config["b20ActivationAdmin"] = common.HexToAddress(admin).Hex()
+	} else {
+		root["b20_time"] = timestamp
+		root["b20_activation_admin"] = common.HexToAddress(admin).Hex()
+	}
+	return json.Marshal(root)
+}
 
 type MixedL2ELKind string
 
@@ -344,6 +391,8 @@ func buildMixedOpRethNode(
 
 	data, err := json.Marshal(l2Net.genesis)
 	t.Require().NoError(err, "must json-encode genesis")
+	data, err = injectB20Config(data, true)
+	t.Require().NoError(err, "must inject B20 genesis config")
 	chainConfigPath := filepath.Join(tempDir, "genesis.json")
 	t.Require().NoError(os.WriteFile(chainConfigPath, data, 0o640), "must write genesis file")
 
@@ -520,6 +569,8 @@ func startMixedKonaNode(
 	tempRollupCfgPath := filepath.Join(tempKonaDir, "rollup.json")
 	rollupCfgData, err := json.Marshal(l2Net.rollupCfg)
 	t.Require().NoError(err, "must write rollup config")
+	rollupCfgData, err = injectB20Config(rollupCfgData, false)
+	t.Require().NoError(err, "must inject B20 rollup config")
 	t.Require().NoError(os.WriteFile(tempRollupCfgPath, rollupCfgData, 0o640))
 
 	tempL1CfgPath := filepath.Join(tempKonaDir, "l1-chain-config.json")

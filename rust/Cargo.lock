@@ -558,6 +558,8 @@ dependencies = [
  "alloy-op-hardforks",
  "alloy-primitives",
  "auto_impl",
+ "hsk-b20-config",
+ "hsk-b20-precompiles",
  "op-alloy",
  "op-revm",
  "revm",
@@ -2383,6 +2385,32 @@ dependencies = [
  "sync_wrapper",
  "tower-layer",
  "tower-service",
+ "tracing",
+]
+
+[[package]]
+name = "b20-precompile-macros"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
+name = "b20-precompile-storage"
+version = "0.1.0"
+dependencies = [
+ "alloy-evm",
+ "alloy-primitives",
+ "alloy-sol-types",
+ "b20-precompile-macros",
+ "derive_more 2.1.1",
+ "proptest",
+ "revm",
+ "rstest",
+ "thiserror 2.0.18",
  "tracing",
 ]
 
@@ -5757,6 +5785,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "hsk-b20-config"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives",
+]
+
+[[package]]
+name = "hsk-b20-precompiles"
+version = "0.1.0"
+dependencies = [
+ "alloy-evm",
+ "alloy-primitives",
+ "alloy-sol-types",
+ "b20-precompile-macros",
+ "b20-precompile-storage",
+ "codspeed-criterion-compat",
+ "k256",
+ "revm",
+ "rstest",
+]
+
+[[package]]
 name = "http"
 version = "0.2.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6872,8 +6922,12 @@ dependencies = [
  "alloy-primitives",
  "alloy-rlp",
  "alloy-rpc-types-engine",
+ "alloy-sol-types",
+ "alloy-trie",
  "async-trait",
  "cfg-if",
+ "hsk-b20-config",
+ "hsk-b20-precompiles",
  "kona-derive",
  "kona-driver",
  "kona-executor",
@@ -7062,6 +7116,7 @@ dependencies = [
  "alloy-sol-types",
  "arbitrary",
  "derive_more 2.1.1",
+ "hsk-b20-config",
  "op-revm",
  "rand 0.9.4",
  "serde",
@@ -7649,9 +7704,12 @@ dependencies = [
  "alloy-primitives",
  "alloy-rlp",
  "alloy-sol-types",
+ "alloy-trie",
  "anyhow",
  "async-trait",
  "cfg-if",
+ "hsk-b20-config",
+ "hsk-b20-precompiles",
  "kona-derive",
  "kona-driver",
  "kona-executor",
@@ -13226,6 +13284,7 @@ dependencies = [
  "alloy-op-hardforks",
  "alloy-primitives",
  "derive_more 2.1.1",
+ "hsk-b20-config",
  "miniz_oxide 0.9.1",
  "op-alloy-consensus",
  "op-alloy-rpc-types",
@@ -13397,6 +13456,7 @@ version = "1.11.3"
 dependencies = [
  "alloy-consensus 2.1.1",
  "alloy-eips 2.1.1",
+ "alloy-genesis",
  "alloy-network 2.1.1",
  "alloy-primitives",
  "alloy-rpc-types",
@@ -13524,6 +13584,7 @@ dependencies = [
  "alloy-consensus 2.1.1",
  "alloy-eips 2.1.1",
  "alloy-evm",
+ "alloy-genesis",
  "alloy-primitives",
  "alloy-rlp",
  "alloy-rpc-types-debug",
@@ -13553,6 +13614,7 @@ dependencies = [
  "reth-transaction-pool",
  "revm",
  "serde",
+ "serde_json",
  "sha2 0.10.9",
  "thiserror 2.0.18",
  "tracing",

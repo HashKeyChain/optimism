@@ -19,6 +19,7 @@ alloy-evm.workspace = true
 alloy-op-evm.workspace = true
 op-revm.workspace = true
 revm.workspace = true
+hsk-b20-config.workspace = true
 
 # kona
 kona-preimage = { workspace = true, features = ["serde", "rkyv"] }
@@ -53,6 +54,10 @@ aggregation-test-utils = []
 # trigger Zepter's propagate-feature check and drag the dependencies' `test-utils` (incl. RPC deps
 # via kona-executor) into this crate, which is not wanted for a single tampering helper.
 test-tamper-witness = []
+
+[dev-dependencies]
+hsk-b20-precompiles = { workspace = true, features = ["std"] }
+alloy-trie = { workspace = true, features = ["ethereum"] }
 
 [lints]
 workspace = true

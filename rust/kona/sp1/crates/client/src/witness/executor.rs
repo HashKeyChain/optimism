@@ -106,9 +106,16 @@ pub trait WitnessExecutor {
 
         let boot_clone = boot.clone();
 
+        let b20_config = boot
+            .rollup_config
+            .b20_config()
+            .map_err(|err| anyhow!("invalid B20 config: {err}"))?;
         let rollup_config = Arc::new(boot.rollup_config);
 
-        let evm_factory = PostExecEvmFactoryAdapter::new(ZkvmOpEvmFactory);
+        let evm_factory = PostExecEvmFactoryAdapter::new(
+            ZkvmOpEvmFactory::new()
+                .with_b20_config(rollup_config.l2_chain_id.id(), b20_config),
+        );
         let executor = KonaExecutor::new(
             rollup_config.as_ref(),
             l2_provider.clone(),

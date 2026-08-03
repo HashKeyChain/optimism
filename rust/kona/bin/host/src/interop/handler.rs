@@ -7,7 +7,7 @@ use crate::{
 };
 use alloy_consensus::{Header, Sealed};
 use alloy_eips::{eip2718::Encodable2718, eip4844::FIELD_ELEMENTS_PER_BLOB};
-use alloy_op_evm::OpEvmFactory;
+use alloy_op_evm::B20OpEvmFactory;
 use alloy_primitives::{Address, B256, Bytes, keccak256};
 use alloy_provider::Provider;
 use alloy_rlp::{Decodable, Encodable};
@@ -597,7 +597,11 @@ impl HintHandler for InteropHintHandler {
                             rollup_config.as_ref(),
                             l2_provider.clone(),
                             l2_provider,
-                            OpEvmFactory::<alloy_op_evm::OpTx>::default(),
+                            B20OpEvmFactory::<alloy_op_evm::OpTx>::new(
+                                rollup_config
+                                    .b20_config()
+                                    .map_err(|err| anyhow!("invalid B20 config: {err}"))?,
+                            ),
                             alloy_op_evm::block::OpAlloyReceiptBuilder::default(),
                             None,
                         );

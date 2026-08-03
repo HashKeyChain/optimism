@@ -496,18 +496,20 @@ mod tests {
     use crate::{TransactionCache, tx_cache::CachedExecutionMeta};
     use alloy_consensus::{SignableTransaction, TxEip1559};
     use alloy_eips::eip2718::Encodable2718;
+    use alloy_genesis::Genesis;
     use alloy_network::TxSignerSync;
     use alloy_primitives::{Address, B256, StorageKey, StorageValue, TxKind, U256};
     use alloy_signer_local::PrivateKeySigner;
     use op_alloy_rpc_types_engine::OpFlashblockPayloadBase;
     use op_revm::constants::L1_BLOCK_CONTRACT;
-    use reth_optimism_chainspec::OP_MAINNET;
-    use reth_optimism_evm::OpEvmConfig;
+    use reth_evm::ConfigureEvm;
+    use reth_optimism_chainspec::{OP_MAINNET, OpChainSpecBuilder};
+    use reth_optimism_evm::{B20OpEvmFactory, OpEvmConfig, OpTx};
     use reth_optimism_primitives::{OpPrimitives, OpTransactionSigned};
     use reth_primitives_traits::{AlloyBlockHeader, Recovered, SignerRecoverable};
     use reth_provider::test_utils::{ExtendedAccount, MockEthProvider};
     use reth_storage_api::BlockReaderIdExt;
-    use std::str::FromStr;
+    use std::{str::FromStr, sync::Arc};
 
     fn signed_transfer_tx(
         signer: &PrivateKeySigner,
@@ -551,6 +553,24 @@ mod tests {
         assert!(!is_consistent_speculative_parent_hashes(incoming, pending, sealed));
         assert!(!is_consistent_speculative_parent_hashes(incoming, incoming, sealed));
         assert!(!is_consistent_speculative_parent_hashes(incoming, pending, pending));
+    }
+
+    #[test]
+    fn flashblock_builder_keeps_the_b20_evm_factory() {
+        let mut genesis = Genesis::default();
+        genesis.config.extra_fields.insert("b20Time".to_string(), serde_json::json!(100));
+        genesis.config.extra_fields.insert(
+            "b20ActivationAdmin".to_string(),
+            serde_json::json!("0x1111111111111111111111111111111111111111"),
+        );
+        let chain_spec = Arc::new(OpChainSpecBuilder::optimism_mainnet().genesis(genesis).build());
+        let provider = MockEthProvider::<OpPrimitives>::new()
+            .with_chain_spec(chain_spec.clone())
+            .with_genesis_block();
+        let builder = FlashBlockBuilder::new(OpEvmConfig::optimism(chain_spec), provider);
+
+        let factory: &B20OpEvmFactory<OpTx> = builder.evm_config.evm_factory();
+        assert_eq!(factory.config().activation_time(), Some(100));
     }
 
     #[test]
