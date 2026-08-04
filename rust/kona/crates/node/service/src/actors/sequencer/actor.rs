@@ -281,8 +281,8 @@ where
             }
         };
 
-        if unsafe_head.l1_origin.hash != l1_origin.parent_hash &&
-            unsafe_head.l1_origin.hash != l1_origin.hash
+        if unsafe_head.l1_origin.hash != l1_origin.parent_hash
+            && unsafe_head.l1_origin.hash != l1_origin.hash
         {
             warn!(
                 target: "sequencer",
@@ -348,8 +348,8 @@ where
 
         // If the next L2 block is beyond the sequencer drift threshold, we must produce an empty
         // block.
-        if attributes.payload_attributes.timestamp >
-            l1_origin.timestamp + self.rollup_config.max_sequencer_drift(l1_origin.timestamp)
+        if attributes.payload_attributes.timestamp
+            > l1_origin.timestamp + self.rollup_config.max_sequencer_drift(l1_origin.timestamp)
         {
             return false;
         }
@@ -519,22 +519,22 @@ fn is_seal_task_err_fatal(err: &SealTaskError) -> bool {
         SealTaskError::PayloadInsertionFailed(insert_err) => match &**insert_err {
             InsertTaskError::ForkchoiceUpdateFailed(synchronize_error) => match synchronize_error {
                 SynchronizeTaskError::FinalizedAheadOfUnsafe(_, _) => true,
-                SynchronizeTaskError::ForkchoiceUpdateFailed(_) |
-                SynchronizeTaskError::InvalidForkchoiceState |
-                SynchronizeTaskError::UnexpectedPayloadStatus(_) => false,
+                SynchronizeTaskError::ForkchoiceUpdateFailed(_)
+                | SynchronizeTaskError::InvalidForkchoiceState
+                | SynchronizeTaskError::UnexpectedPayloadStatus(_) => false,
             },
             InsertTaskError::FromBlockError(_) | InsertTaskError::L2BlockInfoConstruction(_) => {
                 true
             }
             InsertTaskError::InsertFailed(_) | InsertTaskError::UnexpectedPayloadStatus(_) => false,
         },
-        SealTaskError::GetPayloadFailed(_) |
-        SealTaskError::HoloceneInvalidFlush |
-        SealTaskError::UnsafeHeadChangedSinceBuild => false,
-        SealTaskError::DepositOnlyPayloadFailed |
-        SealTaskError::DepositOnlyPayloadReattemptFailed |
-        SealTaskError::FromBlock(_) |
-        SealTaskError::MpscSend(_) |
-        SealTaskError::ClockWentBackwards => true,
+        SealTaskError::GetPayloadFailed(_)
+        | SealTaskError::HoloceneInvalidFlush
+        | SealTaskError::UnsafeHeadChangedSinceBuild => false,
+        SealTaskError::DepositOnlyPayloadFailed
+        | SealTaskError::DepositOnlyPayloadReattemptFailed
+        | SealTaskError::FromBlock(_)
+        | SealTaskError::MpscSend(_)
+        | SealTaskError::ClockWentBackwards => true,
     }
 }

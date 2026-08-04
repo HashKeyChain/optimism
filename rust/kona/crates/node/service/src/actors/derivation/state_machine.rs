@@ -71,9 +71,11 @@ fn transition(
         // NB: initial state. Once we transition away from this, we never go back.
         DerivationState::AwaitingELSyncCompletion => match update {
             DerivationStateUpdate::ELSyncCompleted(_) => Ok(DerivationState::Deriving),
-            DerivationStateUpdate::NewAttributesConfirmed(_) |
-            DerivationStateUpdate::SignalProcessed |
-            DerivationStateUpdate::L1DataReceived => Ok(DerivationState::AwaitingELSyncCompletion),
+            DerivationStateUpdate::NewAttributesConfirmed(_)
+            | DerivationStateUpdate::SignalProcessed
+            | DerivationStateUpdate::L1DataReceived => {
+                Ok(DerivationState::AwaitingELSyncCompletion)
+            }
             _ => Err(DerivationStateTransitionError::InvalidTransition {
                 state: *state,
                 update: update.clone(),
@@ -115,8 +117,8 @@ fn transition(
             }),
         },
         DerivationState::AwaitingUpdateAfterSignal => match update {
-            DerivationStateUpdate::L1DataReceived |
-            DerivationStateUpdate::NewAttributesConfirmed(_) => Ok(DerivationState::Deriving),
+            DerivationStateUpdate::L1DataReceived
+            | DerivationStateUpdate::NewAttributesConfirmed(_) => Ok(DerivationState::Deriving),
             DerivationStateUpdate::SignalProcessed => {
                 Ok(DerivationState::AwaitingUpdateAfterSignal)
             }
@@ -194,8 +196,8 @@ impl DerivationStateMachine {
         &mut self,
         state_update: &DerivationStateUpdate,
     ) -> Result<(), DerivationStateTransitionError> {
-        if let DerivationStateUpdate::NewAttributesConfirmed(safe_head) = state_update &&
-            safe_head.block_info.hash == self.confirmed_safe_head.block_info.hash
+        if let DerivationStateUpdate::NewAttributesConfirmed(safe_head) = state_update
+            && safe_head.block_info.hash == self.confirmed_safe_head.block_info.hash
         {
             info!(target: "derivation", ?safe_head, "Re-received safe head. Skipping state transition.");
         }

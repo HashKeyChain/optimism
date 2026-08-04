@@ -161,10 +161,13 @@ where
     ) -> Result<(), EngineError> {
         self.el_sync_complete = true;
 
-        // Reset the engine if the sync state does not already know about a finalized block.
-        if self.engine.state().sync_state.finalized_head() == L2BlockInfo::default() {
-            // If the sync status is finished, we can reset the engine and start derivation.
-            info!(target: "engine", "Performing initial engine reset");
+        // Validators do not have a sequencer actor to initialize forkchoice, so always reset once
+        // EL sync has completed. Sequencers retain the existing behavior and only reset when the
+        // sync state does not already know about a finalized block.
+        if self.unsafe_head_tx.is_none()
+            || self.engine.state().sync_state.finalized_head() == L2BlockInfo::default()
+        {
+            info!(target: "engine", "Performing post-sync engine reset");
             self.reset().await?;
         } else {
             info!(target: "engine", "finalized head is not default, so not resetting");
