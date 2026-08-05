@@ -14,6 +14,14 @@ use op_alloy_rpc_types_engine::OpExecutionPayloadEnvelope;
 use std::sync::Arc;
 use tokio::sync::{mpsc, watch};
 
+/// Returns whether the engine should be reset after EL sync completes.
+///
+/// Validators always reset because they do not have a sequencer actor to initialize forkchoice.
+/// Sequencers preserve the existing behavior and only reset when no finalized head is known.
+fn should_reset_after_el_sync(is_validator: bool, finalized_head: L2BlockInfo) -> bool {
+    is_validator || finalized_head == L2BlockInfo::default()
+}
+
 /// A request handled by the [`EngineActor`].
 #[derive(Debug)]
 pub enum EngineActorRequest {
@@ -164,9 +172,10 @@ where
         // Validators do not have a sequencer actor to initialize forkchoice, so always reset once
         // EL sync has completed. Sequencers retain the existing behavior and only reset when the
         // sync state does not already know about a finalized block.
-        if self.unsafe_head_tx.is_none()
-            || self.engine.state().sync_state.finalized_head() == L2BlockInfo::default()
-        {
+        if should_reset_after_el_sync(
+            self.unsafe_head_tx.is_none(),
+            self.engine.state().sync_state.finalized_head(),
+        ) {
             info!(target: "engine", "Performing post-sync engine reset");
             self.reset().await?;
         } else {
@@ -201,6 +210,47 @@ where
         self.last_safe_head_sent = engine_safe_head;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::should_reset_after_el_sync;
+    use alloy_eips::BlockNumHash;
+    use alloy_primitives::B256;
+    use kona_protocol::{BlockInfo, L2BlockInfo};
+
+    fn non_zero_finalized_head() -> L2BlockInfo {
+        L2BlockInfo {
+            block_info: BlockInfo {
+                number: 1,
+                hash: B256::with_last_byte(1),
+                parent_hash: B256::ZERO,
+                timestamp: 2,
+            },
+            l1_origin: BlockNumHash { number: 1, hash: B256::with_last_byte(2) },
+            seq_num: 0,
+        }
+    }
+
+    #[test]
+    fn validator_resets_without_finalized_head() {
+        assert!(should_reset_after_el_sync(true, L2BlockInfo::default()));
+    }
+
+    #[test]
+    fn validator_resets_with_continuation_finalized_head() {
+        assert!(should_reset_after_el_sync(true, non_zero_finalized_head()));
+    }
+
+    #[test]
+    fn sequencer_resets_without_finalized_head() {
+        assert!(should_reset_after_el_sync(false, L2BlockInfo::default()));
+    }
+
+    #[test]
+    fn sequencer_keeps_existing_forkchoice_with_finalized_head() {
+        assert!(!should_reset_after_el_sync(false, non_zero_finalized_head()));
     }
 }
 
