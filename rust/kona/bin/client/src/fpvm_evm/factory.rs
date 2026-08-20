@@ -7,7 +7,7 @@ use alloy_op_evm::{
     OpEvm, OpEvmContext, OpTx, OpTxError,
     post_exec::{PostExecEvmFactoryHooks, PostExecExecutedTx, PostExecTxContext, WarmingState},
 };
-use hsk_b20_config::B20Config;
+use hsk_b20_config::H20Config;
 use kona_preimage::{HintWriterClient, PreimageOracleClient};
 use op_revm::{L1BlockInfo, OpBuilder, OpHaltReason, OpSpecId, OpTransaction};
 use revm::{
@@ -24,7 +24,7 @@ pub struct FpvmOpEvmFactory<H, O> {
     /// The oracle reader.
     oracle_reader: O,
     /// Per-L2-chain B20 consensus configurations loaded from proof boot information.
-    b20_configs: BTreeMap<u64, B20Config>,
+    h20_configs: BTreeMap<u64, H20Config>,
 }
 
 impl<H, O> FpvmOpEvmFactory<H, O>
@@ -34,23 +34,23 @@ where
 {
     /// Creates a new [`FpvmOpEvmFactory`].
     pub fn new(hint_writer: H, oracle_reader: O) -> Self {
-        Self { hint_writer, oracle_reader, b20_configs: BTreeMap::new() }
+        Self { hint_writer, oracle_reader, h20_configs: BTreeMap::new() }
     }
 
     /// Installs the validated B20 configuration for an L2 chain ID.
-    pub fn with_b20_config(mut self, chain_id: u64, config: B20Config) -> Self {
-        self.b20_configs.insert(chain_id, config);
+    pub fn with_h20_config(mut self, chain_id: u64, config: H20Config) -> Self {
+        self.h20_configs.insert(chain_id, config);
         self
     }
 
     /// Installs all validated B20 configurations used by an interop proof.
-    pub fn with_b20_configs(mut self, configs: impl IntoIterator<Item = (u64, B20Config)>) -> Self {
-        self.b20_configs.extend(configs);
+    pub fn with_h20_configs(mut self, configs: impl IntoIterator<Item = (u64, H20Config)>) -> Self {
+        self.h20_configs.extend(configs);
         self
     }
 
-    fn b20_config(&self, chain_id: u64) -> B20Config {
-        self.b20_configs.get(&chain_id).copied().unwrap_or(B20Config::DISABLED)
+    fn h20_config(&self, chain_id: u64) -> H20Config {
+        self.h20_configs.get(&chain_id).copied().unwrap_or(H20Config::DISABLED)
     }
 
     /// Returns a reference to the inner [`HintWriterClient`].
@@ -141,7 +141,7 @@ where
                     self.hint_writer.clone(),
                     self.oracle_reader.clone(),
                 )
-                .with_b20(self.b20_config(chain_id), timestamp),
+                .with_h20(self.h20_config(chain_id), timestamp),
             );
 
         OpEvm::new(revm_evm, false)
@@ -170,7 +170,7 @@ where
                     self.hint_writer.clone(),
                     self.oracle_reader.clone(),
                 )
-                .with_b20(self.b20_config(chain_id), timestamp),
+                .with_h20(self.h20_config(chain_id), timestamp),
             );
 
         OpEvm::new(revm_evm, true)
@@ -232,7 +232,7 @@ mod tests {
     #[test]
     fn fpvm_and_op_reth_b20_execution_produce_the_same_state_root() {
         let admin = Address::repeat_byte(0x11);
-        let config = B20Config::new(Some(100), Some(admin)).unwrap();
+        let config = H20Config::new(Some(100), Some(admin)).unwrap();
         let chain_id = 133;
         let env = EvmEnv::new(
             CfgEnv::new_with_spec(OpSpecId::JOVIAN).with_chain_id(chain_id),
@@ -268,7 +268,7 @@ mod tests {
             HintWriter::new(hint_chan.client),
             OracleReader::new(preimage_chan.client),
         )
-        .with_b20_config(chain_id, config)
+        .with_h20_config(chain_id, config)
         .create_evm(database(), env);
 
         let dynamic = B20Variant::Asset.compute_address(admin, [0x22; 32].into()).0;
@@ -307,7 +307,7 @@ mod tests {
     #[test]
     fn fpvm_and_op_reth_build_the_same_b20_block_state_and_output_root() {
         let admin = Address::repeat_byte(0x11);
-        let config = B20Config::new(Some(100), Some(admin)).unwrap();
+        let config = H20Config::new(Some(100), Some(admin)).unwrap();
         let rollup = RollupConfig {
             block_time: 2,
             l2_chain_id: 133.into(),
@@ -373,7 +373,7 @@ mod tests {
                     HintWriter::new(hint_chan.client),
                     OracleReader::new(preimage_chan.client),
                 )
-                .with_b20_config(133, config),
+                .with_h20_config(133, config),
             ),
             alloy_op_evm::block::OpAlloyReceiptBuilder::default(),
             NoopTrieDBProvider,

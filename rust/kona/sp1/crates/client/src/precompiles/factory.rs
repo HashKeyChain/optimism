@@ -7,7 +7,7 @@ use alloy_op_evm::{
     OpEvm, OpEvmContext, OpTx, OpTxError,
     post_exec::{PostExecEvmFactoryHooks, PostExecExecutedTx, PostExecTxContext, WarmingState},
 };
-use hsk_b20_config::B20Config;
+use hsk_b20_config::H20Config;
 use op_revm::{L1BlockInfo, OpBuilder, OpHaltReason, OpSpecId, OpTransaction};
 use revm::{
     Context, Inspector, MainContext,
@@ -18,32 +18,32 @@ use revm::{
 /// Factory producing [`OpEvm`]s with FPVM-accelerated precompile overrides enabled.
 #[derive(Debug, Clone, Default)]
 pub struct ZkvmOpEvmFactory {
-    b20_configs: BTreeMap<u64, B20Config>,
+    h20_configs: BTreeMap<u64, H20Config>,
 }
 
 impl ZkvmOpEvmFactory {
     /// Creates a ZKVM factory with B20 disabled unless a chain configuration is installed.
     pub const fn new() -> Self {
-        Self { b20_configs: BTreeMap::new() }
+        Self { h20_configs: BTreeMap::new() }
     }
 
     /// Installs one chain's validated B20 consensus configuration.
-    pub fn with_b20_config(mut self, chain_id: u64, config: B20Config) -> Self {
-        self.b20_configs.insert(chain_id, config);
+    pub fn with_h20_config(mut self, chain_id: u64, config: H20Config) -> Self {
+        self.h20_configs.insert(chain_id, config);
         self
     }
 
     /// Installs all chain configurations used by an interop proof.
-    pub fn with_b20_configs(
+    pub fn with_h20_configs(
         mut self,
-        configs: impl IntoIterator<Item = (u64, B20Config)>,
+        configs: impl IntoIterator<Item = (u64, H20Config)>,
     ) -> Self {
-        self.b20_configs.extend(configs);
+        self.h20_configs.extend(configs);
         self
     }
 
-    fn b20_config(&self, chain_id: u64) -> B20Config {
-        self.b20_configs.get(&chain_id).copied().unwrap_or(B20Config::DISABLED)
+    fn h20_config(&self, chain_id: u64) -> H20Config {
+        self.h20_configs.get(&chain_id).copied().unwrap_or(H20Config::DISABLED)
     }
 }
 
@@ -111,7 +111,7 @@ impl EvmFactory for ZkvmOpEvmFactory {
             .build_op_with_inspector(NoOpInspector {})
             .with_precompiles(
                 OpZkvmPrecompiles::new_with_spec(spec_id)
-                    .with_b20(self.b20_config(chain_id), timestamp),
+                    .with_h20(self.h20_config(chain_id), timestamp),
             );
 
         OpEvm::new(revm_evm, false)
@@ -136,7 +136,7 @@ impl EvmFactory for ZkvmOpEvmFactory {
             .build_op_with_inspector(inspector)
             .with_precompiles(
                 OpZkvmPrecompiles::new_with_spec(spec_id)
-                    .with_b20(self.b20_config(chain_id), timestamp),
+                    .with_h20(self.h20_config(chain_id), timestamp),
             );
 
         OpEvm::new(revm_evm, true)
@@ -187,7 +187,7 @@ mod tests {
     #[test]
     fn zkvm_and_op_reth_b20_execution_produce_the_same_state_root() {
         let admin = Address::repeat_byte(0x11);
-        let config = B20Config::new(Some(100), Some(admin)).unwrap();
+        let config = H20Config::new(Some(100), Some(admin)).unwrap();
         let chain_id = 133;
         let env = EvmEnv::new(
             CfgEnv::new_with_spec(OpSpecId::JOVIAN).with_chain_id(chain_id),
@@ -230,7 +230,7 @@ mod tests {
             op_reth.transact_raw(tx.clone()).expect("op-reth B20 activation succeeds");
 
         let mut zkvm = ZkvmOpEvmFactory::new()
-            .with_b20_config(chain_id, config)
+            .with_h20_config(chain_id, config)
             .create_evm(database(), env);
 
         let dynamic = B20Variant::Asset.compute_address(admin, [0x22; 32].into()).0;

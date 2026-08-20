@@ -3,7 +3,7 @@
 use alloy_evm::{Database, EvmEnv, EvmFactory, IntoTxEnv, precompiles::PrecompilesMap};
 use alloy_primitives::{Address, map::AddressSet};
 use core::{fmt::Debug, marker::PhantomData};
-use hsk_b20_config::B20Config;
+use hsk_b20_config::H20Config;
 use hsk_b20_precompiles::{
     ActivationRegistry, B20Factory, B20Spec, BerylLookup, NoopPrecompileCallObserver,
     PolicyRegistryPrecompile,
@@ -32,7 +32,7 @@ pub struct B20OpPrecompiles {
     /// Installed OP and optional B20 precompile map.
     installed: PrecompilesMap,
     /// Static consensus configuration.
-    config: B20Config,
+    config: H20Config,
     /// Timestamp used to select B20 activation for this EVM.
     timestamp: u64,
     /// Statically installed precompile addresses to warm at transaction start.
@@ -41,7 +41,7 @@ pub struct B20OpPrecompiles {
 
 impl B20OpPrecompiles {
     /// Creates an OP provider and installs B20 when active at `timestamp`.
-    pub fn new(spec: OpSpecId, config: B20Config, timestamp: u64) -> Self {
+    pub fn new(spec: OpSpecId, config: H20Config, timestamp: u64) -> Self {
         let op = OpPrecompiles::new_with_spec(spec);
         let installed = Self::install(op.precompiles(), config, timestamp);
         let warm_addresses = installed.addresses().copied().collect();
@@ -50,7 +50,7 @@ impl B20OpPrecompiles {
 
     fn install(
         op_precompiles: &'static revm::precompile::Precompiles,
-        config: B20Config,
+        config: H20Config,
         timestamp: u64,
     ) -> PrecompilesMap {
         let mut installed = PrecompilesMap::from_static(op_precompiles);
@@ -73,7 +73,7 @@ impl B20OpPrecompiles {
     }
 
     /// Returns the B20 consensus configuration.
-    pub const fn config(&self) -> B20Config {
+    pub const fn config(&self) -> H20Config {
         self.config
     }
 
@@ -88,7 +88,7 @@ impl B20OpPrecompiles {
     }
 
     /// Builds the canonical OP+B20 precompile map for an EVM environment.
-    pub fn build(spec: OpSpecId, config: B20Config, timestamp: u64) -> PrecompilesMap {
+    pub fn build(spec: OpSpecId, config: H20Config, timestamp: u64) -> PrecompilesMap {
         Self::new(spec, config, timestamp).into_map()
     }
 }
@@ -140,25 +140,25 @@ where
 /// EVM factory that selects B20 precompiles from the block timestamp.
 #[derive(Debug, Clone, Copy)]
 pub struct B20OpEvmFactory<Tx = OpTx> {
-    config: B20Config,
+    config: H20Config,
     _tx: PhantomData<Tx>,
 }
 
 impl<Tx> B20OpEvmFactory<Tx> {
     /// Creates a B20-aware OP EVM factory.
-    pub const fn new(config: B20Config) -> Self {
+    pub const fn new(config: H20Config) -> Self {
         Self { config, _tx: PhantomData }
     }
 
     /// Returns the B20 consensus configuration.
-    pub const fn config(&self) -> B20Config {
+    pub const fn config(&self) -> H20Config {
         self.config
     }
 }
 
 impl<Tx> Default for B20OpEvmFactory<Tx> {
     fn default() -> Self {
-        Self::new(B20Config::DISABLED)
+        Self::new(H20Config::DISABLED)
     }
 }
 
@@ -273,13 +273,13 @@ mod tests {
         inspector::NoOpInspector,
     };
 
-    use super::{B20Config, B20OpEvmFactory, B20OpPrecompiles};
+    use super::{H20Config, B20OpEvmFactory, B20OpPrecompiles};
     use crate::{OpEvmContext, OpTx};
 
     const ADMIN: Address = Address::new([0x11; 20]);
 
-    fn config() -> B20Config {
-        B20Config::new(Some(100), Some(ADMIN)).unwrap()
+    fn config() -> H20Config {
+        H20Config::new(Some(100), Some(ADMIN)).unwrap()
     }
 
     #[test]

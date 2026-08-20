@@ -5,14 +5,14 @@ use alloy_primitives::Address;
 
 /// Consensus configuration for Base Beryl B20 v1.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub struct B20Config {
+pub struct H20Config {
     /// First L2 block timestamp at which B20 is active.
     activation_time: Option<u64>,
     /// Static Beryl `ActivationRegistry` administrator.
     activation_admin: Option<Address>,
 }
 
-impl B20Config {
+impl H20Config {
     /// Disabled B20 configuration.
     pub const DISABLED: Self = Self { activation_time: None, activation_admin: None };
 
@@ -20,20 +20,20 @@ impl B20Config {
     pub fn new(
         activation_time: Option<u64>,
         activation_admin: Option<Address>,
-    ) -> Result<Self, B20ConfigError> {
+    ) -> Result<Self, H20ConfigError> {
         match (activation_time, activation_admin) {
             (None, None) => Ok(Self::DISABLED),
             (Some(activation_time), Some(activation_admin)) => {
                 if activation_admin.is_zero() {
-                    return Err(B20ConfigError::ZeroAdmin);
+                    return Err(H20ConfigError::ZeroAdmin);
                 }
                 Ok(Self {
                     activation_time: Some(activation_time),
                     activation_admin: Some(activation_admin),
                 })
             }
-            (Some(_), None) => Err(B20ConfigError::MissingAdmin),
-            (None, Some(_)) => Err(B20ConfigError::MissingActivationTime),
+            (Some(_), None) => Err(H20ConfigError::MissingAdmin),
+            (None, Some(_)) => Err(H20ConfigError::MissingActivationTime),
         }
     }
 
@@ -63,7 +63,7 @@ impl B20Config {
 
 /// Invalid B20 consensus configuration.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum B20ConfigError {
+pub enum H20ConfigError {
     /// An activation timestamp was configured without an administrator.
     MissingAdmin,
     /// An administrator was configured without an activation timestamp.
@@ -72,7 +72,7 @@ pub enum B20ConfigError {
     ZeroAdmin,
 }
 
-impl core::fmt::Display for B20ConfigError {
+impl core::fmt::Display for H20ConfigError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.write_str(match self {
             Self::MissingAdmin => "h20Time requires h20ActivationAdmin",
@@ -83,22 +83,22 @@ impl core::fmt::Display for B20ConfigError {
 }
 
 #[cfg(feature = "std")]
-impl std::error::Error for B20ConfigError {}
+impl std::error::Error for H20ConfigError {}
 
 #[cfg(test)]
 mod tests {
     use alloy_primitives::Address;
 
-    use super::{B20Config, B20ConfigError};
+    use super::{H20Config, H20ConfigError};
 
     #[test]
     fn disabled_configuration_is_never_active() {
-        assert!(!B20Config::DISABLED.is_active_at(u64::MAX));
+        assert!(!H20Config::DISABLED.is_active_at(u64::MAX));
     }
 
     #[test]
     fn activation_is_inclusive() {
-        let config = B20Config::new(Some(100), Some(Address::repeat_byte(0x11))).unwrap();
+        let config = H20Config::new(Some(100), Some(Address::repeat_byte(0x11))).unwrap();
         assert!(!config.is_active_at(99));
         assert!(config.is_active_at(100));
         assert!(config.is_active_at(101));
@@ -106,11 +106,11 @@ mod tests {
 
     #[test]
     fn incomplete_or_zero_admin_configuration_is_rejected() {
-        assert_eq!(B20Config::new(Some(1), None), Err(B20ConfigError::MissingAdmin));
+        assert_eq!(H20Config::new(Some(1), None), Err(H20ConfigError::MissingAdmin));
         assert_eq!(
-            B20Config::new(None, Some(Address::repeat_byte(0x11))),
-            Err(B20ConfigError::MissingActivationTime)
+            H20Config::new(None, Some(Address::repeat_byte(0x11))),
+            Err(H20ConfigError::MissingActivationTime)
         );
-        assert_eq!(B20Config::new(Some(1), Some(Address::ZERO)), Err(B20ConfigError::ZeroAdmin));
+        assert_eq!(H20Config::new(Some(1), Some(Address::ZERO)), Err(H20ConfigError::ZeroAdmin));
     }
 }

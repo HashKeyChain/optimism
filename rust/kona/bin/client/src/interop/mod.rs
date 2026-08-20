@@ -57,7 +57,7 @@ pub enum FaultProofProgramError {
     MissingRollupConfig(u64),
     /// A rollup config contains an incomplete or invalid B20 configuration.
     #[error("Invalid B20 consensus configuration for chain {chain_id}: {reason}")]
-    InvalidB20Config {
+    InvalidH20Config {
         /// L2 chain whose rollup config is invalid.
         chain_id: u64,
         /// Validation failure returned by the shared B20 configuration type.
@@ -90,12 +90,12 @@ where
         }
     };
 
-    let b20_configs = boot
+    let h20_configs = boot
         .rollup_configs
         .iter()
         .map(|(chain_id, config)| {
-            config.b20_config().map(|b20| (*chain_id, b20)).map_err(|err| {
-                FaultProofProgramError::InvalidB20Config {
+            config.h20_config().map(|b20| (*chain_id, b20)).map_err(|err| {
+                FaultProofProgramError::InvalidH20Config {
                     chain_id: *chain_id,
                     reason: err.to_string(),
                 }
@@ -103,7 +103,7 @@ where
         })
         .collect::<Result<Vec<_>, _>>()?;
     let evm_factory = PostExecEvmFactoryAdapter::new(
-        FpvmOpEvmFactory::new(hint_client, oracle_client).with_b20_configs(b20_configs),
+        FpvmOpEvmFactory::new(hint_client, oracle_client).with_h20_configs(h20_configs),
     );
 
     // Load in the agreed pre-state from the preimage oracle in order to determine the active

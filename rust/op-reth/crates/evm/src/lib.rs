@@ -29,7 +29,7 @@ use op_alloy_consensus::{
 use op_revm::OpSpecId;
 use reth_chainspec::EthChainSpec;
 use reth_evm::{ConfigureEvm, EvmEnv, eth::NextEvmEnvAttributes};
-use reth_optimism_chainspec::{B20ChainSpec, OpChainSpec};
+use reth_optimism_chainspec::{H20ChainSpec, OpChainSpec};
 use reth_optimism_forks::OpHardforks;
 use reth_optimism_primitives::{DepositReceipt, OpPrimitives};
 use reth_primitives_traits::{NodePrimitives, SealedBlock, SealedHeader, SignedTransaction};
@@ -106,7 +106,7 @@ impl<ChainSpec, N: NodePrimitives, R: Clone, EvmFactory: Clone> Clone
     }
 }
 
-impl<ChainSpec: EthChainSpec<Header = Header> + OpHardforks + B20ChainSpec> OpEvmConfig<ChainSpec> {
+impl<ChainSpec: EthChainSpec<Header = Header> + OpHardforks + H20ChainSpec> OpEvmConfig<ChainSpec> {
     /// Creates a new [`OpEvmConfig`] with the given chain spec for OP chains.
     pub fn optimism(chain_spec: Arc<ChainSpec>) -> Self {
         Self::new(chain_spec, OpRethReceiptBuilder::default())
@@ -128,16 +128,16 @@ impl<ChainSpec, N: NodePrimitives, R, EvmFactory> OpEvmConfig<ChainSpec, N, R, E
     }
 }
 
-impl<ChainSpec: EthChainSpec<Header = Header> + OpHardforks + B20ChainSpec, N: NodePrimitives, R>
+impl<ChainSpec: EthChainSpec<Header = Header> + OpHardforks + H20ChainSpec, N: NodePrimitives, R>
     OpEvmConfig<ChainSpec, N, R>
 {
     /// Creates a new [`OpEvmConfig`] with the given chain spec.
     pub fn new(chain_spec: Arc<ChainSpec>, receipt_builder: R) -> Self {
-        let b20_config = chain_spec.b20_config();
+        let h20_config = chain_spec.h20_config();
         Self::new_with_evm_factory(
             chain_spec,
             receipt_builder,
-            B20OpEvmFactory::<OpTx>::new(b20_config),
+            B20OpEvmFactory::<OpTx>::new(h20_config),
         )
     }
 }

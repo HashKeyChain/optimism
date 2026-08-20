@@ -4,7 +4,7 @@ use alloc::{format, string::String};
 use alloy_evm::{Database, precompiles::PrecompilesMap};
 use alloy_op_evm::{B20OpPrecompiles, OpEvmContext};
 use alloy_primitives::Address;
-use hsk_b20_config::B20Config;
+use hsk_b20_config::H20Config;
 use op_revm::{OpSpecId, precompiles::OpPrecompiles};
 #[cfg(target_os = "zkvm")]
 use revm::precompile::PrecompileId;
@@ -84,7 +84,7 @@ pub struct OpZkvmPrecompiles {
     /// Optional OP+B20 map for the executing block timestamp.
     b20_precompiles: Option<PrecompilesMap>,
     /// B20 configuration retained across `set_spec` calls.
-    b20_config: B20Config,
+    h20_config: H20Config,
     /// Executing block timestamp retained across `set_spec` calls.
     timestamp: u64,
     /// Static precompile addresses warmed at transaction start.
@@ -102,15 +102,15 @@ impl OpZkvmPrecompiles {
             inner: EthPrecompiles { precompiles, spec: spec.into_eth_spec() },
             spec,
             b20_precompiles: None,
-            b20_config: B20Config::DISABLED,
+            h20_config: H20Config::DISABLED,
             timestamp: 0,
             warm_addresses,
         }
     }
 
     /// Adds Base Beryl B20 v1 while retaining ZKVM acceleration for canonical precompiles.
-    pub fn with_b20(mut self, config: B20Config, timestamp: u64) -> Self {
-        self.b20_config = config;
+    pub fn with_h20(mut self, config: H20Config, timestamp: u64) -> Self {
+        self.h20_config = config;
         self.timestamp = timestamp;
         if config.is_active_at(timestamp) {
             let installed = B20OpPrecompiles::build(self.spec, config, timestamp);
@@ -132,7 +132,7 @@ where
         if spec == self.spec {
             return false;
         }
-        *self = Self::new_with_spec(spec).with_b20(self.b20_config, self.timestamp);
+        *self = Self::new_with_spec(spec).with_h20(self.h20_config, self.timestamp);
         true
     }
 

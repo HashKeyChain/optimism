@@ -58,9 +58,9 @@ where
     let oracle =
         Arc::new(CachingOracle::new(ORACLE_LRU_SIZE, oracle_client.clone(), hint_client.clone()));
     let boot = BootInfo::load(oracle.as_ref()).await?;
-    let b20_config = boot
+    let h20_config = boot
         .rollup_config
-        .b20_config()
+        .h20_config()
         .map_err(|err| FaultProofProgramError::InvalidB20Config(err.to_string()))?;
     let rollup_config = Arc::new(boot.rollup_config.clone());
     let beacon = OracleBlobProvider::new(oracle.clone());
@@ -110,7 +110,7 @@ where
 
     let evm_factory = PostExecEvmFactoryAdapter::new(
         FpvmOpEvmFactory::new(hint_client, oracle_client)
-            .with_b20_config(rollup_config.l2_chain_id.id(), b20_config),
+            .with_h20_config(rollup_config.l2_chain_id.id(), h20_config),
     );
     let da_provider =
         EthereumDataSource::new_from_parts(l1_provider.clone(), beacon, &rollup_config);

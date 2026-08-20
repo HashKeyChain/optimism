@@ -599,7 +599,7 @@ impl HintHandler for InteropHintHandler {
                             l2_provider,
                             B20OpEvmFactory::<alloy_op_evm::OpTx>::new(
                                 rollup_config
-                                    .b20_config()
+                                    .h20_config()
                                     .map_err(|err| anyhow!("invalid B20 config: {err}"))?,
                             ),
                             alloy_op_evm::block::OpAlloyReceiptBuilder::default(),

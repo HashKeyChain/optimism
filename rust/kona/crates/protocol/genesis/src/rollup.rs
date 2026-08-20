@@ -5,7 +5,7 @@ use alloy_chains::Chain;
 use alloy_hardforks::{EthereumHardfork, EthereumHardforks, ForkCondition};
 use alloy_op_hardforks::{OpHardfork, OpHardforks};
 use alloy_primitives::Address;
-use hsk_b20_config::{B20Config, B20ConfigError};
+use hsk_b20_config::{H20Config, H20ConfigError};
 
 /// The max rlp bytes per channel for the Bedrock hardfork.
 pub const MAX_RLP_BYTES_PER_CHANNEL_BEDROCK: u64 = 10_000_000;
@@ -218,8 +218,8 @@ impl RollupConfig {
 impl RollupConfig {
     /// Returns the validated Base Beryl B20 v1 consensus configuration carried by proof boot
     /// information.
-    pub fn b20_config(&self) -> Result<B20Config, B20ConfigError> {
-        B20Config::new(self.h20_time, self.h20_activation_admin)
+    pub fn h20_config(&self) -> Result<H20Config, H20ConfigError> {
+        H20Config::new(self.h20_time, self.h20_activation_admin)
     }
 
     /// Returns true if Regolith is active at the given timestamp.
@@ -561,7 +561,7 @@ mod tests {
             h20_activation_admin: Some(admin),
             ..Default::default()
         };
-        let b20 = config.b20_config().unwrap();
+        let b20 = config.h20_config().unwrap();
         assert!(!b20.is_active_at(99));
         assert!(b20.is_active_at(100));
         assert_eq!(config.spec_id(100), op_revm::OpSpecId::BEDROCK);
@@ -570,7 +570,7 @@ mod tests {
     #[test]
     fn incomplete_b20_boot_config_is_rejected() {
         let config = RollupConfig { h20_time: Some(100), ..Default::default() };
-        assert!(config.b20_config().is_err());
+        assert!(config.h20_config().is_err());
     }
 
     #[cfg(feature = "serde")]

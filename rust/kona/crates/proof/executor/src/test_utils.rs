@@ -66,7 +66,7 @@ pub fn execute_loaded_fixture(
     let mut executor = StatelessL2Builder::new(
         &rollup_config,
         B20OpEvmFactory::<alloy_op_evm::OpTx>::new(
-            rollup_config.b20_config().expect("fixture B20 config must be valid"),
+            rollup_config.h20_config().expect("fixture B20 config must be valid"),
         ),
         alloy_op_evm::block::OpAlloyReceiptBuilder::default(),
         provider,
@@ -216,7 +216,7 @@ impl ExecutorTestFixtureCreator {
         let mut executor = StatelessL2Builder::new(
             rollup_config,
             B20OpEvmFactory::<alloy_op_evm::OpTx>::new(
-                rollup_config.b20_config().expect("fixture B20 config must be valid"),
+                rollup_config.h20_config().expect("fixture B20 config must be valid"),
             ),
             alloy_op_evm::block::OpAlloyReceiptBuilder::default(),
             self,

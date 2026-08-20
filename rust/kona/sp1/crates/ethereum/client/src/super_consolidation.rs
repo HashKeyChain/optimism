@@ -158,18 +158,18 @@ where
     .await?;
 
     let interop_provider = OracleInteropProvider::new(oracle, boot.clone(), headers);
-    let b20_configs = boot
+    let h20_configs = boot
         .rollup_configs
         .iter()
         .map(|(chain_id, config)| {
             config
-                .b20_config()
+                .h20_config()
                 .map(|b20| (*chain_id, b20))
                 .map_err(|err| anyhow!("invalid B20 config for chain {chain_id}: {err}"))
         })
         .collect::<Result<Vec<_>, _>>()?;
     let evm_factory = PostExecEvmFactoryAdapter::new(
-        ZkvmOpEvmFactory::new().with_b20_configs(b20_configs),
+        ZkvmOpEvmFactory::new().with_h20_configs(h20_configs),
     );
     SuperchainConsolidator::new(&mut boot, interop_provider, l2_providers, evm_factory)
         .consolidate()
