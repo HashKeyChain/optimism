@@ -4,14 +4,14 @@ use h20_precompile_storage::Result;
 
 use crate::{H20_MAX_SUPPLY_CAP, H20Variant};
 
-/// Maximum total supply for all newly-created B-20 tokens.
+/// Maximum total supply for all newly-created H20 tokens.
 const DEFAULT_SUPPLY_CAP: U256 = H20_MAX_SUPPLY_CAP;
 
 /// keccak256(0xef)
 const FACTORY_MARKER_CODE_HASH: B256 =
     b256!("309b8896ee4c1ff7ec1966155373dee42663b6b40c3fedc70ba501684848d2a3");
 
-/// The B-20 token factory precompile.
+/// The H20 token factory precompile.
 #[contract(addr = Self::ADDRESS)]
 pub struct H20FactoryStorage {}
 
@@ -19,17 +19,17 @@ impl<'a> H20FactoryStorage<'a> {
     /// Singleton precompile address for the `H20Factory`.
     pub const ADDRESS: Address = address!("0177FF0000000000000000000000000000000000");
 
-    /// Initial supply cap for newly created default B-20 tokens.
+    /// Initial supply cap for newly created default H20 tokens.
     pub const DEFAULT_SUPPLY_CAP: U256 = DEFAULT_SUPPLY_CAP;
 
-    /// Returns whether `token` has the structural B-20 prefix.
+    /// Returns whether `token` has the structural H20 dynamic-token prefix.
     ///
-    /// This includes reserved or future variant discriminants in the B-20 address range.
+    /// This includes reserved or future variant discriminants in the H20 dynamic address range.
     pub fn is_h20(&self, token: Address) -> Result<bool> {
         Ok(H20Variant::has_h20_prefix(token))
     }
 
-    /// Returns whether `token` is a B-20 address that has been initialized by this factory.
+    /// Returns whether `token` is an H20 address that has been initialized by this factory.
     pub fn is_h20_initialized(&self, token: Address) -> Result<bool> {
         if !H20Variant::has_h20_prefix(token) {
             return Ok(false);
@@ -62,7 +62,7 @@ mod tests {
         let (addr, tail) = H20Variant::Asset.compute_address(creator, salt);
 
         assert_eq!(addr.as_slice()[11..], tail);
-        assert!(H20Variant::is_h20_address(addr));
+        assert!(H20Variant::is_h20_dynamic_address(addr));
         assert_eq!(H20Variant::from_address(addr), Some(H20Variant::Asset));
     }
 
@@ -88,8 +88,8 @@ mod tests {
         assert!(H20Variant::is_supported_discriminant(0));
         assert!(H20Variant::is_supported_discriminant(1));
         assert!(!H20Variant::is_supported_discriminant(2));
-        assert!(H20Variant::is_h20_address(asset));
-        assert!(H20Variant::is_h20_address(stablecoin));
+        assert!(H20Variant::is_h20_dynamic_address(asset));
+        assert!(H20Variant::is_h20_dynamic_address(stablecoin));
         assert_eq!(H20Variant::from_address(asset), Some(H20Variant::Asset));
         assert_eq!(H20Variant::from_address(stablecoin), Some(H20Variant::Stablecoin));
     }

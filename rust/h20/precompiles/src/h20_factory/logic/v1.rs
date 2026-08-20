@@ -1,4 +1,4 @@
-//! Version 1 of the B-20 token factory precompile logic, activated at Beryl.
+//! Version 1 of the H20 token factory precompile logic, activated at Beryl.
 
 use alloc::{string::ToString, vec::Vec};
 
@@ -32,7 +32,7 @@ fn encode_stablecoin_variant_params(currency: &str) -> Bytes {
 /// Initial multiplier storage value. Reads treat zero as WAD precision (1:1).
 const INITIAL_MULTIPLIER: U256 = U256::ZERO;
 
-/// First B-20 token factory logic implementation. Frozen as of its activation at Beryl.
+/// First H20 token factory logic implementation. Frozen as of its activation at Beryl.
 #[derive(Debug, Default, Clone, Copy)]
 pub struct FactoryV1;
 
@@ -239,14 +239,14 @@ pub struct CommonParams {
 /// `initialize()` call, plus the shared control-flow fields in `common`.
 #[derive(Debug)]
 pub enum TokenCreateParams {
-    /// Stablecoin B-20 token creation parameters.
+    /// Stablecoin H20 token creation parameters.
     Stablecoin {
         /// Shared control-flow fields.
         common: CommonParams,
         /// Stablecoin initialization fields.
         init: H20StablecoinInit,
     },
-    /// Asset B-20 token creation parameters.
+    /// Asset H20 token creation parameters.
     Asset {
         /// Shared control-flow fields.
         common: CommonParams,

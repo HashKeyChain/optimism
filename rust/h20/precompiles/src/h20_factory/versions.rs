@@ -1,4 +1,4 @@
-//! Version manager for the B-20 token factory precompile.
+//! Version manager for the H20 token factory precompile.
 //!
 //! This module is the single owner of both version mappings: which version is
 //! active at a given hardfork ([`FactoryVersions::from_spec`]), and which
@@ -11,7 +11,7 @@ use crate::H20Spec;
 
 use crate::{Factory, FactoryV1};
 
-/// An activated version of the B-20 token factory precompile logic.
+/// An activated version of the H20 token factory precompile logic.
 ///
 /// Each variant maps to an immutable implementation via [`Self::implementation`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

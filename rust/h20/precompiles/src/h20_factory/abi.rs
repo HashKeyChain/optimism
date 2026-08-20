@@ -8,9 +8,9 @@ sol! {
         // ── Structs ─────────────────────────────────────────────────────────
 
         enum H20Variant {
-            /// Asset B-20 token variant.
+            /// Asset H20 token variant.
             ASSET,
-            /// Stablecoin B-20 token variant.
+            /// Stablecoin H20 token variant.
             STABLECOIN
         }
 
@@ -77,7 +77,7 @@ sol! {
 
         // ── Functions ────────────────────────────────────────────────────────
 
-        /// Creates a B-20 token of the requested variant at a deterministic address.
+        /// Creates an H20 token of the requested variant at a deterministic address.
         ///
         /// Default tokens start with an unbounded supply cap and the pausable plus mutable-cap
         /// capability bits enabled. Callers configure optional launch state atomically through
@@ -93,7 +93,7 @@ sol! {
         /// Returns the address a `createH20` call would produce.
         function getH20Address(H20Variant variant, address sender, bytes32 salt) external view returns (address);
 
-        /// Returns `true` if `token` has the B-20 address prefix.
+        /// Returns `true` if `token` has the H20 dynamic-token address prefix.
         function isH20(address token) external view returns (bool);
 
         /// Returns `true` if `token` has been initialized by this factory.

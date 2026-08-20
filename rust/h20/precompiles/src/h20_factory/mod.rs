@@ -1,4 +1,4 @@
-//! `H20Factory` native precompile — creates B-20 tokens at deterministic prefix-encoded addresses.
+//! `H20Factory` native precompile — creates H20 tokens at deterministic prefix-encoded addresses.
 
 mod abi;
 pub use abi::IH20Factory;

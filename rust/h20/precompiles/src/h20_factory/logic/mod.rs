@@ -1,4 +1,4 @@
-//! Versioned business logic for the B-20 token factory precompile.
+//! Versioned business logic for the H20 token factory precompile.
 
 mod interface;
 pub use interface::Factory;

@@ -6,7 +6,7 @@ use alloy_primitives::{Address, B256, FixedBytes, U256};
 use h20_precompile_macros::Storable;
 use h20_precompile_storage::Mapping;
 
-/// Core B-20 storage rooted at the `base.h20` ERC-7201 namespace.
+/// Core H20 storage rooted at the `base.b20` ERC-7201 namespace.
 #[derive(Debug, Clone, Storable)]
 #[namespace("base.b20")]
 pub struct H20CoreStorage {

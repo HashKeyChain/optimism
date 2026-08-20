@@ -1,11 +1,11 @@
-//! B-20 token variant address derivation.
+//! H20 token variant address derivation.
 
 use alloy_primitives::{Address, B256, keccak256};
 use alloy_sol_types::SolValue;
 
 use crate::{ActivationFeature, IH20Factory};
 
-/// B-20 token variant encoded in token address byte `[10]`.
+/// H20 token variant encoded in token address byte `[10]`.
 ///
 /// Discriminant values match the `H20Variant` ABI enum ordinals directly
 /// (ASSET=0, STABLECOIN=1), so `uint8(variant)` in Solidity
@@ -13,22 +13,24 @@ use crate::{ActivationFeature, IH20Factory};
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum H20Variant {
-    /// Asset B-20 token.
+    /// Asset H20 token.
     Asset = 0,
-    /// Stablecoin B-20 token.
+    /// Stablecoin H20 token.
     Stablecoin = 1,
 }
 
 impl H20Variant {
     /// Two-byte namespace prefix of every H20 token address.
     pub const PREFIX_BYTES: [u8; 2] = [0x01, 0x77];
+    /// Byte that distinguishes the singleton namespace from dynamic tokens.
+    pub const SINGLETON_DISCRIMINANT: u8 = 0xff;
     /// Number of zero bytes between the namespace and variant.
     pub const ZERO_BYTES: usize = 8;
 
-    /// Variant discriminant for asset B-20 tokens.
+    /// Variant discriminant for asset H20 tokens.
     pub const ASSET_DISCRIMINANT: u8 = Self::Asset as u8;
 
-    /// Variant discriminant for stablecoin B-20 tokens.
+    /// Variant discriminant for stablecoin H20 tokens.
     pub const STABLECOIN_DISCRIMINANT: u8 = Self::Stablecoin as u8;
 
     /// Returns the currently supported creation-parameter version for this variant.
@@ -64,7 +66,7 @@ impl H20Variant {
         Self::from_discriminant(variant).is_some()
     }
 
-    /// Returns the token variant encoded in `address`, if it has a supported B-20 prefix.
+    /// Returns the token variant encoded in `address`, if it has a supported H20 prefix.
     pub fn from_address(address: Address) -> Option<Self> {
         let bytes = address.as_slice();
         if bytes[..2] != Self::PREFIX_BYTES || bytes[2..10] != [0u8; Self::ZERO_BYTES] {
@@ -74,7 +76,7 @@ impl H20Variant {
         Self::from_discriminant(bytes[10])
     }
 
-    /// Returns whether `address` has the structural B-20 token prefix.
+    /// Returns whether `address` has the structural H20 token prefix.
     ///
     /// This intentionally does not validate the encoded variant discriminant.
     pub fn has_h20_prefix(address: Address) -> bool {
@@ -82,6 +84,11 @@ impl H20Variant {
         bytes[..2] == Self::PREFIX_BYTES && bytes[2..10] == [0u8; Self::ZERO_BYTES]
     }
 
+    /// Returns whether `address` belongs to the reserved H20 singleton namespace.
+    pub fn is_h20_singleton_address(address: Address) -> bool {
+        let bytes = address.as_slice();
+        bytes[..2] == Self::PREFIX_BYTES && bytes[2] == Self::SINGLETON_DISCRIMINANT
+    }
 
     /// Returns this variant's ABI discriminant.
     pub const fn discriminant(self) -> u8 {
@@ -113,7 +120,7 @@ impl H20Variant {
         }
     }
 
-    /// Returns the stable metric label for this B-20 variant.
+    /// Returns the stable metric label for this H20 variant.
     pub const fn as_label(self) -> &'static str {
         match self {
             Self::Asset => "asset",
@@ -121,7 +128,7 @@ impl H20Variant {
         }
     }
 
-    /// Builds this variant's B-20 address prefix.
+    /// Builds this variant's H20 address prefix.
     pub const fn address_prefix(self) -> [u8; 11] {
         [Self::PREFIX_BYTES[0], Self::PREFIX_BYTES[1], 0, 0, 0, 0, 0, 0, 0, 0, self.discriminant()]
     }
@@ -149,7 +156,7 @@ impl H20Variant {
         (Address::from(addr_bytes), tail)
     }
 
-    /// Computes a deterministic B-20 token address for an ABI discriminant.
+    /// Computes a deterministic H20 token address for an ABI discriminant.
     pub fn compute_address_for_discriminant(
         creator: Address,
         variant: u8,
@@ -168,8 +175,8 @@ impl H20Variant {
         (Address::from(addr_bytes), tail)
     }
 
-    /// Returns `true` when `address` has a supported B-20 token variant prefix.
-    pub fn is_h20_address(address: Address) -> bool {
+    /// Returns `true` when `address` has a supported H20 token variant prefix.
+    pub fn is_h20_dynamic_address(address: Address) -> bool {
         Self::from_address(address).is_some()
     }
 
@@ -222,7 +229,7 @@ mod tests {
 
         assert!(H20Variant::has_h20_prefix(address));
         assert_eq!(H20Variant::from_address(address), None);
-        assert!(!H20Variant::is_h20_address(address));
+        assert!(!H20Variant::is_h20_dynamic_address(address));
     }
 
     #[test]
@@ -238,7 +245,12 @@ mod tests {
         assert_eq!(H20Variant::from_address(legacy_h20), None);
         for singleton in singletons {
             assert!(!H20Variant::has_h20_prefix(singleton));
+            assert!(H20Variant::is_h20_singleton_address(singleton));
+            assert!(!H20Variant::is_h20_dynamic_address(singleton));
             assert_eq!(H20Variant::from_address(singleton), None);
         }
+        assert!(!H20Variant::is_h20_singleton_address(address!(
+            "0177FE0000000000000000000000000000000000"
+        )));
     }
 }
