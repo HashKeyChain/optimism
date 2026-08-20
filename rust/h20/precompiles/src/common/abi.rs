@@ -137,7 +137,7 @@ sol! {
 }
 
 impl IH20::IH20Calls {
-    /// Returns the stable label for this decoded B-20 call.
+    /// Returns the stable label for this decoded H20 call.
     pub const fn as_label(&self) -> &'static str {
         match self {
             Self::name(_) => "precompile-h20-name",

@@ -115,9 +115,43 @@ impl IH20Factory::IH20FactoryCalls {
 
 #[cfg(test)]
 mod tests {
-    use alloy_primitives::{Address, B256};
+    use alloy_primitives::{Address, B256, keccak256};
+    use alloy_sol_types::{SolCall, SolError, SolEvent};
 
     use crate::IH20Factory;
+
+    #[test]
+    fn h20_factory_abi_selectors_and_topics_are_frozen() {
+        fn selector(signature: &str) -> [u8; 4] {
+            keccak256(signature.as_bytes())[..4].try_into().unwrap()
+        }
+
+        assert_eq!(
+            IH20Factory::createH20Call::SELECTOR,
+            selector("createH20(uint8,bytes32,bytes,bytes[])")
+        );
+        assert_eq!(
+            IH20Factory::getH20AddressCall::SELECTOR,
+            selector("getH20Address(uint8,address,bytes32)")
+        );
+        assert_eq!(IH20Factory::isH20Call::SELECTOR, selector("isH20(address)"));
+        assert_eq!(
+            IH20Factory::isH20InitializedCall::SELECTOR,
+            selector("isH20Initialized(address)")
+        );
+        assert_ne!(
+            IH20Factory::createH20Call::SELECTOR,
+            selector("createB20(uint8,bytes32,bytes,bytes[])")
+        );
+        assert_eq!(
+            IH20Factory::H20Created::SIGNATURE_HASH,
+            keccak256("H20Created(address,uint8,string,string,uint8,bytes)")
+        );
+        assert_eq!(
+            IH20Factory::TokenAlreadyExists::SELECTOR,
+            selector("TokenAlreadyExists(address)")
+        );
+    }
 
     #[test]
     fn factory_call_labels_are_stable() {
