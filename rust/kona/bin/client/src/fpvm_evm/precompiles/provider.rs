@@ -401,9 +401,9 @@ mod test {
     #[test]
     fn b20_lookup_is_timestamp_gated_and_dynamic_addresses_are_not_warmed() {
         const FACTORY: Address =
-            alloy_primitives::address!("B20F000000000000000000000000000000000000");
+            alloy_primitives::address!("0177FF0000000000000000000000000000000000");
         const DYNAMIC: Address =
-            alloy_primitives::address!("B200000000000000000000000000000000000000");
+            alloy_primitives::address!("0177000000000000000000000000000000000000");
         let config = B20Config::new(Some(100), Some(Address::repeat_byte(0x11))).unwrap();
         let provider = |timestamp| {
             let (hint_chan, preimage_chan) = (

@@ -491,7 +491,7 @@ mod tests {
 
     #[test]
     fn all_node_execution_entrypoints_share_the_b20_factory() {
-        const FACTORY: Address = address!("B20F000000000000000000000000000000000000");
+        const FACTORY: Address = address!("0177FF0000000000000000000000000000000000");
 
         let config = OpEvmConfig::optimism(b20_at_timestamp_chain_spec(100));
         let _: &B20OpEvmFactory<OpTx> = config.evm_factory();
@@ -544,7 +544,7 @@ mod tests {
 
     #[test]
     fn rpc_simulation_and_trace_produce_identical_b20_results() {
-        const FACTORY: Address = address!("B20F000000000000000000000000000000000000");
+        const FACTORY: Address = address!("0177FF0000000000000000000000000000000000");
         let config = OpEvmConfig::optimism(b20_at_timestamp_chain_spec(100));
         let header = Header { timestamp: 100, gas_limit: 30_000_000, ..Default::default() };
         let evm_env = config.evm_env(&header).unwrap();
@@ -553,7 +553,7 @@ mod tests {
         calldata.extend_from_slice(&keccak256("isB20(address)")[..4]);
         calldata.extend_from_slice(&[0u8; 12]);
         calldata
-            .extend_from_slice(&address!("B200000000000000000000000000000000000000").into_array());
+            .extend_from_slice(&address!("0177000000000000000000000000000000000000").into_array());
 
         let transaction = || {
             OpTx(

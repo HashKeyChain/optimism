@@ -77,7 +77,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use alloy_primitives::Address;
+    use alloy_primitives::{Address, address};
 
     use crate::{B20Variant, BerylLookup};
 
@@ -89,5 +89,24 @@ mod tests {
         }
 
         assert!(BerylLookup::lookup(&Address::repeat_byte(0x22)).is_none());
+    }
+
+    #[test]
+    fn lookup_rejects_h20_singletons_legacy_b20_and_unknown_variants() {
+        let singletons = [
+            address!("0177FF0000000000000000000000000000000000"),
+            address!("0177FF0000000000000000000000000000000001"),
+            address!("0177FF0000000000000000000000000000000002"),
+        ];
+        for singleton in singletons {
+            assert!(BerylLookup::lookup(&singleton).is_none());
+        }
+
+        let legacy_b20 = address!("B200000000000000000000000000000000000000");
+        assert!(BerylLookup::lookup(&legacy_b20).is_none());
+
+        let unknown_variant =
+            B20Variant::compute_address_for_discriminant(Address::ZERO, 0x02, [0u8; 32].into()).0;
+        assert!(BerylLookup::lookup(&unknown_variant).is_none());
     }
 }

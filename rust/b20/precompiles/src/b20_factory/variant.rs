@@ -20,8 +20,10 @@ pub enum B20Variant {
 }
 
 impl B20Variant {
-    /// First byte of every B-20 address.
-    pub const PREFIX_BYTE: u8 = 0xb2;
+    /// Two-byte namespace prefix of every H20 token address.
+    pub const PREFIX_BYTES: [u8; 2] = [0x01, 0x77];
+    /// Number of zero bytes between the namespace and variant.
+    pub const ZERO_BYTES: usize = 8;
 
     /// Variant discriminant for asset B-20 tokens.
     pub const ASSET_DISCRIMINANT: u8 = Self::Asset as u8;
@@ -65,7 +67,7 @@ impl B20Variant {
     /// Returns the token variant encoded in `address`, if it has a supported B-20 prefix.
     pub fn from_address(address: Address) -> Option<Self> {
         let bytes = address.as_slice();
-        if bytes[0] != Self::PREFIX_BYTE || bytes[1..10] != [0u8; 9] {
+        if bytes[..2] != Self::PREFIX_BYTES || bytes[2..10] != [0u8; Self::ZERO_BYTES] {
             return None;
         }
 
@@ -75,9 +77,15 @@ impl B20Variant {
     /// Returns whether `address` has the structural B-20 token prefix.
     ///
     /// This intentionally does not validate the encoded variant discriminant.
-    pub fn has_b20_prefix(address: Address) -> bool {
+    pub fn has_h20_prefix(address: Address) -> bool {
         let bytes = address.as_slice();
-        bytes[0] == Self::PREFIX_BYTE && bytes[1..10] == [0u8; 9]
+        bytes[..2] == Self::PREFIX_BYTES && bytes[2..10] == [0u8; Self::ZERO_BYTES]
+    }
+
+    /// Compatibility alias for callers that still use the B20 terminology.
+    #[deprecated(note = "use has_h20_prefix")]
+    pub fn has_b20_prefix(address: Address) -> bool {
+        Self::has_h20_prefix(address)
     }
 
     /// Returns this variant's ABI discriminant.
@@ -120,7 +128,7 @@ impl B20Variant {
 
     /// Builds this variant's B-20 address prefix.
     pub const fn address_prefix(self) -> [u8; 11] {
-        [Self::PREFIX_BYTE, 0, 0, 0, 0, 0, 0, 0, 0, 0, self.discriminant()]
+        [Self::PREFIX_BYTES[0], Self::PREFIX_BYTES[1], 0, 0, 0, 0, 0, 0, 0, 0, self.discriminant()]
     }
 
     /// Computes this variant's deterministic token address for `creator` and `salt`.
@@ -158,7 +166,7 @@ impl B20Variant {
         tail.copy_from_slice(&hash[..9]);
 
         let mut addr_bytes = [0u8; 20];
-        addr_bytes[0] = Self::PREFIX_BYTE;
+        addr_bytes[..2].copy_from_slice(&Self::PREFIX_BYTES);
         addr_bytes[10] = variant;
         addr_bytes[11..].copy_from_slice(&tail);
 
@@ -174,5 +182,68 @@ impl B20Variant {
     pub fn variant_of(address: Address) -> Option<u8> {
         Self::from_address(address)?;
         Some(address.as_slice()[10])
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use alloy_primitives::{Address, B256, address};
+
+    use super::B20Variant;
+
+    const CREATOR: Address = address!("1111111111111111111111111111111111111111");
+    const SALT: B256 = B256::repeat_byte(0x22);
+
+    #[test]
+    fn computed_addresses_use_the_h20_byte_layout() {
+        for (variant, discriminant) in [
+            (B20Variant::Asset, B20Variant::ASSET_DISCRIMINANT),
+            (B20Variant::Stablecoin, B20Variant::STABLECOIN_DISCRIMINANT),
+        ] {
+            let (address, tail) = variant.compute_address(CREATOR, SALT);
+            let bytes = address.as_slice();
+
+            assert_eq!(&bytes[..2], &B20Variant::PREFIX_BYTES);
+            assert_eq!(&bytes[2..10], &[0u8; B20Variant::ZERO_BYTES]);
+            assert_eq!(bytes[10], discriminant);
+            assert_eq!(&bytes[11..], &tail);
+            assert_eq!(B20Variant::from_address(address), Some(variant));
+        }
+    }
+
+    #[test]
+    fn discriminant_address_computation_uses_the_same_h20_layout() {
+        for variant in [B20Variant::Asset, B20Variant::Stablecoin] {
+            assert_eq!(
+                B20Variant::compute_address_for_discriminant(CREATOR, variant.discriminant(), SALT,),
+                variant.compute_address(CREATOR, SALT)
+            );
+        }
+    }
+
+    #[test]
+    fn unknown_variant_has_the_structural_prefix_but_is_not_supported() {
+        let (address, _) = B20Variant::compute_address_for_discriminant(CREATOR, 0x02, SALT);
+
+        assert!(B20Variant::has_h20_prefix(address));
+        assert_eq!(B20Variant::from_address(address), None);
+        assert!(!B20Variant::is_b20_address(address));
+    }
+
+    #[test]
+    fn legacy_b20_and_h20_singleton_addresses_are_not_dynamic_tokens() {
+        let legacy_b20 = address!("B200000000000000000000000000000000000000");
+        let singletons = [
+            address!("0177FF0000000000000000000000000000000000"),
+            address!("0177FF0000000000000000000000000000000001"),
+            address!("0177FF0000000000000000000000000000000002"),
+        ];
+
+        assert!(!B20Variant::has_h20_prefix(legacy_b20));
+        assert_eq!(B20Variant::from_address(legacy_b20), None);
+        for singleton in singletons {
+            assert!(!B20Variant::has_h20_prefix(singleton));
+            assert_eq!(B20Variant::from_address(singleton), None);
+        }
     }
 }

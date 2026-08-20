@@ -72,7 +72,7 @@ pub struct PolicyRegistryStorage {
 
 impl PolicyRegistryStorage<'_> {
     /// Singleton precompile address for the `PolicyRegistry`.
-    pub const ADDRESS: Address = address!("8453000000000000000000000000000000000002");
+    pub const ADDRESS: Address = address!("0177FF0000000000000000000000000000000002");
 
     /// Built-in policy ID that always authorizes every account.
     ///
@@ -164,6 +164,14 @@ mod tests {
     const ALICE: Address = address!("0xA000000000000000000000000000000000000001");
     const POLICY_REGISTRY_ROOT: U256 =
         uint!(0x00503aeb06982fa1fe3151dc68f90b3946c55c449dfd447e49dcaece71ba4a00_U256);
+
+    #[test]
+    fn policy_registry_address_matches_h20_singleton_address() {
+        assert_eq!(
+            PolicyRegistryStorage::ADDRESS,
+            address!("0177FF0000000000000000000000000000000002")
+        );
+    }
 
     // --- PackedPolicy value-type unit tests ---
 

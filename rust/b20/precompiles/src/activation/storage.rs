@@ -68,7 +68,7 @@ impl From<ActivationFeature> for B256 {
 
 impl ActivationRegistryStorage<'_> {
     /// Activation registry precompile address.
-    pub const ADDRESS: Address = address!("8453000000000000000000000000000000000001");
+    pub const ADDRESS: Address = address!("0177FF0000000000000000000000000000000001");
 
     /// Returns the effective activation admin address.
     /// Beryl always reads the administrator from static chain configuration.
@@ -209,6 +209,14 @@ mod tests {
     enum InvalidContext {
         Static,
         Unauthorized,
+    }
+
+    #[test]
+    fn activation_registry_address_matches_h20_singleton_address() {
+        assert_eq!(
+            ActivationRegistryStorage::ADDRESS,
+            address!("0177FF0000000000000000000000000000000001")
+        );
     }
 
     fn apply_transition(

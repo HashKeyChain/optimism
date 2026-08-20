@@ -17,7 +17,7 @@ pub struct B20FactoryStorage {}
 
 impl<'a> B20FactoryStorage<'a> {
     /// Singleton precompile address for the `B20Factory`.
-    pub const ADDRESS: Address = address!("B20F000000000000000000000000000000000000");
+    pub const ADDRESS: Address = address!("0177FF0000000000000000000000000000000000");
 
     /// Initial supply cap for newly created default B-20 tokens.
     pub const DEFAULT_SUPPLY_CAP: U256 = DEFAULT_SUPPLY_CAP;
@@ -26,12 +26,12 @@ impl<'a> B20FactoryStorage<'a> {
     ///
     /// This includes reserved or future variant discriminants in the B-20 address range.
     pub fn is_b20(&self, token: Address) -> Result<bool> {
-        Ok(B20Variant::has_b20_prefix(token))
+        Ok(B20Variant::has_h20_prefix(token))
     }
 
     /// Returns whether `token` is a B-20 address that has been initialized by this factory.
     pub fn is_b20_initialized(&self, token: Address) -> Result<bool> {
-        if !B20Variant::has_b20_prefix(token) {
+        if !B20Variant::has_h20_prefix(token) {
             return Ok(false);
         }
         self.storage.with_account_info(token, |info| Ok(info.code_hash == FACTORY_MARKER_CODE_HASH))
@@ -51,7 +51,7 @@ mod tests {
     fn factory_address_matches_canonical_precompile_address() {
         assert_eq!(
             B20FactoryStorage::ADDRESS,
-            address!("B20F000000000000000000000000000000000000")
+            address!("0177FF0000000000000000000000000000000000")
         );
     }
 

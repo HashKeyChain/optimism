@@ -165,7 +165,7 @@ fn payload_builder_ctx(
 
 #[test]
 fn payload_builder_uses_b20_precompiles_at_activation_timestamp() {
-    const FACTORY: Address = address!("B20F000000000000000000000000000000000000");
+    const FACTORY: Address = address!("0177FF0000000000000000000000000000000000");
 
     let mut genesis = Genesis::default();
     genesis.config.extra_fields.insert("b20Time".to_string(), serde_json::json!(1));
@@ -197,7 +197,7 @@ fn payload_builder_uses_b20_precompiles_at_activation_timestamp() {
     let mut calldata = Vec::with_capacity(36);
     calldata.extend_from_slice(&keccak256("isB20(address)")[..4]);
     calldata.extend_from_slice(&[0u8; 12]);
-    calldata.extend_from_slice(&address!("B200000000000000000000000000000000000000").into_array());
+    calldata.extend_from_slice(&address!("0177000000000000000000000000000000000000").into_array());
     let signer = Address::repeat_byte(0x44);
     let tx = op_pooled_tx_with_input(0, signer, FACTORY, Bytes::from(calldata));
 
