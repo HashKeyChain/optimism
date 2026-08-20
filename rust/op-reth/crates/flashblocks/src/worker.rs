@@ -558,9 +558,9 @@ mod tests {
     #[test]
     fn flashblock_builder_keeps_the_b20_evm_factory() {
         let mut genesis = Genesis::default();
-        genesis.config.extra_fields.insert("b20Time".to_string(), serde_json::json!(100));
+        genesis.config.extra_fields.insert("h20Time".to_string(), serde_json::json!(100));
         genesis.config.extra_fields.insert(
-            "b20ActivationAdmin".to_string(),
+            "h20ActivationAdmin".to_string(),
             serde_json::json!("0x1111111111111111111111111111111111111111"),
         );
         let chain_spec = Arc::new(OpChainSpecBuilder::optimism_mainnet().genesis(genesis).build());

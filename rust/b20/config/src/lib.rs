@@ -75,9 +75,9 @@ pub enum B20ConfigError {
 impl core::fmt::Display for B20ConfigError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.write_str(match self {
-            Self::MissingAdmin => "b20Time requires b20ActivationAdmin",
-            Self::MissingActivationTime => "b20ActivationAdmin requires b20Time",
-            Self::ZeroAdmin => "b20ActivationAdmin must not be the zero address",
+            Self::MissingAdmin => "h20Time requires h20ActivationAdmin",
+            Self::MissingActivationTime => "h20ActivationAdmin requires h20Time",
+            Self::ZeroAdmin => "h20ActivationAdmin must not be the zero address",
         })
     }
 }

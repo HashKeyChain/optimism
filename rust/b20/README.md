@@ -34,10 +34,10 @@ Canonical Base namespaces, addresses, feature identifiers, ABI selectors, storag
 - `config`: consensus configuration containing the inclusive activation timestamp and static Beryl `ActivationRegistry` administrator.
 - `alloy-op-evm::B20OpPrecompiles`: wraps canonical `OpPrecompiles` and builds the `PrecompilesMap` required by reth.
 - `alloy-op-evm::B20OpEvmFactory`: selects the map from the executed block timestamp for both normal and inspected EVMs.
-- `reth-optimism-chainspec`: parses `b20Time` and `b20ActivationAdmin` from genesis config.
+- `reth-optimism-chainspec`: parses `h20Time` and `h20ActivationAdmin` from genesis config.
 - `reth-optimism-evm`: uses the B20-aware factory for block execution and post-exec paths.
 
-Before `b20Time`, only canonical OP precompiles are installed. At and after `b20Time`, the three B20 singletons and the Beryl dynamic lookup are installed. Structurally valid Asset and Stablecoin addresses resolve through lookup and intentionally remain absent from the static warm-address set.
+Before `h20Time`, only canonical OP precompiles are installed. At and after `h20Time`, the three B20 singletons and the Beryl dynamic lookup are installed. Structurally valid Asset and Stablecoin addresses resolve through lookup and intentionally remain absent from the static warm-address set.
 
 ## M5 execution entrypoints
 
@@ -53,7 +53,7 @@ No RPC or builder subsystem installs B20 independently. The executed block or pe
 
 ## M6 proof execution
 
-Kona proof boot configuration carries `b20_time` and `b20_activation_admin` in `RollupConfig`.
+Kona proof boot configuration carries `h20_time` and `h20_activation_admin` in `RollupConfig`.
 They are validated as one consensus configuration and remain independent from OP hardfork and
 `OpSpecId` selection.
 

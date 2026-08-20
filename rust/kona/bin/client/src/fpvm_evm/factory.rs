@@ -311,8 +311,8 @@ mod tests {
         let rollup = RollupConfig {
             block_time: 2,
             l2_chain_id: 133.into(),
-            b20_time: Some(100),
-            b20_activation_admin: Some(admin),
+            h20_time: Some(100),
+            h20_activation_admin: Some(admin),
             ..Default::default()
         };
         let calldata = IActivationRegistry::activateCall {

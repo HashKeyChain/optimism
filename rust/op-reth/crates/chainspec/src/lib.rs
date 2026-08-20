@@ -67,9 +67,9 @@ use reth_primitives_traits::{SealedHeader, sync::LazyLock};
 pub use hsk_b20_config::B20Config;
 
 /// Genesis config field containing the inclusive B20 activation timestamp.
-pub const B20_TIME_FIELD: &str = "b20Time";
+pub const H20_TIME_FIELD: &str = "h20Time";
 /// Genesis config field containing the static Beryl `ActivationRegistry` administrator.
-pub const B20_ACTIVATION_ADMIN_FIELD: &str = "b20ActivationAdmin";
+pub const H20_ACTIVATION_ADMIN_FIELD: &str = "h20ActivationAdmin";
 
 /// Chain-spec access to HSK B20 consensus configuration.
 pub trait B20ChainSpec: EthChainSpec {
@@ -94,11 +94,11 @@ pub fn b20_config_from_genesis(genesis: &Genesis) -> Result<B20Config, B20Genesi
 
     let fields = &genesis.config.extra_fields;
     let activation_time = fields
-        .get(B20_TIME_FIELD)
+        .get(H20_TIME_FIELD)
         .map(|value| value.as_u64().ok_or(B20GenesisConfigError::InvalidActivationTime))
         .transpose()?;
     let activation_admin = fields
-        .get(B20_ACTIVATION_ADMIN_FIELD)
+        .get(H20_ACTIVATION_ADMIN_FIELD)
         .map(|value| {
             let value = value.as_str().ok_or(B20GenesisConfigError::InvalidAdmin)?;
             Address::from_str(value).map_err(|_| B20GenesisConfigError::InvalidAdmin)
@@ -111,9 +111,9 @@ pub fn b20_config_from_genesis(genesis: &Genesis) -> Result<B20Config, B20Genesi
 /// Invalid B20 fields in the genesis chain config.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum B20GenesisConfigError {
-    /// `b20Time` is not an unsigned 64-bit integer.
+    /// `h20Time` is not an unsigned 64-bit integer.
     InvalidActivationTime,
-    /// `b20ActivationAdmin` is not a valid address string.
+    /// `h20ActivationAdmin` is not a valid address string.
     InvalidAdmin,
     /// The pair of B20 fields violates B20 configuration invariants.
     InvalidConfig(hsk_b20_config::B20ConfigError),
@@ -122,8 +122,8 @@ pub enum B20GenesisConfigError {
 impl core::fmt::Display for B20GenesisConfigError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::InvalidActivationTime => f.write_str("b20Time must be a uint64"),
-            Self::InvalidAdmin => f.write_str("b20ActivationAdmin must be an address string"),
+            Self::InvalidActivationTime => f.write_str("h20Time must be a uint64"),
+            Self::InvalidAdmin => f.write_str("h20ActivationAdmin must be an address string"),
             Self::InvalidConfig(error) => error.fmt(f),
         }
     }
@@ -629,9 +629,9 @@ mod tests {
         genesis
             .config
             .extra_fields
-            .insert(B20_TIME_FIELD.to_string(), serde_json::json!(100));
+            .insert(H20_TIME_FIELD.to_string(), serde_json::json!(100));
         genesis.config.extra_fields.insert(
-            B20_ACTIVATION_ADMIN_FIELD.to_string(),
+            H20_ACTIVATION_ADMIN_FIELD.to_string(),
             serde_json::json!("0x1111111111111111111111111111111111111111"),
         );
 
@@ -648,12 +648,12 @@ mod tests {
         missing_admin
             .config
             .extra_fields
-            .insert(B20_TIME_FIELD.to_string(), serde_json::json!(100));
+            .insert(H20_TIME_FIELD.to_string(), serde_json::json!(100));
         assert!(b20_config_from_genesis(&missing_admin).is_err());
 
         let mut zero_admin = missing_admin;
         zero_admin.config.extra_fields.insert(
-            B20_ACTIVATION_ADMIN_FIELD.to_string(),
+            H20_ACTIVATION_ADMIN_FIELD.to_string(),
             serde_json::json!("0x0000000000000000000000000000000000000000"),
         );
         assert!(b20_config_from_genesis(&zero_admin).is_err());

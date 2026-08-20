@@ -47,29 +47,29 @@ import (
 )
 
 const (
-	b20TimeEnv  = "DEVSTACK_B20_TIME"
-	b20AdminEnv = "DEVSTACK_B20_ACTIVATION_ADMIN"
+	h20TimeEnv  = "DEVSTACK_H20_TIME"
+	h20AdminEnv = "DEVSTACK_H20_ACTIVATION_ADMIN"
 )
 
-// injectB20Config adds the HSK B20 consensus fields to a JSON object when the
+// injectH20Config adds the HSK B20 consensus fields to a JSON object when the
 // devstack-specific environment variables are configured. The Go OP types do
 // not own these HSK extension fields, so preserving the extension at the JSON
 // boundary keeps upstream deployment and rollup types unchanged.
-func injectB20Config(data []byte, genesis bool) ([]byte, error) {
-	timeValue, timeOK := os.LookupEnv(b20TimeEnv)
-	admin, adminOK := os.LookupEnv(b20AdminEnv)
+func injectH20Config(data []byte, genesis bool) ([]byte, error) {
+	timeValue, timeOK := os.LookupEnv(h20TimeEnv)
+	admin, adminOK := os.LookupEnv(h20AdminEnv)
 	if timeOK != adminOK {
-		return nil, fmt.Errorf("%s and %s must be configured together", b20TimeEnv, b20AdminEnv)
+		return nil, fmt.Errorf("%s and %s must be configured together", h20TimeEnv, h20AdminEnv)
 	}
 	if !timeOK {
 		return data, nil
 	}
 	timestamp, err := strconv.ParseUint(timeValue, 10, 64)
 	if err != nil {
-		return nil, fmt.Errorf("invalid %s: %w", b20TimeEnv, err)
+		return nil, fmt.Errorf("invalid %s: %w", h20TimeEnv, err)
 	}
 	if !common.IsHexAddress(admin) || common.HexToAddress(admin) == (common.Address{}) {
-		return nil, fmt.Errorf("%s must be a non-zero address", b20AdminEnv)
+		return nil, fmt.Errorf("%s must be a non-zero address", h20AdminEnv)
 	}
 
 	var root map[string]any
@@ -81,11 +81,11 @@ func injectB20Config(data []byte, genesis bool) ([]byte, error) {
 		if !ok {
 			return nil, fmt.Errorf("genesis config is not a JSON object")
 		}
-		config["b20Time"] = timestamp
-		config["b20ActivationAdmin"] = common.HexToAddress(admin).Hex()
+		config["h20Time"] = timestamp
+		config["h20ActivationAdmin"] = common.HexToAddress(admin).Hex()
 	} else {
-		root["b20_time"] = timestamp
-		root["b20_activation_admin"] = common.HexToAddress(admin).Hex()
+		root["h20_time"] = timestamp
+		root["h20_activation_admin"] = common.HexToAddress(admin).Hex()
 	}
 	return json.Marshal(root)
 }
@@ -397,7 +397,7 @@ func buildMixedOpRethNode(
 
 	data, err := json.Marshal(l2Net.genesis)
 	t.Require().NoError(err, "must json-encode genesis")
-	data, err = injectB20Config(data, true)
+	data, err = injectH20Config(data, true)
 	t.Require().NoError(err, "must inject B20 genesis config")
 	chainConfigPath := filepath.Join(tempDir, "genesis.json")
 	t.Require().NoError(os.WriteFile(chainConfigPath, data, 0o640), "must write genesis file")
@@ -578,7 +578,7 @@ func startMixedKonaNode(
 	tempRollupCfgPath := filepath.Join(tempKonaDir, "rollup.json")
 	rollupCfgData, err := json.Marshal(l2Net.rollupCfg)
 	t.Require().NoError(err, "must write rollup config")
-	rollupCfgData, err = injectB20Config(rollupCfgData, false)
+	rollupCfgData, err = injectH20Config(rollupCfgData, false)
 	t.Require().NoError(err, "must inject B20 rollup config")
 	t.Require().NoError(os.WriteFile(tempRollupCfgPath, rollupCfgData, 0o640))
 

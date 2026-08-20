@@ -475,9 +475,9 @@ mod tests {
 
     fn b20_at_timestamp_chain_spec(activation: u64) -> Arc<OpChainSpec> {
         let mut genesis = Genesis::default();
-        genesis.config.extra_fields.insert("b20Time".to_string(), serde_json::json!(activation));
+        genesis.config.extra_fields.insert("h20Time".to_string(), serde_json::json!(activation));
         genesis.config.extra_fields.insert(
-            "b20ActivationAdmin".to_string(),
+            "h20ActivationAdmin".to_string(),
             serde_json::json!("0x1111111111111111111111111111111111111111"),
         );
         Arc::new(

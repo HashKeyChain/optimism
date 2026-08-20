@@ -168,9 +168,9 @@ fn payload_builder_uses_b20_precompiles_at_activation_timestamp() {
     const FACTORY: Address = address!("0177FF0000000000000000000000000000000000");
 
     let mut genesis = Genesis::default();
-    genesis.config.extra_fields.insert("b20Time".to_string(), serde_json::json!(1));
+    genesis.config.extra_fields.insert("h20Time".to_string(), serde_json::json!(1));
     genesis.config.extra_fields.insert(
-        "b20ActivationAdmin".to_string(),
+        "h20ActivationAdmin".to_string(),
         serde_json::json!("0x1111111111111111111111111111111111111111"),
     );
     let chain_spec = Arc::new(OpChainSpecBuilder::optimism_mainnet().genesis(genesis).build());
@@ -226,9 +226,9 @@ fn payload_builder_uses_b20_precompiles_at_activation_timestamp() {
         run_execute_best_transactions_with_ctx(ctx, signer, vec![tx.clone()], None, None);
 
     let mut pre_fork_genesis = Genesis::default();
-    pre_fork_genesis.config.extra_fields.insert("b20Time".to_string(), serde_json::json!(2));
+    pre_fork_genesis.config.extra_fields.insert("h20Time".to_string(), serde_json::json!(2));
     pre_fork_genesis.config.extra_fields.insert(
-        "b20ActivationAdmin".to_string(),
+        "h20ActivationAdmin".to_string(),
         serde_json::json!("0x1111111111111111111111111111111111111111"),
     );
     let pre_fork_ctx = payload_builder_ctx(
