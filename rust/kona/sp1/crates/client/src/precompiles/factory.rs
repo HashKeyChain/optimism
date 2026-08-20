@@ -148,16 +148,18 @@ mod tests {
     use super::*;
     use alloy_evm::Evm;
     use alloy_op_evm::B20OpEvmFactory;
-    use alloy_primitives::{Address, B256, Bytes, TxKind, U256};
+    use alloy_primitives::{Address, B256, Bytes, TxKind, U256, address};
     use alloy_sol_types::SolCall;
     use alloy_trie::{TrieAccount, root};
     use hsk_b20_precompiles::{
-        ActivationFeature, ActivationRegistryStorage, IActivationRegistry,
+        ActivationFeature, ActivationRegistryStorage, B20FactoryStorage, B20Variant,
+        IActivationRegistry, PolicyRegistryStorage,
     };
     use kona_protocol::OutputRoot;
     use revm::{
         context::{BlockEnv, CfgEnv, TxEnv},
         database::InMemoryDB,
+        handler::PrecompileProvider,
         state::{AccountInfo, EvmState},
     };
 
@@ -230,6 +232,22 @@ mod tests {
         let mut zkvm = ZkvmOpEvmFactory::new()
             .with_b20_config(chain_id, config)
             .create_evm(database(), env);
+
+        let dynamic = B20Variant::Asset.compute_address(admin, [0x22; 32].into()).0;
+        assert_eq!(dynamic, address!("0177000000000000000000f4f69ba108f6504dc5"));
+        for address in [
+            B20FactoryStorage::ADDRESS,
+            ActivationRegistryStorage::ADDRESS,
+            PolicyRegistryStorage::ADDRESS,
+            dynamic,
+        ] {
+            assert!(op_reth.precompiles().get(&address).is_some());
+            assert!(<OpZkvmPrecompiles as PrecompileProvider<OpEvmContext<InMemoryDB>>>::contains(
+                zkvm.precompiles(),
+                &address,
+            ));
+        }
+
         let zkvm_result = zkvm.transact_raw(tx).expect("ZKVM B20 activation succeeds");
 
         assert_eq!(op_reth_result.result, zkvm_result.result);

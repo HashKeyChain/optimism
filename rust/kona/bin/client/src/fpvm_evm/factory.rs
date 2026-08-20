@@ -181,14 +181,17 @@ where
 mod tests {
     use super::*;
     use alloy_evm::Evm;
-    use alloy_op_evm::{B20OpEvmFactory, post_exec::PostExecEvmFactoryAdapter};
+    use alloy_op_evm::{B20OpEvmFactory, OpEvmContext, post_exec::PostExecEvmFactoryAdapter};
     use alloy_consensus::{Header, Sealable};
     use alloy_eips::Encodable2718;
-    use alloy_primitives::{Address, B256, Bytes, TxKind, U256};
+    use alloy_primitives::{Address, B256, Bytes, TxKind, U256, address};
     use alloy_rpc_types_engine::PayloadAttributes;
     use alloy_sol_types::SolCall;
     use alloy_trie::{TrieAccount, root};
-    use hsk_b20_precompiles::{ActivationFeature, ActivationRegistryStorage, IActivationRegistry};
+    use hsk_b20_precompiles::{
+        ActivationFeature, ActivationRegistryStorage, B20FactoryStorage, B20Variant,
+        IActivationRegistry, PolicyRegistryStorage,
+    };
     use kona_preimage::{BidirectionalChannel, HintWriter, OracleReader};
     use kona_executor::{NoopTrieDBProvider, StatelessL2Builder};
     use kona_genesis::RollupConfig;
@@ -199,6 +202,7 @@ mod tests {
     use revm::{
         context::{BlockEnv, CfgEnv, TxEnv},
         database::InMemoryDB,
+        handler::PrecompileProvider,
         state::{AccountInfo, EvmState},
     };
 
@@ -266,6 +270,22 @@ mod tests {
         )
         .with_b20_config(chain_id, config)
         .create_evm(database(), env);
+
+        let dynamic = B20Variant::Asset.compute_address(admin, [0x22; 32].into()).0;
+        assert_eq!(dynamic, address!("0177000000000000000000f4f69ba108f6504dc5"));
+        for address in [
+            B20FactoryStorage::ADDRESS,
+            ActivationRegistryStorage::ADDRESS,
+            PolicyRegistryStorage::ADDRESS,
+            dynamic,
+        ] {
+            assert!(op_reth.precompiles().get(&address).is_some());
+            assert!(<OpFpvmPrecompiles<_, _> as PrecompileProvider<OpEvmContext<InMemoryDB>>>::contains(
+                fpvm.precompiles(),
+                &address,
+            ));
+        }
+
         let fpvm_result =
             fpvm.transact_raw(FpvmOpTx(op_transaction)).expect("FPVM B20 activation succeeds");
 

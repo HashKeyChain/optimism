@@ -261,7 +261,7 @@ where
 #[cfg(test)]
 mod tests {
     use alloy_evm::{Evm, EvmEnv, EvmFactory};
-    use alloy_primitives::{Address, U256};
+    use alloy_primitives::{Address, U256, address};
     use hsk_b20_precompiles::{
         ActivationRegistryStorage, B20FactoryStorage, B20Variant, PolicyRegistryStorage,
     };
@@ -326,6 +326,23 @@ mod tests {
             &after,
             &Address::repeat_byte(0x22),
         ));
+    }
+
+    #[test]
+    fn provider_matches_frozen_h20_address_vectors() {
+        let salt = [0x22; 32].into();
+        let asset = B20Variant::Asset.compute_address(ADMIN, salt).0;
+        let stablecoin = B20Variant::Stablecoin.compute_address(ADMIN, salt).0;
+
+        assert_eq!(asset, address!("0177000000000000000000f4f69ba108f6504dc5"));
+        assert_eq!(stablecoin, address!("0177000000000000000001f4f69ba108f6504dc5"));
+
+        let provider = B20OpPrecompiles::new(OpSpecId::JOVIAN, config(), 100);
+        for address in [asset, stablecoin] {
+            assert!(<B20OpPrecompiles as PrecompileProvider<OpEvmContext<EmptyDB>>>::contains(
+                &provider, &address,
+            ));
+        }
     }
 
     #[test]
