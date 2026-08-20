@@ -1,0 +1,51 @@
+[package]
+name = "hsk-h20-precompiles"
+description = "Base Beryl H20 v1 core precompiles for HSK"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+alloy-evm.workspace = true
+alloy-sol-types.workspace = true
+alloy-primitives.workspace = true
+h20-precompile-macros.workspace = true
+h20-precompile-storage.workspace = true
+revm.workspace = true
+
+[dev-dependencies]
+rstest.workspace = true
+criterion.workspace = true
+k256 = { workspace = true, features = ["ecdsa"] }
+h20-precompile-storage = { workspace = true, features = ["test-utils"] }
+
+[[test]]
+name = "h20_stablecoin_v1_golden"
+required-features = ["test-utils"]
+
+[[test]]
+name = "h20_asset_v1_golden"
+required-features = ["test-utils"]
+
+[[test]]
+name = "h20_policy_v1_golden"
+required-features = ["test-utils"]
+
+[[test]]
+name = "h20_factory_v1_golden"
+required-features = ["test-utils"]
+
+[features]
+default = ["std"]
+std = [
+  "alloy-evm/std",
+  "alloy-primitives/std",
+  "alloy-sol-types/std",
+  "h20-precompile-storage/std",
+  "revm/std",
+]
+test-utils = ["h20-precompile-storage/test-utils"]

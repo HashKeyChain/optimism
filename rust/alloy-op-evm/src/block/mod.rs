@@ -1,6 +1,6 @@
 //! Block executor for Optimism.
 
-use crate::{B20OpEvmFactory, OpEvmFactory, spec_by_timestamp_after_bedrock};
+use crate::{H20OpEvmFactory, OpEvmFactory, spec_by_timestamp_after_bedrock};
 use alloc::{boxed::Box, collections::BTreeMap, format, string::String, vec, vec::Vec};
 use alloy_consensus::{Eip658Value, Header, Transaction, TransactionEnvelope, TxReceipt};
 use alloy_eips::{Encodable2718, Typed2718, eip7685::Requests};
@@ -1295,7 +1295,7 @@ where
     }
 }
 
-impl<R, Spec, Tx> BlockExecutorFactory for OpBlockExecutorFactory<R, Spec, B20OpEvmFactory<Tx>>
+impl<R, Spec, Tx> BlockExecutorFactory for OpBlockExecutorFactory<R, Spec, H20OpEvmFactory<Tx>>
 where
     R: OpReceiptBuilder<
             Transaction: Transaction + Encodable2718 + OpConsensusTransaction,
@@ -1313,19 +1313,19 @@ where
         + 'static,
     Self: 'static,
 {
-    type EvmFactory = B20OpEvmFactory<Tx>;
+    type EvmFactory = H20OpEvmFactory<Tx>;
     type ExecutionCtx<'a> = OpBlockExecutionCtx;
     type Transaction = R::Transaction;
     type Receipt = R::Receipt;
     type TxExecutionResult = OpTxResult<
-        <B20OpEvmFactory<Tx> as EvmFactory>::HaltReason,
+        <H20OpEvmFactory<Tx> as EvmFactory>::HaltReason,
         <R::Transaction as TransactionEnvelope>::TxType,
     >;
     type Executor<
         'a,
         DB: StateDB,
-        I: Inspector<<B20OpEvmFactory<Tx> as EvmFactory>::Context<DB>>,
-    > = OpBlockExecutor<<B20OpEvmFactory<Tx> as EvmFactory>::Evm<DB, I>, &'a R, &'a Spec>;
+        I: Inspector<<H20OpEvmFactory<Tx> as EvmFactory>::Context<DB>>,
+    > = OpBlockExecutor<<H20OpEvmFactory<Tx> as EvmFactory>::Evm<DB, I>, &'a R, &'a Spec>;
 
     fn evm_factory(&self) -> &Self::EvmFactory {
         &self.evm_factory
@@ -1333,12 +1333,12 @@ where
 
     fn create_executor<'a, DB, I>(
         &'a self,
-        evm: <B20OpEvmFactory<Tx> as EvmFactory>::Evm<DB, I>,
+        evm: <H20OpEvmFactory<Tx> as EvmFactory>::Evm<DB, I>,
         ctx: Self::ExecutionCtx<'a>,
     ) -> Self::Executor<'a, DB, I>
     where
         DB: StateDB,
-        I: Inspector<<B20OpEvmFactory<Tx> as EvmFactory>::Context<DB>>,
+        I: Inspector<<H20OpEvmFactory<Tx> as EvmFactory>::Context<DB>>,
     {
         OpBlockExecutor::new(evm, ctx, &self.spec, &self.receipt_builder)
     }

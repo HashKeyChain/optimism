@@ -5,9 +5,9 @@ use crate::fpvm_evm::precompiles::{
 };
 use alloc::{string::String, vec, vec::Vec};
 use alloy_evm::{Database, precompiles::PrecompilesMap};
-use alloy_op_evm::{B20OpPrecompiles, OpEvmContext};
+use alloy_op_evm::{H20OpPrecompiles, OpEvmContext};
 use alloy_primitives::{Address, Bytes};
-use hsk_b20_config::H20Config;
+use hsk_h20_config::H20Config;
 use kona_preimage::{HintWriterClient, PreimageOracleClient};
 use op_revm::{
     OpSpecId,
@@ -36,9 +36,9 @@ pub struct OpFpvmPrecompiles<H, O> {
     hint_writer: H,
     /// The inner [`PreimageOracleClient`].
     oracle_reader: O,
-    /// Optional OP+B20 map for the executing block timestamp.
-    b20_precompiles: Option<PrecompilesMap>,
-    /// B20 configuration retained across `set_spec` calls.
+    /// Optional OP+H20 map for the executing block timestamp.
+    h20_precompiles: Option<PrecompilesMap>,
+    /// H20 configuration retained across `set_spec` calls.
     h20_config: H20Config,
     /// Executing block timestamp retained across `set_spec` calls.
     timestamp: u64,
@@ -87,21 +87,21 @@ where
             spec,
             hint_writer,
             oracle_reader,
-            b20_precompiles: None,
+            h20_precompiles: None,
             h20_config: H20Config::DISABLED,
             timestamp: 0,
             warm_addresses,
         }
     }
 
-    /// Adds Base Beryl B20 v1 while retaining FPVM acceleration for canonical OP precompiles.
+    /// Adds Base Beryl H20 v1 while retaining FPVM acceleration for canonical OP precompiles.
     pub fn with_h20(mut self, config: H20Config, timestamp: u64) -> Self {
         self.h20_config = config;
         self.timestamp = timestamp;
         if config.is_active_at(timestamp) {
-            let installed = B20OpPrecompiles::build(self.spec, config, timestamp);
+            let installed = H20OpPrecompiles::build(self.spec, config, timestamp);
             self.warm_addresses = installed.addresses().copied().collect();
-            self.b20_precompiles = Some(installed);
+            self.h20_precompiles = Some(installed);
         }
         self
     }
@@ -156,7 +156,7 @@ where
                 let eth_result =
                     (accelerated)(&input, inputs.gas_limit, &self.hint_writer, &self.oracle_reader);
                 PrecompileOutput::from_eth_result(eth_result, inputs.reservoir)
-            } else if let Some(installed) = self.b20_precompiles.as_mut() {
+            } else if let Some(installed) = self.h20_precompiles.as_mut() {
                 return <PrecompilesMap as PrecompileProvider<OpEvmContext<DB>>>::run(
                     installed, context, inputs,
                 );
@@ -200,7 +200,7 @@ where
 
     #[inline]
     fn contains(&self, address: &Address) -> bool {
-        self.b20_precompiles.as_ref().map_or_else(
+        self.h20_precompiles.as_ref().map_or_else(
             || self.inner.contains(address),
             |installed| installed.get(address).is_some(),
         )
@@ -399,7 +399,7 @@ mod test {
     }
 
     #[test]
-    fn b20_lookup_is_timestamp_gated_and_dynamic_addresses_are_not_warmed() {
+    fn h20_lookup_is_timestamp_gated_and_dynamic_addresses_are_not_warmed() {
         const FACTORY: Address =
             alloy_primitives::address!("0177FF0000000000000000000000000000000000");
         const DYNAMIC: Address =

@@ -70,7 +70,7 @@ pub mod tx;
 pub use tx::OpTx;
 
 pub use alloy_op_evm::{
-    B20OpEvmFactory, B20OpPrecompiles, OpBlockExecutionCtx, OpBlockExecutorFactory, OpEvm,
+    H20OpEvmFactory, H20OpPrecompiles, OpBlockExecutionCtx, OpBlockExecutorFactory, OpEvm,
     OpEvmFactory, PostExecMode, PreRefundGasUsed,
     post_exec::{PostExecExecutorExt, WarmingRefundEvent, WarmingRefundKind, WarmingState},
 };
@@ -84,7 +84,7 @@ pub struct OpEvmConfig<
     ChainSpec = OpChainSpec,
     N: NodePrimitives = OpPrimitives,
     R = OpRethReceiptBuilder,
-    EvmFactory = B20OpEvmFactory<OpTx>,
+    EvmFactory = H20OpEvmFactory<OpTx>,
 > {
     /// Inner [`OpBlockExecutorFactory`].
     pub executor_factory: OpBlockExecutorFactory<R, Arc<ChainSpec>, EvmFactory>,
@@ -137,7 +137,7 @@ impl<ChainSpec: EthChainSpec<Header = Header> + OpHardforks + H20ChainSpec, N: N
         Self::new_with_evm_factory(
             chain_spec,
             receipt_builder,
-            B20OpEvmFactory::<OpTx>::new(h20_config),
+            H20OpEvmFactory::<OpTx>::new(h20_config),
         )
     }
 }
@@ -473,7 +473,7 @@ mod tests {
         )
     }
 
-    fn b20_at_timestamp_chain_spec(activation: u64) -> Arc<OpChainSpec> {
+    fn h20_at_timestamp_chain_spec(activation: u64) -> Arc<OpChainSpec> {
         let mut genesis = Genesis::default();
         genesis.config.extra_fields.insert("h20Time".to_string(), serde_json::json!(activation));
         genesis.config.extra_fields.insert(
@@ -490,11 +490,11 @@ mod tests {
     }
 
     #[test]
-    fn all_node_execution_entrypoints_share_the_b20_factory() {
+    fn all_node_execution_entrypoints_share_the_h20_factory() {
         const FACTORY: Address = address!("0177FF0000000000000000000000000000000000");
 
-        let config = OpEvmConfig::optimism(b20_at_timestamp_chain_spec(100));
-        let _: &B20OpEvmFactory<OpTx> = config.evm_factory();
+        let config = OpEvmConfig::optimism(h20_at_timestamp_chain_spec(100));
+        let _: &H20OpEvmFactory<OpTx> = config.evm_factory();
 
         // Block import and historical RPC simulation derive the EVM from the imported header.
         let before = config
@@ -543,14 +543,14 @@ mod tests {
     }
 
     #[test]
-    fn rpc_simulation_and_trace_produce_identical_b20_results() {
+    fn rpc_simulation_and_trace_produce_identical_h20_results() {
         const FACTORY: Address = address!("0177FF0000000000000000000000000000000000");
-        let config = OpEvmConfig::optimism(b20_at_timestamp_chain_spec(100));
+        let config = OpEvmConfig::optimism(h20_at_timestamp_chain_spec(100));
         let header = Header { timestamp: 100, gas_limit: 30_000_000, ..Default::default() };
         let evm_env = config.evm_env(&header).unwrap();
 
         let mut calldata = Vec::with_capacity(36);
-        calldata.extend_from_slice(&keccak256("isB20(address)")[..4]);
+        calldata.extend_from_slice(&keccak256("isH20(address)")[..4]);
         calldata.extend_from_slice(&[0u8; 12]);
         calldata
             .extend_from_slice(&address!("0177000000000000000000000000000000000000").into_array());
@@ -594,7 +594,7 @@ mod tests {
             ExecutionResult::Success { output: Output::Call(output), .. } => {
                 assert_eq!(output.as_ref(), expected);
             }
-            result => panic!("expected successful B20 isB20 call, got {result:?}"),
+            result => panic!("expected successful H20 isH20 call, got {result:?}"),
         }
         assert_eq!(imported_result.result, simulated_result.result);
         assert_eq!(imported_result.state, simulated_result.state);

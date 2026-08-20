@@ -109,7 +109,7 @@ pub trait WitnessExecutor {
         let h20_config = boot
             .rollup_config
             .h20_config()
-            .map_err(|err| anyhow!("invalid B20 config: {err}"))?;
+            .map_err(|err| anyhow!("invalid H20 config: {err}"))?;
         let rollup_config = Arc::new(boot.rollup_config);
 
         let evm_factory = PostExecEvmFactoryAdapter::new(

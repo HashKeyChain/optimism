@@ -37,9 +37,9 @@ pub enum FaultProofProgramError {
     /// An error occurred in the driver.
     #[error(transparent)]
     Driver(#[from] DriverError<ExecutorError>),
-    /// The rollup config contains an incomplete or invalid B20 configuration.
-    #[error("Invalid B20 consensus configuration: {0}")]
-    InvalidB20Config(String),
+    /// The rollup config contains an incomplete or invalid H20 configuration.
+    #[error("Invalid H20 consensus configuration: {0}")]
+    InvalidH20Config(String),
 }
 
 /// Executes the fault proof program with the given [PreimageOracleClient] and [HintWriterClient].
@@ -61,7 +61,7 @@ where
     let h20_config = boot
         .rollup_config
         .h20_config()
-        .map_err(|err| FaultProofProgramError::InvalidB20Config(err.to_string()))?;
+        .map_err(|err| FaultProofProgramError::InvalidH20Config(err.to_string()))?;
     let rollup_config = Arc::new(boot.rollup_config.clone());
     let beacon = OracleBlobProvider::new(oracle.clone());
 

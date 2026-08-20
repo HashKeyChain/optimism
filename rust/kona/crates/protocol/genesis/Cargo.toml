@@ -24,7 +24,7 @@ alloy-hardforks.workspace = true
 alloy-op-hardforks.workspace = true
 alloy-chains.workspace = true
 alloy-genesis.workspace = true
-hsk-b20-config.workspace = true
+hsk-h20-config.workspace = true
 
 # Misc
 thiserror.workspace = true
@@ -62,7 +62,7 @@ std = [
 	"alloy-primitives/std",
 	"alloy-sol-types/std",
 	"derive_more/std",
-	"hsk-b20-config/std",
+	"hsk-h20-config/std",
 	"op-revm?/std",
 	"serde?/std",
 	"thiserror/std",

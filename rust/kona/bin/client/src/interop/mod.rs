@@ -55,12 +55,12 @@ pub enum FaultProofProgramError {
     /// Missing a rollup configuration.
     #[error("Missing rollup configuration for chain ID {0}")]
     MissingRollupConfig(u64),
-    /// A rollup config contains an incomplete or invalid B20 configuration.
-    #[error("Invalid B20 consensus configuration for chain {chain_id}: {reason}")]
+    /// A rollup config contains an incomplete or invalid H20 configuration.
+    #[error("Invalid H20 consensus configuration for chain {chain_id}: {reason}")]
     InvalidH20Config {
         /// L2 chain whose rollup config is invalid.
         chain_id: u64,
-        /// Validation failure returned by the shared B20 configuration type.
+        /// Validation failure returned by the shared H20 configuration type.
         reason: String,
     },
 }
@@ -94,7 +94,7 @@ where
         .rollup_configs
         .iter()
         .map(|(chain_id, config)| {
-            config.h20_config().map(|b20| (*chain_id, b20)).map_err(|err| {
+            config.h20_config().map(|h20| (*chain_id, h20)).map_err(|err| {
                 FaultProofProgramError::InvalidH20Config {
                     chain_id: *chain_id,
                     reason: err.to_string(),

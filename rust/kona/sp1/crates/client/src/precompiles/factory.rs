@@ -7,7 +7,7 @@ use alloy_op_evm::{
     OpEvm, OpEvmContext, OpTx, OpTxError,
     post_exec::{PostExecEvmFactoryHooks, PostExecExecutedTx, PostExecTxContext, WarmingState},
 };
-use hsk_b20_config::H20Config;
+use hsk_h20_config::H20Config;
 use op_revm::{L1BlockInfo, OpBuilder, OpHaltReason, OpSpecId, OpTransaction};
 use revm::{
     Context, Inspector, MainContext,
@@ -22,12 +22,12 @@ pub struct ZkvmOpEvmFactory {
 }
 
 impl ZkvmOpEvmFactory {
-    /// Creates a ZKVM factory with B20 disabled unless a chain configuration is installed.
+    /// Creates a ZKVM factory with H20 disabled unless a chain configuration is installed.
     pub const fn new() -> Self {
         Self { h20_configs: BTreeMap::new() }
     }
 
-    /// Installs one chain's validated B20 consensus configuration.
+    /// Installs one chain's validated H20 consensus configuration.
     pub fn with_h20_config(mut self, chain_id: u64, config: H20Config) -> Self {
         self.h20_configs.insert(chain_id, config);
         self
@@ -147,12 +147,12 @@ impl EvmFactory for ZkvmOpEvmFactory {
 mod tests {
     use super::*;
     use alloy_evm::Evm;
-    use alloy_op_evm::B20OpEvmFactory;
+    use alloy_op_evm::H20OpEvmFactory;
     use alloy_primitives::{Address, B256, Bytes, TxKind, U256, address};
     use alloy_sol_types::SolCall;
     use alloy_trie::{TrieAccount, root};
-    use hsk_b20_precompiles::{
-        ActivationFeature, ActivationRegistryStorage, B20FactoryStorage, B20Variant,
+    use hsk_h20_precompiles::{
+        ActivationFeature, ActivationRegistryStorage, H20FactoryStorage, H20Variant,
         IActivationRegistry, PolicyRegistryStorage,
     };
     use kona_protocol::OutputRoot;
@@ -185,7 +185,7 @@ mod tests {
     }
 
     #[test]
-    fn zkvm_and_op_reth_b20_execution_produce_the_same_state_root() {
+    fn zkvm_and_op_reth_h20_execution_produce_the_same_state_root() {
         let admin = Address::repeat_byte(0x11);
         let config = H20Config::new(Some(100), Some(admin)).unwrap();
         let chain_id = 133;
@@ -198,7 +198,7 @@ mod tests {
             },
         );
         let calldata = IActivationRegistry::activateCall {
-            feature: ActivationFeature::B20Asset.id(),
+            feature: ActivationFeature::H20Asset.id(),
         }
         .abi_encode();
         let tx = OpTx(
@@ -225,18 +225,18 @@ mod tests {
         };
 
         let mut op_reth =
-            B20OpEvmFactory::<OpTx>::new(config).create_evm(database(), env.clone());
+            H20OpEvmFactory::<OpTx>::new(config).create_evm(database(), env.clone());
         let op_reth_result =
-            op_reth.transact_raw(tx.clone()).expect("op-reth B20 activation succeeds");
+            op_reth.transact_raw(tx.clone()).expect("op-reth H20 activation succeeds");
 
         let mut zkvm = ZkvmOpEvmFactory::new()
             .with_h20_config(chain_id, config)
             .create_evm(database(), env);
 
-        let dynamic = B20Variant::Asset.compute_address(admin, [0x22; 32].into()).0;
+        let dynamic = H20Variant::Asset.compute_address(admin, [0x22; 32].into()).0;
         assert_eq!(dynamic, address!("0177000000000000000000f4f69ba108f6504dc5"));
         for address in [
-            B20FactoryStorage::ADDRESS,
+            H20FactoryStorage::ADDRESS,
             ActivationRegistryStorage::ADDRESS,
             PolicyRegistryStorage::ADDRESS,
             dynamic,
@@ -248,7 +248,7 @@ mod tests {
             ));
         }
 
-        let zkvm_result = zkvm.transact_raw(tx).expect("ZKVM B20 activation succeeds");
+        let zkvm_result = zkvm.transact_raw(tx).expect("ZKVM H20 activation succeeds");
 
         assert_eq!(op_reth_result.result, zkvm_result.result);
         assert_eq!(op_reth_result.state, zkvm_result.state);

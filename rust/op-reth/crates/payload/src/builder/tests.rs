@@ -27,7 +27,7 @@ use reth_evm::{
     execute::{BlockBuilder, BlockExecutionError},
 };
 use reth_optimism_chainspec::{OpChainSpec, OpChainSpecBuilder};
-use reth_optimism_evm::{B20OpEvmFactory, OpEvmConfig, OpTx, PostExecMode};
+use reth_optimism_evm::{H20OpEvmFactory, OpEvmConfig, OpTx, PostExecMode};
 use reth_optimism_primitives::{OpPrimitives, OpTransactionSigned};
 use reth_optimism_txpool::{
     OpPooledTransaction, OpPooledTx,
@@ -164,7 +164,7 @@ fn payload_builder_ctx(
 }
 
 #[test]
-fn payload_builder_uses_b20_precompiles_at_activation_timestamp() {
+fn payload_builder_uses_h20_precompiles_at_activation_timestamp() {
     const FACTORY: Address = address!("0177FF0000000000000000000000000000000000");
 
     let mut genesis = Genesis::default();
@@ -180,7 +180,7 @@ fn payload_builder_uses_b20_precompiles_at_activation_timestamp() {
         .with_database(StateProviderDatabase::new(&state_provider))
         .with_bundle_update()
         .build();
-    let factory: &B20OpEvmFactory<OpTx> = ctx.evm_config.evm_factory();
+    let factory: &H20OpEvmFactory<OpTx> = ctx.evm_config.evm_factory();
     assert_eq!(factory.config().activation_time(), Some(1));
     let evm = factory.create_evm(
         EmptyDB::default(),
@@ -191,11 +191,11 @@ fn payload_builder_uses_b20_precompiles_at_activation_timestamp() {
     );
     assert!(evm.precompiles().get(&FACTORY).is_some());
 
-    let builder = ctx.block_builder(&mut db).expect("B20 payload builder can be created");
+    let builder = ctx.block_builder(&mut db).expect("H20 payload builder can be created");
     drop(builder);
 
     let mut calldata = Vec::with_capacity(36);
-    calldata.extend_from_slice(&keccak256("isB20(address)")[..4]);
+    calldata.extend_from_slice(&keccak256("isH20(address)")[..4]);
     calldata.extend_from_slice(&[0u8; 12]);
     calldata.extend_from_slice(&address!("0177000000000000000000000000000000000000").into_array());
     let signer = Address::repeat_byte(0x44);
@@ -220,7 +220,7 @@ fn payload_builder_uses_b20_precompiles_at_activation_timestamp() {
         ),
     );
     let direct_tx = ctx.evm_config.tx_env(tx.clone().into_consensus_with2718());
-    let direct_result = direct_evm.transact_raw(direct_tx).expect("direct B20 simulation succeeds");
+    let direct_result = direct_evm.transact_raw(direct_tx).expect("direct H20 simulation succeeds");
 
     let (active_info, active_hashes) =
         run_execute_best_transactions_with_ctx(ctx, signer, vec![tx.clone()], None, None);
@@ -243,7 +243,7 @@ fn payload_builder_uses_b20_precompiles_at_activation_timestamp() {
     assert_eq!(active_info.cumulative_evm_gas_used, direct_result.result.tx_gas_used());
     assert!(
         active_info.cumulative_gas_used > pre_fork_info.cumulative_gas_used,
-        "active payload execution must charge B20 precompile gas rather than behave as an empty account"
+        "active payload execution must charge H20 precompile gas rather than behave as an empty account"
     );
 }
 

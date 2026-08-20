@@ -21,7 +21,7 @@ reth-network-peers.workspace = true
 # op-reth
 reth-optimism-forks.workspace = true
 reth-optimism-primitives = { workspace = true, features = ["serde"] }
-hsk-b20-config.workspace = true
+hsk-h20-config.workspace = true
 
 # ethereum
 alloy-chains.workspace = true
@@ -72,7 +72,7 @@ std = [
     "alloy-chains/std",
     "alloy-genesis/std",
     "alloy-primitives/std",
-    "hsk-b20-config/std",
+    "hsk-h20-config/std",
     "alloy-eips/std",
     "op-alloy-rpc-types/std",
     "reth-chainspec/std",

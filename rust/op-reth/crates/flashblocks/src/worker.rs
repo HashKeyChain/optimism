@@ -504,7 +504,7 @@ mod tests {
     use op_revm::constants::L1_BLOCK_CONTRACT;
     use reth_evm::ConfigureEvm;
     use reth_optimism_chainspec::{OP_MAINNET, OpChainSpecBuilder};
-    use reth_optimism_evm::{B20OpEvmFactory, OpEvmConfig, OpTx};
+    use reth_optimism_evm::{H20OpEvmFactory, OpEvmConfig, OpTx};
     use reth_optimism_primitives::{OpPrimitives, OpTransactionSigned};
     use reth_primitives_traits::{AlloyBlockHeader, Recovered, SignerRecoverable};
     use reth_provider::test_utils::{ExtendedAccount, MockEthProvider};
@@ -556,7 +556,7 @@ mod tests {
     }
 
     #[test]
-    fn flashblock_builder_keeps_the_b20_evm_factory() {
+    fn flashblock_builder_keeps_the_h20_evm_factory() {
         let mut genesis = Genesis::default();
         genesis.config.extra_fields.insert("h20Time".to_string(), serde_json::json!(100));
         genesis.config.extra_fields.insert(
@@ -569,7 +569,7 @@ mod tests {
             .with_genesis_block();
         let builder = FlashBlockBuilder::new(OpEvmConfig::optimism(chain_spec), provider);
 
-        let factory: &B20OpEvmFactory<OpTx> = builder.evm_config.evm_factory();
+        let factory: &H20OpEvmFactory<OpTx> = builder.evm_config.evm_factory();
         assert_eq!(factory.config().activation_time(), Some(100));
     }
 

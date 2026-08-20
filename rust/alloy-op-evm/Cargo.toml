@@ -25,8 +25,8 @@ op-alloy = { workspace = true, features = ["consensus"] }
 
 revm = { workspace = true }
 op-revm = { workspace = true }
-hsk-b20-config.workspace = true
-hsk-b20-precompiles.workspace = true
+hsk-h20-config.workspace = true
+hsk-h20-precompiles.workspace = true
 
 thiserror = { workspace = true }
 
@@ -43,8 +43,8 @@ std = [
 	"revm/std",
 	"alloy-evm/std",
 	"op-revm/std",
-	"hsk-b20-config/std",
-	"hsk-b20-precompiles/std",
+	"hsk-h20-config/std",
+	"hsk-h20-precompiles/std",
 	"alloy-consensus/std",
 	"alloy-eips/std",
 	"op-alloy/std",

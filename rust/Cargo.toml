@@ -12,11 +12,11 @@ categories = ["cryptography", "cryptography::cryptocurrencies"]
 [workspace]
 resolver = "2"
 members = [
-  # HSK B20
-  "b20/config",
-  "b20/precompile-macros",
-  "b20/precompile-storage",
-  "b20/precompiles",
+  # HSK H20
+  "h20/config",
+  "h20/precompile-macros",
+  "h20/precompile-storage",
+  "h20/precompiles",
 
   # Kona
   "kona/bin/*",
@@ -264,11 +264,11 @@ incremental = false
 
 # ==================== WORKSPACE DEPENDENCIES ====================
 [workspace.dependencies]
-# HSK B20
-hsk-b20-config = { path = "b20/config", default-features = false }
-b20-precompile-macros = { path = "b20/precompile-macros" }
-b20-precompile-storage = { path = "b20/precompile-storage", default-features = false }
-hsk-b20-precompiles = { path = "b20/precompiles", default-features = false }
+# HSK H20
+hsk-h20-config = { path = "h20/config", default-features = false }
+h20-precompile-macros = { path = "h20/precompile-macros" }
+h20-precompile-storage = { path = "h20/precompile-storage", default-features = false }
+hsk-h20-precompiles = { path = "h20/precompiles", default-features = false }
 
 # Shared OP Stack binary build/version metadata
 op-version = { path = "op-version" }

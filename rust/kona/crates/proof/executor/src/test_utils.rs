@@ -2,7 +2,7 @@
 
 use crate::{BlockBuildingOutcome, ExecutorResult, StatelessL2Builder, TrieDBProvider};
 use alloy_consensus::Header;
-use alloy_op_evm::B20OpEvmFactory;
+use alloy_op_evm::H20OpEvmFactory;
 use alloy_primitives::{B256, Bytes, Sealable};
 use alloy_provider::{Provider, RootProvider, network::primitives::BlockTransactions};
 use alloy_rlp::Decodable;
@@ -65,8 +65,8 @@ pub fn execute_loaded_fixture(
 
     let mut executor = StatelessL2Builder::new(
         &rollup_config,
-        B20OpEvmFactory::<alloy_op_evm::OpTx>::new(
-            rollup_config.h20_config().expect("fixture B20 config must be valid"),
+        H20OpEvmFactory::<alloy_op_evm::OpTx>::new(
+            rollup_config.h20_config().expect("fixture H20 config must be valid"),
         ),
         alloy_op_evm::block::OpAlloyReceiptBuilder::default(),
         provider,
@@ -215,8 +215,8 @@ impl ExecutorTestFixtureCreator {
 
         let mut executor = StatelessL2Builder::new(
             rollup_config,
-            B20OpEvmFactory::<alloy_op_evm::OpTx>::new(
-                rollup_config.h20_config().expect("fixture B20 config must be valid"),
+            H20OpEvmFactory::<alloy_op_evm::OpTx>::new(
+                rollup_config.h20_config().expect("fixture H20 config must be valid"),
             ),
             alloy_op_evm::block::OpAlloyReceiptBuilder::default(),
             self,

@@ -19,7 +19,7 @@ alloy-evm.workspace = true
 alloy-op-evm.workspace = true
 op-revm.workspace = true
 revm.workspace = true
-hsk-b20-config.workspace = true
+hsk-h20-config.workspace = true
 
 # kona
 kona-preimage = { workspace = true, features = ["serde", "rkyv"] }
@@ -56,7 +56,7 @@ aggregation-test-utils = []
 test-tamper-witness = []
 
 [dev-dependencies]
-hsk-b20-precompiles = { workspace = true, features = ["std"] }
+hsk-h20-precompiles = { workspace = true, features = ["std"] }
 alloy-trie = { workspace = true, features = ["ethereum"] }
 
 [lints]

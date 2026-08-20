@@ -164,8 +164,8 @@ where
         .map(|(chain_id, config)| {
             config
                 .h20_config()
-                .map(|b20| (*chain_id, b20))
-                .map_err(|err| anyhow!("invalid B20 config for chain {chain_id}: {err}"))
+                .map(|h20| (*chain_id, h20))
+                .map_err(|err| anyhow!("invalid H20 config for chain {chain_id}: {err}"))
         })
         .collect::<Result<Vec<_>, _>>()?;
     let evm_factory = PostExecEvmFactoryAdapter::new(

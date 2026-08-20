@@ -2,9 +2,9 @@
 
 use alloc::{format, string::String};
 use alloy_evm::{Database, precompiles::PrecompilesMap};
-use alloy_op_evm::{B20OpPrecompiles, OpEvmContext};
+use alloy_op_evm::{H20OpPrecompiles, OpEvmContext};
 use alloy_primitives::Address;
-use hsk_b20_config::H20Config;
+use hsk_h20_config::H20Config;
 use op_revm::{OpSpecId, precompiles::OpPrecompiles};
 #[cfg(target_os = "zkvm")]
 use revm::precompile::PrecompileId;
@@ -81,9 +81,9 @@ pub struct OpZkvmPrecompiles {
     inner: EthPrecompiles,
     /// The [`OpSpecId`] of the precompiles.
     spec: OpSpecId,
-    /// Optional OP+B20 map for the executing block timestamp.
-    b20_precompiles: Option<PrecompilesMap>,
-    /// B20 configuration retained across `set_spec` calls.
+    /// Optional OP+H20 map for the executing block timestamp.
+    h20_precompiles: Option<PrecompilesMap>,
+    /// H20 configuration retained across `set_spec` calls.
     h20_config: H20Config,
     /// Executing block timestamp retained across `set_spec` calls.
     timestamp: u64,
@@ -101,21 +101,21 @@ impl OpZkvmPrecompiles {
         Self {
             inner: EthPrecompiles { precompiles, spec: spec.into_eth_spec() },
             spec,
-            b20_precompiles: None,
+            h20_precompiles: None,
             h20_config: H20Config::DISABLED,
             timestamp: 0,
             warm_addresses,
         }
     }
 
-    /// Adds Base Beryl B20 v1 while retaining ZKVM acceleration for canonical precompiles.
+    /// Adds Base Beryl H20 v1 while retaining ZKVM acceleration for canonical precompiles.
     pub fn with_h20(mut self, config: H20Config, timestamp: u64) -> Self {
         self.h20_config = config;
         self.timestamp = timestamp;
         if config.is_active_at(timestamp) {
-            let installed = B20OpPrecompiles::build(self.spec, config, timestamp);
+            let installed = H20OpPrecompiles::build(self.spec, config, timestamp);
             self.warm_addresses = installed.addresses().copied().collect();
-            self.b20_precompiles = Some(installed);
+            self.h20_precompiles = Some(installed);
         }
         self
     }
@@ -143,7 +143,7 @@ where
         inputs: &CallInputs,
     ) -> Result<Option<Self::Output>, String> {
         let Some(precompile) = self.inner.precompiles.get(&inputs.bytecode_address) else {
-            if let Some(installed) = self.b20_precompiles.as_mut() {
+            if let Some(installed) = self.h20_precompiles.as_mut() {
                 return <PrecompilesMap as PrecompileProvider<OpEvmContext<DB>>>::run(
                     installed, context, inputs,
                 );
@@ -202,7 +202,7 @@ where
 
     #[inline]
     fn contains(&self, address: &Address) -> bool {
-        self.b20_precompiles
+        self.h20_precompiles
             .as_ref()
             .map_or_else(|| self.inner.contains(address), |installed| installed.get(address).is_some())
     }

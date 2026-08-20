@@ -64,31 +64,31 @@ use reth_network_peers::NodeRecord;
 use reth_optimism_primitives::L2_TO_L1_MESSAGE_PASSER_ADDRESS;
 use reth_primitives_traits::{SealedHeader, sync::LazyLock};
 
-pub use hsk_b20_config::H20Config;
+pub use hsk_h20_config::H20Config;
 
-/// Genesis config field containing the inclusive B20 activation timestamp.
+/// Genesis config field containing the inclusive H20 activation timestamp.
 pub const H20_TIME_FIELD: &str = "h20Time";
 /// Genesis config field containing the static Beryl `ActivationRegistry` administrator.
 pub const H20_ACTIVATION_ADMIN_FIELD: &str = "h20ActivationAdmin";
 
-/// Chain-spec access to HSK B20 consensus configuration.
+/// Chain-spec access to HSK H20 consensus configuration.
 pub trait H20ChainSpec: EthChainSpec {
-    /// Returns the validated B20 configuration.
+    /// Returns the validated H20 configuration.
     ///
     /// # Panics
     ///
-    /// Panics when either B20 genesis field is malformed or only one of the two required fields is
+    /// Panics when either H20 genesis field is malformed or only one of the two required fields is
     /// configured. Invalid consensus configuration must fail node startup rather than silently
-    /// disabling B20.
+    /// disabling H20.
     fn h20_config(&self) -> H20Config {
         h20_config_from_genesis(self.genesis())
-            .unwrap_or_else(|error| panic!("invalid B20 genesis configuration: {error}"))
+            .unwrap_or_else(|error| panic!("invalid H20 genesis configuration: {error}"))
     }
 }
 
 impl<T: EthChainSpec + ?Sized> H20ChainSpec for T {}
 
-/// Parses B20 configuration from a genesis `config` object.
+/// Parses H20 configuration from a genesis `config` object.
 pub fn h20_config_from_genesis(genesis: &Genesis) -> Result<H20Config, H20GenesisConfigError> {
     use core::str::FromStr;
 
@@ -108,15 +108,15 @@ pub fn h20_config_from_genesis(genesis: &Genesis) -> Result<H20Config, H20Genesi
     H20Config::new(activation_time, activation_admin).map_err(H20GenesisConfigError::InvalidConfig)
 }
 
-/// Invalid B20 fields in the genesis chain config.
+/// Invalid H20 fields in the genesis chain config.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum H20GenesisConfigError {
     /// `h20Time` is not an unsigned 64-bit integer.
     InvalidActivationTime,
     /// `h20ActivationAdmin` is not a valid address string.
     InvalidAdmin,
-    /// The pair of B20 fields violates B20 configuration invariants.
-    InvalidConfig(hsk_b20_config::H20ConfigError),
+    /// The pair of H20 fields violates H20 configuration invariants.
+    InvalidConfig(hsk_h20_config::H20ConfigError),
 }
 
 impl core::fmt::Display for H20GenesisConfigError {
@@ -618,13 +618,13 @@ mod tests {
     use crate::*;
 
     #[test]
-    fn b20_genesis_config_is_disabled_when_fields_are_absent() {
+    fn h20_genesis_config_is_disabled_when_fields_are_absent() {
         let genesis = Genesis::default();
         assert_eq!(h20_config_from_genesis(&genesis).unwrap(), H20Config::DISABLED);
     }
 
     #[test]
-    fn b20_genesis_config_parses_time_and_static_admin() {
+    fn h20_genesis_config_parses_time_and_static_admin() {
         let mut genesis = Genesis::default();
         genesis
             .config
@@ -643,7 +643,7 @@ mod tests {
     }
 
     #[test]
-    fn b20_genesis_config_rejects_partial_or_zero_admin_config() {
+    fn h20_genesis_config_rejects_partial_or_zero_admin_config() {
         let mut missing_admin = Genesis::default();
         missing_admin
             .config

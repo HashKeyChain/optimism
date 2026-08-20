@@ -7,7 +7,7 @@ use alloy_op_evm::{
     OpEvm, OpEvmContext, OpTx, OpTxError,
     post_exec::{PostExecEvmFactoryHooks, PostExecExecutedTx, PostExecTxContext, WarmingState},
 };
-use hsk_b20_config::H20Config;
+use hsk_h20_config::H20Config;
 use kona_preimage::{HintWriterClient, PreimageOracleClient};
 use op_revm::{L1BlockInfo, OpBuilder, OpHaltReason, OpSpecId, OpTransaction};
 use revm::{
@@ -23,7 +23,7 @@ pub struct FpvmOpEvmFactory<H, O> {
     hint_writer: H,
     /// The oracle reader.
     oracle_reader: O,
-    /// Per-L2-chain B20 consensus configurations loaded from proof boot information.
+    /// Per-L2-chain H20 consensus configurations loaded from proof boot information.
     h20_configs: BTreeMap<u64, H20Config>,
 }
 
@@ -37,13 +37,13 @@ where
         Self { hint_writer, oracle_reader, h20_configs: BTreeMap::new() }
     }
 
-    /// Installs the validated B20 configuration for an L2 chain ID.
+    /// Installs the validated H20 configuration for an L2 chain ID.
     pub fn with_h20_config(mut self, chain_id: u64, config: H20Config) -> Self {
         self.h20_configs.insert(chain_id, config);
         self
     }
 
-    /// Installs all validated B20 configurations used by an interop proof.
+    /// Installs all validated H20 configurations used by an interop proof.
     pub fn with_h20_configs(mut self, configs: impl IntoIterator<Item = (u64, H20Config)>) -> Self {
         self.h20_configs.extend(configs);
         self
@@ -181,15 +181,15 @@ where
 mod tests {
     use super::*;
     use alloy_evm::Evm;
-    use alloy_op_evm::{B20OpEvmFactory, OpEvmContext, post_exec::PostExecEvmFactoryAdapter};
+    use alloy_op_evm::{H20OpEvmFactory, OpEvmContext, post_exec::PostExecEvmFactoryAdapter};
     use alloy_consensus::{Header, Sealable};
     use alloy_eips::Encodable2718;
     use alloy_primitives::{Address, B256, Bytes, TxKind, U256, address};
     use alloy_rpc_types_engine::PayloadAttributes;
     use alloy_sol_types::SolCall;
     use alloy_trie::{TrieAccount, root};
-    use hsk_b20_precompiles::{
-        ActivationFeature, ActivationRegistryStorage, B20FactoryStorage, B20Variant,
+    use hsk_h20_precompiles::{
+        ActivationFeature, ActivationRegistryStorage, H20FactoryStorage, H20Variant,
         IActivationRegistry, PolicyRegistryStorage,
     };
     use kona_preimage::{BidirectionalChannel, HintWriter, OracleReader};
@@ -230,7 +230,7 @@ mod tests {
     }
 
     #[test]
-    fn fpvm_and_op_reth_b20_execution_produce_the_same_state_root() {
+    fn fpvm_and_op_reth_h20_execution_produce_the_same_state_root() {
         let admin = Address::repeat_byte(0x11);
         let config = H20Config::new(Some(100), Some(admin)).unwrap();
         let chain_id = 133;
@@ -239,7 +239,7 @@ mod tests {
             BlockEnv { timestamp: U256::from(100), gas_limit: 30_000_000, ..Default::default() },
         );
         let calldata =
-            IActivationRegistry::activateCall { feature: ActivationFeature::B20Asset.id() }
+            IActivationRegistry::activateCall { feature: ActivationFeature::H20Asset.id() }
                 .abi_encode();
         let base_tx = TxEnv::builder()
             .caller(admin)
@@ -257,10 +257,10 @@ mod tests {
             db
         };
 
-        let mut op_reth = B20OpEvmFactory::<OpTx>::new(config).create_evm(database(), env.clone());
+        let mut op_reth = H20OpEvmFactory::<OpTx>::new(config).create_evm(database(), env.clone());
         let op_reth_result = op_reth
             .transact_raw(OpTx(op_transaction.clone()))
-            .expect("op-reth B20 activation succeeds");
+            .expect("op-reth H20 activation succeeds");
 
         let (hint_chan, preimage_chan) =
             (BidirectionalChannel::new().unwrap(), BidirectionalChannel::new().unwrap());
@@ -271,10 +271,10 @@ mod tests {
         .with_h20_config(chain_id, config)
         .create_evm(database(), env);
 
-        let dynamic = B20Variant::Asset.compute_address(admin, [0x22; 32].into()).0;
+        let dynamic = H20Variant::Asset.compute_address(admin, [0x22; 32].into()).0;
         assert_eq!(dynamic, address!("0177000000000000000000f4f69ba108f6504dc5"));
         for address in [
-            B20FactoryStorage::ADDRESS,
+            H20FactoryStorage::ADDRESS,
             ActivationRegistryStorage::ADDRESS,
             PolicyRegistryStorage::ADDRESS,
             dynamic,
@@ -287,7 +287,7 @@ mod tests {
         }
 
         let fpvm_result =
-            fpvm.transact_raw(FpvmOpTx(op_transaction)).expect("FPVM B20 activation succeeds");
+            fpvm.transact_raw(FpvmOpTx(op_transaction)).expect("FPVM H20 activation succeeds");
 
         assert_eq!(op_reth_result.result, fpvm_result.result);
         assert_eq!(op_reth_result.state, fpvm_result.state);
@@ -305,7 +305,7 @@ mod tests {
     }
 
     #[test]
-    fn fpvm_and_op_reth_build_the_same_b20_block_state_and_output_root() {
+    fn fpvm_and_op_reth_build_the_same_h20_block_state_and_output_root() {
         let admin = Address::repeat_byte(0x11);
         let config = H20Config::new(Some(100), Some(admin)).unwrap();
         let rollup = RollupConfig {
@@ -316,7 +316,7 @@ mod tests {
             ..Default::default()
         };
         let calldata = IActivationRegistry::activateCall {
-            feature: ActivationFeature::B20Asset.id(),
+            feature: ActivationFeature::H20Asset.id(),
         }
         .abi_encode();
         let deposit = TxDeposit {
@@ -353,7 +353,7 @@ mod tests {
 
         let mut op_reth = StatelessL2Builder::new(
             &rollup,
-            B20OpEvmFactory::<OpTx>::new(config),
+            H20OpEvmFactory::<OpTx>::new(config),
             alloy_op_evm::block::OpAlloyReceiptBuilder::default(),
             NoopTrieDBProvider,
             NoopTrieHinter,
@@ -380,7 +380,7 @@ mod tests {
             NoopTrieHinter,
             parent,
         );
-        let fpvm_outcome = fpvm.build_block(attributes).expect("FPVM B20 block builds");
+        let fpvm_outcome = fpvm.build_block(attributes).expect("FPVM H20 block builds");
 
         assert_eq!(op_reth_outcome.header, fpvm_outcome.header);
         assert_eq!(op_reth_outcome.execution_result, fpvm_outcome.execution_result);
