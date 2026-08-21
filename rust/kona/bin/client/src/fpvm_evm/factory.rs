@@ -180,10 +180,10 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use alloy_evm::Evm;
-    use alloy_op_evm::{H20OpEvmFactory, OpEvmContext, post_exec::PostExecEvmFactoryAdapter};
     use alloy_consensus::{Header, Sealable};
     use alloy_eips::Encodable2718;
+    use alloy_evm::Evm;
+    use alloy_op_evm::{H20OpEvmFactory, OpEvmContext, post_exec::PostExecEvmFactoryAdapter};
     use alloy_primitives::{Address, B256, Bytes, TxKind, U256, address};
     use alloy_rpc_types_engine::PayloadAttributes;
     use alloy_sol_types::SolCall;
@@ -192,10 +192,10 @@ mod tests {
         ActivationFeature, ActivationRegistryStorage, H20FactoryStorage, H20Variant,
         IActivationRegistry, PolicyRegistryStorage,
     };
-    use kona_preimage::{BidirectionalChannel, HintWriter, OracleReader};
     use kona_executor::{NoopTrieDBProvider, StatelessL2Builder};
     use kona_genesis::RollupConfig;
     use kona_mpt::NoopTrieHinter;
+    use kona_preimage::{BidirectionalChannel, HintWriter, OracleReader};
     use kona_protocol::OutputRoot;
     use op_alloy_consensus::{OpTxEnvelope, TxDeposit};
     use op_alloy_rpc_types_engine::OpPayloadAttributes;
@@ -271,19 +271,24 @@ mod tests {
         .with_h20_config(chain_id, config)
         .create_evm(database(), env);
 
-        let dynamic = H20Variant::Asset.compute_address(admin, [0x22; 32].into()).0;
-        assert_eq!(dynamic, address!("0177000000000000000000f4f69ba108f6504dc5"));
+        let asset = H20Variant::Asset.compute_address(admin, [0x22; 32].into()).0;
+        assert_eq!(asset, address!("0177000000000000000000f4f69ba108f6504dc5"));
+        let stablecoin = H20Variant::Stablecoin.compute_address(admin, [0x22; 32].into()).0;
+        assert_eq!(stablecoin, address!("0177000000000000000001f4f69ba108f6504dc5"));
         for address in [
             H20FactoryStorage::ADDRESS,
             ActivationRegistryStorage::ADDRESS,
             PolicyRegistryStorage::ADDRESS,
-            dynamic,
+            asset,
+            stablecoin,
         ] {
             assert!(op_reth.precompiles().get(&address).is_some());
-            assert!(<OpFpvmPrecompiles<_, _> as PrecompileProvider<OpEvmContext<InMemoryDB>>>::contains(
-                fpvm.precompiles(),
-                &address,
-            ));
+            assert!(
+                <OpFpvmPrecompiles<_, _> as PrecompileProvider<OpEvmContext<InMemoryDB>>>::contains(
+                    fpvm.precompiles(),
+                    &address,
+                )
+            );
         }
 
         let fpvm_result =
@@ -315,10 +320,9 @@ mod tests {
             h20_activation_admin: Some(admin),
             ..Default::default()
         };
-        let calldata = IActivationRegistry::activateCall {
-            feature: ActivationFeature::H20Asset.id(),
-        }
-        .abi_encode();
+        let calldata =
+            IActivationRegistry::activateCall { feature: ActivationFeature::H20Asset.id() }
+                .abi_encode();
         let deposit = TxDeposit {
             source_hash: B256::repeat_byte(0x44),
             from: admin,
@@ -362,10 +366,8 @@ mod tests {
         let op_reth_outcome =
             op_reth.build_block(attributes.clone()).expect("op-reth-style block builds");
 
-        let (hint_chan, preimage_chan) = (
-            BidirectionalChannel::new().unwrap(),
-            BidirectionalChannel::new().unwrap(),
-        );
+        let (hint_chan, preimage_chan) =
+            (BidirectionalChannel::new().unwrap(), BidirectionalChannel::new().unwrap());
         let mut fpvm = StatelessL2Builder::new(
             &rollup,
             PostExecEvmFactoryAdapter::new(

@@ -34,10 +34,7 @@ impl ZkvmOpEvmFactory {
     }
 
     /// Installs all chain configurations used by an interop proof.
-    pub fn with_h20_configs(
-        mut self,
-        configs: impl IntoIterator<Item = (u64, H20Config)>,
-    ) -> Self {
+    pub fn with_h20_configs(mut self, configs: impl IntoIterator<Item = (u64, H20Config)>) -> Self {
         self.h20_configs.extend(configs);
         self
     }
@@ -164,23 +161,25 @@ mod tests {
     };
 
     fn state_root(state: EvmState) -> B256 {
-        let accounts = state.into_iter().filter_map(|(address, account)| {
-            if !account.is_touched() || account.is_selfdestructed() {
-                return None;
-            }
-            let storage_root = root::storage_root_unhashed(account.storage.into_iter().map(
-                |(slot, value)| (B256::from(slot.to_be_bytes()), value.present_value),
-            ));
-            Some((
-                address,
-                TrieAccount {
-                    nonce: account.info.nonce,
-                    balance: account.info.balance,
-                    storage_root,
-                    code_hash: account.info.code_hash,
-                },
-            ))
-        });
+        let accounts =
+            state.into_iter().filter_map(|(address, account)| {
+                if !account.is_touched() || account.is_selfdestructed() {
+                    return None;
+                }
+                let storage_root =
+                    root::storage_root_unhashed(account.storage.into_iter().map(
+                        |(slot, value)| (B256::from(slot.to_be_bytes()), value.present_value),
+                    ));
+                Some((
+                    address,
+                    TrieAccount {
+                        nonce: account.info.nonce,
+                        balance: account.info.balance,
+                        storage_root,
+                        code_hash: account.info.code_hash,
+                    },
+                ))
+            });
         root::state_root_unhashed(accounts)
     }
 
@@ -191,16 +190,11 @@ mod tests {
         let chain_id = 133;
         let env = EvmEnv::new(
             CfgEnv::new_with_spec(OpSpecId::JOVIAN).with_chain_id(chain_id),
-            BlockEnv {
-                timestamp: U256::from(100),
-                gas_limit: 30_000_000,
-                ..Default::default()
-            },
+            BlockEnv { timestamp: U256::from(100), gas_limit: 30_000_000, ..Default::default() },
         );
-        let calldata = IActivationRegistry::activateCall {
-            feature: ActivationFeature::H20Asset.id(),
-        }
-        .abi_encode();
+        let calldata =
+            IActivationRegistry::activateCall { feature: ActivationFeature::H20Asset.id() }
+                .abi_encode();
         let tx = OpTx(
             OpTransaction::builder()
                 .base(
@@ -217,29 +211,27 @@ mod tests {
         );
         let database = || {
             let mut db = InMemoryDB::default();
-            db.insert_account_info(
-                admin,
-                AccountInfo { balance: U256::MAX, ..Default::default() },
-            );
+            db.insert_account_info(admin, AccountInfo { balance: U256::MAX, ..Default::default() });
             db
         };
 
-        let mut op_reth =
-            H20OpEvmFactory::<OpTx>::new(config).create_evm(database(), env.clone());
+        let mut op_reth = H20OpEvmFactory::<OpTx>::new(config).create_evm(database(), env.clone());
         let op_reth_result =
             op_reth.transact_raw(tx.clone()).expect("op-reth H20 activation succeeds");
 
-        let mut zkvm = ZkvmOpEvmFactory::new()
-            .with_h20_config(chain_id, config)
-            .create_evm(database(), env);
+        let mut zkvm =
+            ZkvmOpEvmFactory::new().with_h20_config(chain_id, config).create_evm(database(), env);
 
-        let dynamic = H20Variant::Asset.compute_address(admin, [0x22; 32].into()).0;
-        assert_eq!(dynamic, address!("0177000000000000000000f4f69ba108f6504dc5"));
+        let asset = H20Variant::Asset.compute_address(admin, [0x22; 32].into()).0;
+        assert_eq!(asset, address!("0177000000000000000000f4f69ba108f6504dc5"));
+        let stablecoin = H20Variant::Stablecoin.compute_address(admin, [0x22; 32].into()).0;
+        assert_eq!(stablecoin, address!("0177000000000000000001f4f69ba108f6504dc5"));
         for address in [
             H20FactoryStorage::ADDRESS,
             ActivationRegistryStorage::ADDRESS,
             PolicyRegistryStorage::ADDRESS,
-            dynamic,
+            asset,
+            stablecoin,
         ] {
             assert!(op_reth.precompiles().get(&address).is_some());
             assert!(<OpZkvmPrecompiles as PrecompileProvider<OpEvmContext<InMemoryDB>>>::contains(
