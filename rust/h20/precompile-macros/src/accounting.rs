@@ -1,4 +1,4 @@
-//! Derives for Base B-20 storage accounting ports.
+//! Derives for Base H20 storage accounting ports.
 
 use proc_macro2::TokenStream;
 use quote::quote;

@@ -1,4 +1,4 @@
-//! Append-only business-logic interface for the stablecoin B-20 precompile.
+//! Append-only business-logic interface for the stablecoin H20 precompile.
 
 use alloc::{string::String, vec::Vec};
 

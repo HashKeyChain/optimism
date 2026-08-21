@@ -1,4 +1,4 @@
-//! EVM storage adapter for the asset B-20 variant.
+//! EVM storage adapter for the asset H20 variant.
 
 use alloc::string::String;
 
@@ -8,7 +8,7 @@ use h20_precompile_storage::{Handler, Mapping, Result, StorageCtx};
 
 use crate::H20CoreStorage;
 
-/// Asset-specific B-20 storage rooted at the `base.b20.asset` ERC-7201 namespace.
+/// Asset-specific H20 storage rooted at the `base.b20.asset` ERC-7201 namespace.
 #[derive(Debug, Clone, Storable)]
 #[namespace("base.b20.asset")]
 pub struct H20AssetExtensionStorage {
@@ -25,7 +25,7 @@ pub struct H20AssetExtensionStorage {
     pub extra_metadata: Mapping<String, String>, // slot 3
 }
 
-/// EVM-backed storage for an asset B-20 token.
+/// EVM-backed storage for an asset H20 token.
 #[contract]
 #[derive(TokenAccounting, AssetAccounting)]
 pub struct H20AssetStorage {
@@ -33,7 +33,7 @@ pub struct H20AssetStorage {
     pub asset: H20AssetExtensionStorage,
 }
 
-/// Creation-time parameters for an asset B-20 token.
+/// Creation-time parameters for an asset H20 token.
 ///
 /// Passed to [`H20AssetStorage::initialize`] to write all fields atomically.
 #[derive(Debug)]
@@ -68,9 +68,9 @@ impl<'a> H20AssetStorage<'a> {
 }
 
 impl H20AssetStorage<'_> {
-    /// Minimum allowed decimals for a B-20 asset token.
+    /// Minimum allowed decimals for a H20 asset token.
     pub const MIN_DECIMALS: u8 = 6;
-    /// Maximum allowed decimals for a B-20 asset token.
+    /// Maximum allowed decimals for a H20 asset token.
     pub const MAX_DECIMALS: u8 = 18;
     /// WAD precision for multiplier arithmetic: 1e18.
     pub const WAD: U256 = U256::from_limbs([1_000_000_000_000_000_000, 0, 0, 0]);

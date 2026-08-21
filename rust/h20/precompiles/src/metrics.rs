@@ -18,7 +18,7 @@ pub struct PrecompileCallMetric {
     pub precompile: &'static str,
     /// ABI method name or `unknown`.
     pub method: Cow<'static, str>,
-    /// Optional variant label. Dynamic B-20 calls use `asset` or `stablecoin`.
+    /// Optional variant label. Dynamic H20 calls use `asset` or `stablecoin`.
     pub variant: Option<&'static str>,
     /// Calldata byte length.
     pub input_bytes: usize,
@@ -44,7 +44,7 @@ impl PrecompileCallMetric {
         Self::new(precompile, method, None, input_bytes)
     }
 
-    /// Creates a call metric descriptor for a dynamic B-20 token call.
+    /// Creates a call metric descriptor for a dynamic H20 token call.
     pub fn h20(
         variant: &'static str,
         method: impl Into<Cow<'static, str>>,
@@ -372,7 +372,7 @@ impl BerylErrorClassifier {
 pub struct BerylMetricLabels;
 
 impl BerylMetricLabels {
-    /// Returns a B-20 method label from an existing stable call label.
+    /// Returns a H20 method label from an existing stable call label.
     pub fn h20_method(label: &'static str) -> Cow<'static, str> {
         Cow::Borrowed(
             label
@@ -462,12 +462,12 @@ impl BerylMetricLabels {
         }
     }
 
-    /// Returns call metadata for asset B-20 calldata.
+    /// Returns call metadata for asset H20 calldata.
     pub fn h20_asset_call(calldata: &[u8]) -> PrecompileCallMetric {
         PrecompileCallMetric::h20("asset", Self::h20_asset_method(calldata), calldata.len())
     }
 
-    /// Returns the metric method label for asset B-20 calldata.
+    /// Returns the metric method label for asset H20 calldata.
     pub fn h20_asset_method(calldata: &[u8]) -> Cow<'static, str> {
         let Some(selector) = BerylSelector::selector(calldata) else {
             return Self::unknown();
@@ -481,7 +481,7 @@ impl BerylMetricLabels {
         Self::unknown()
     }
 
-    /// Returns call metadata for stablecoin B-20 calldata.
+    /// Returns call metadata for stablecoin H20 calldata.
     pub fn h20_stablecoin_call(calldata: &[u8]) -> PrecompileCallMetric {
         PrecompileCallMetric::h20(
             "stablecoin",
@@ -490,7 +490,7 @@ impl BerylMetricLabels {
         )
     }
 
-    /// Returns the metric method label for stablecoin B-20 calldata.
+    /// Returns the metric method label for stablecoin H20 calldata.
     pub fn h20_stablecoin_method(calldata: &[u8]) -> Cow<'static, str> {
         let Some(selector) = BerylSelector::selector(calldata) else {
             return Self::unknown();
@@ -640,7 +640,7 @@ impl BerylAuxiliaryMetrics {
         PrecompileCallMetric::singleton(precompile, method, 0)
     }
 
-    /// Creates a B-20 call descriptor for auxiliary metric recording.
+    /// Creates a H20 call descriptor for auxiliary metric recording.
     pub fn h20(variant: &'static str, method: &'static str) -> PrecompileCallMetric {
         PrecompileCallMetric::h20(variant, method, 0)
     }

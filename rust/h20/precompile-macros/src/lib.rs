@@ -55,7 +55,7 @@ pub fn derive_storage_block(input: TokenStream) -> TokenStream {
     storable::derive(parse_macro_input!(input as DeriveInput))
 }
 
-/// Derives the B-20 `TokenAccounting` storage port for contract storage structs.
+/// Derives the H20 `TokenAccounting` storage port for contract storage structs.
 #[proc_macro_derive(TokenAccounting)]
 pub fn derive_token_accounting(input: TokenStream) -> TokenStream {
     accounting::derive_token(parse_macro_input!(input as DeriveInput))

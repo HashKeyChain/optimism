@@ -233,16 +233,16 @@ mod tests {
     }
 
     #[test]
-    fn legacy_h20_and_h20_singleton_addresses_are_not_dynamic_tokens() {
-        let legacy_h20 = address!("B200000000000000000000000000000000000000");
+    fn legacy_b2_and_h20_singleton_addresses_are_not_dynamic_tokens() {
+        let legacy_b2_address = address!("B200000000000000000000000000000000000000");
         let singletons = [
             address!("0177FF0000000000000000000000000000000000"),
             address!("0177FF0000000000000000000000000000000001"),
             address!("0177FF0000000000000000000000000000000002"),
         ];
 
-        assert!(!H20Variant::has_h20_prefix(legacy_h20));
-        assert_eq!(H20Variant::from_address(legacy_h20), None);
+        assert!(!H20Variant::has_h20_prefix(legacy_b2_address));
+        assert_eq!(H20Variant::from_address(legacy_b2_address), None);
         for singleton in singletons {
             assert!(!H20Variant::has_h20_prefix(singleton));
             assert!(H20Variant::is_h20_singleton_address(singleton));

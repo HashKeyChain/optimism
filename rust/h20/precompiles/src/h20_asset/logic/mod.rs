@@ -1,4 +1,4 @@
-//! Versioned business logic for the asset B-20 precompile.
+//! Versioned business logic for the asset H20 precompile.
 //!
 //! [`Asset`] (in [`interface`](self)) is the append-only business-logic
 //! interface each version implements; [`H20AssetToken`] is the minimal

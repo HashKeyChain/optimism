@@ -1,4 +1,4 @@
-//! Capability extension traits for B-20 token variants.
+//! Capability extension traits for H20 token variants.
 //!
 //! Each trait provides a composable set of token operations with default implementations
 //! built entirely on top of [`TokenAccounting`]. A token variant opts in to a

@@ -1,4 +1,4 @@
-//! Fixtures and helpers shared across the B-20 precompile golden test suites.
+//! Fixtures and helpers shared across the H20 precompile golden test suites.
 
 use alloy_primitives::{Address, B256, Bytes, LogData, U256, address, hex, keccak256};
 use alloy_sol_types::SolValue;

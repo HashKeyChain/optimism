@@ -1,4 +1,4 @@
-//! Shared harness for the B-20 precompile golden test suites.
+//! Shared harness for the H20 precompile golden test suites.
 //!
 //! The four golden integration tests (`h20_asset_v1_golden`, `h20_stablecoin_v1_golden`,
 //! `h20_factory_v1_golden`, `h20_policy_v1_golden`) each compile this module independently,

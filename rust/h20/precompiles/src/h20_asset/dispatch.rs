@@ -1,4 +1,4 @@
-//! ABI dispatch for the asset B-20 variant.
+//! ABI dispatch for the asset H20 variant.
 //!
 //! The dispatcher owns everything that is *not* version-specific: it decodes the
 //! calldata, resolves the active version once from the hardfork (via
@@ -37,7 +37,7 @@ impl<S: AssetAccounting, A: PolicyAccounting> H20AssetToken<S, A> {
         self.dispatch_with_observer(ctx, calldata, upgrade, NoopPrecompileCallObserver)
     }
 
-    /// ABI-dispatches `calldata` and observes the decoded asset B-20 operation.
+    /// ABI-dispatches `calldata` and observes the decoded asset H20 operation.
     pub fn dispatch_with_observer<O>(
         &mut self,
         ctx: StorageCtx<'_>,

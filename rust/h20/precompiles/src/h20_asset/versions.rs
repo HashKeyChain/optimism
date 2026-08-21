@@ -1,4 +1,4 @@
-//! Version manager for the asset B-20 precompile.
+//! Version manager for the asset H20 precompile.
 //!
 //! This module is the single owner of both version mappings: which version is
 //! active at a given hardfork ([`AssetVersions::from_spec`]), and which
@@ -11,7 +11,7 @@ use crate::H20Spec;
 
 use crate::{Asset, AssetAccounting, AssetV1, PolicyAccounting};
 
-/// An activated version of the asset B-20 precompile logic.
+/// An activated version of the asset H20 precompile logic.
 ///
 /// Each variant maps to an immutable implementation via [`Self::implementation`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

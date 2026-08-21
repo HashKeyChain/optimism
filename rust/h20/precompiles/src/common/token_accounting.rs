@@ -4,7 +4,7 @@ use alloc::string::String;
 use alloy_primitives::{Address, B256, LogData, U256};
 use h20_precompile_storage::Result;
 
-/// Maximum total supply for a B-20 token.
+/// Maximum total supply for a H20 token.
 pub const H20_MAX_SUPPLY_CAP: U256 = U256::from_limbs([u64::MAX, u64::MAX, 0, 0]);
 
 /// Outbound port: all data reads and writes the core business logic requires.

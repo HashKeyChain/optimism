@@ -1,4 +1,4 @@
-//! EVM storage adapter for the stablecoin B-20 variant.
+//! EVM storage adapter for the stablecoin H20 variant.
 #![allow(clippy::collection_is_never_read)]
 
 use alloc::string::String;
@@ -9,7 +9,7 @@ use h20_precompile_storage::{BasePrecompileError, Handler, Result, StorageCtx};
 
 use crate::{H20CoreStorage, IH20Factory};
 
-/// Stablecoin-specific B-20 storage rooted at the `base.b20.stablecoin` ERC-7201 namespace.
+/// Stablecoin-specific H20 storage rooted at the `base.b20.stablecoin` ERC-7201 namespace.
 #[allow(clippy::collection_is_never_read)]
 #[derive(Debug, Clone, Storable)]
 #[namespace("base.b20.stablecoin")]
@@ -20,7 +20,7 @@ pub struct H20StablecoinExtensionStorage {
     pub currency: String, // offset 0
 }
 
-/// EVM-backed storage for a stablecoin B-20 token.
+/// EVM-backed storage for a stablecoin H20 token.
 #[contract]
 #[derive(TokenAccounting, StablecoinAccounting)]
 pub struct H20StablecoinStorage {
@@ -28,7 +28,7 @@ pub struct H20StablecoinStorage {
     pub stablecoin: H20StablecoinExtensionStorage,
 }
 
-/// Creation-time parameters for a stablecoin B-20 token.
+/// Creation-time parameters for a stablecoin H20 token.
 ///
 /// Passed to [`H20StablecoinStorage::initialize`] to write all fields atomically.
 #[derive(Debug)]

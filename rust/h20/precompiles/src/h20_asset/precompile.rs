@@ -1,4 +1,4 @@
-//! Precompile entry point for the asset B-20 variant.
+//! Precompile entry point for the asset H20 variant.
 
 use crate::H20Spec;
 use alloy_evm::precompiles::DynPrecompile;
@@ -10,7 +10,7 @@ use crate::{
     PolicyVersions, PrecompileCallObserver, macros::base_precompile,
 };
 
-/// Entry point for the asset B-20 token precompile.
+/// Entry point for the asset H20 token precompile.
 ///
 /// Wraps [`H20AssetToken`] dispatch behind a [`DynPrecompile`] for
 /// registration in a [`PrecompilesMap`].

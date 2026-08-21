@@ -1,4 +1,4 @@
-//! ABI dispatch for the stablecoin B-20 variant.
+//! ABI dispatch for the stablecoin H20 variant.
 //!
 //! The dispatcher owns everything that is *not* version-specific: it decodes the
 //! (via [`StablecoinVersions`]), and routes each operation — including reads — to
@@ -35,7 +35,7 @@ impl<S: StablecoinAccounting, A: PolicyAccounting> H20StablecoinToken<S, A> {
         self.dispatch_with_observer(ctx, calldata, upgrade, NoopPrecompileCallObserver)
     }
 
-    /// ABI-dispatches `calldata` and observes the decoded stablecoin B-20 operation.
+    /// ABI-dispatches `calldata` and observes the decoded stablecoin H20 operation.
     pub fn dispatch_with_observer<O>(
         &mut self,
         ctx: StorageCtx<'_>,

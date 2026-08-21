@@ -1,4 +1,4 @@
-//! Precompile entry point for the stablecoin B-20 variant.
+//! Precompile entry point for the stablecoin H20 variant.
 
 use crate::H20Spec;
 use alloy_evm::precompiles::DynPrecompile;
@@ -10,7 +10,7 @@ use crate::{
     PolicyVersions, PrecompileCallObserver, macros::base_precompile,
 };
 
-/// Entry point for the stablecoin B-20 variant.
+/// Entry point for the stablecoin H20 variant.
 ///
 /// Wraps [`H20StablecoinToken`] dispatch behind a [`DynPrecompile`].
 #[derive(Debug)]

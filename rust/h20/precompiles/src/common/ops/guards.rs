@@ -1,16 +1,16 @@
-//! Shared authorization and policy guards for B-20 token operations.
+//! Shared authorization and policy guards for H20 token operations.
 
 use alloy_primitives::{Address, B256, U256};
 use h20_precompile_storage::{BasePrecompileError, Result};
 
 use crate::{H20PausableFeature, H20PolicyType, H20TokenRole, IH20, Token, TokenAccounting};
 
-/// Authorization and policy guard helpers for B-20 operations.
+/// Authorization and policy guard helpers for H20 operations.
 #[derive(Debug, Clone, Copy)]
 pub struct H20Guards;
 
 impl H20Guards {
-    /// Ensures `caller` has the B-20 role.
+    /// Ensures `caller` has the H20 role.
     pub fn ensure_token_role<T: Token + ?Sized>(
         token: &T,
         caller: Address,

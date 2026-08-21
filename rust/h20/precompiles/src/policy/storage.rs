@@ -76,7 +76,7 @@ impl PolicyRegistryStorage<'_> {
 
     /// Built-in policy ID that always authorizes every account.
     ///
-    /// A stable protocol sentinel consumed by B-20 tokens as their default policy; the
+    /// A stable protocol sentinel consumed by H20 tokens as their default policy; the
     /// encoding is owned by the frozen [`crate::PolicyRegistryV1`] logic and re-exported
     /// here for the registry's public API.
     pub const ALWAYS_ALLOW_ID: u64 = crate::PolicyRegistryV1::ALWAYS_ALLOW_ID;

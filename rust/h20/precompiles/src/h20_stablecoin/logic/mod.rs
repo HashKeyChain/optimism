@@ -1,4 +1,4 @@
-//! Versioned business logic for the stablecoin B-20 precompile.
+//! Versioned business logic for the stablecoin H20 precompile.
 //!
 //! [`Stablecoin`] (in [`interface`](self)) is the append-only business-logic
 //! interface each version implements; [`H20StablecoinToken`] is the minimal

@@ -1,4 +1,4 @@
-//! Golden tests pinning Asset **V1** behavior of the B-20 precompile.
+//! Golden tests pinning Asset **V1** behavior of the H20 precompile.
 //!
 //! These are authored and pinned against the shipped **v1.1.1** (pre-versioned) asset
 //! implementation; the conversion to the versioned precompile structure is behavior-preserving

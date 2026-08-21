@@ -1,4 +1,4 @@
-//! Golden tests pinning Policy Registry **V1** behavior of the B-20 precompile.
+//! Golden tests pinning Policy Registry **V1** behavior of the H20 precompile.
 //!
 //! These are authored and pinned against the shipped **v1.1.1** policy-registry implementation;
 //! the conversion to the versioned precompile structure (BOP-420) is behavior-preserving and

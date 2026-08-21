@@ -27,7 +27,7 @@ pub trait PrecompileCallObserver: Clone + Send + Sync + 'static {
     /// Records one completed native precompile call.
     fn record_call(&self, _call: &PrecompileCallMetric, _outcome: &PrecompileCallOutcome) {}
 
-    /// Records a B-20 token creation.
+    /// Records a H20 token creation.
     fn record_h20_created(&self, _variant: &'static str) {}
 
     /// Records the number of logical items in a Beryl batch call.

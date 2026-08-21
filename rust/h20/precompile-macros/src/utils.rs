@@ -340,7 +340,7 @@ mod tests {
         let id: LitStr = parse_quote!("h20.policy");
         assert_eq!(
             erc7201_root(&id).unwrap(),
-            uint!(0x50861ae81a7f4392b927efbaeecf8f091f3bd39245aa45ea91499a137b8b3100_U256)
+            uint!(0xae46bf7e56e8338669218b5d6c509ca22d5b0f4bfff40bc0e36869b0ebd31000_U256)
         );
     }
 

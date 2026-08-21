@@ -92,7 +92,7 @@ mod tests {
     }
 
     #[test]
-    fn lookup_rejects_h20_singletons_legacy_h20_and_unknown_variants() {
+    fn lookup_rejects_h20_singletons_legacy_b2_and_unknown_variants() {
         let singletons = [
             address!("0177FF0000000000000000000000000000000000"),
             address!("0177FF0000000000000000000000000000000001"),
@@ -102,8 +102,8 @@ mod tests {
             assert!(BerylLookup::lookup(&singleton).is_none());
         }
 
-        let legacy_h20 = address!("B200000000000000000000000000000000000000");
-        assert!(BerylLookup::lookup(&legacy_h20).is_none());
+        let legacy_b2_address = address!("B200000000000000000000000000000000000000");
+        assert!(BerylLookup::lookup(&legacy_b2_address).is_none());
 
         let unknown_variant =
             H20Variant::compute_address_for_discriminant(Address::ZERO, 0x02, [0u8; 32].into()).0;

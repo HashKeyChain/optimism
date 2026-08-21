@@ -1,4 +1,4 @@
-//! Version 1 of the stablecoin B-20 precompile logic, activated at Beryl.
+//! Version 1 of the stablecoin H20 precompile logic, activated at Beryl.
 
 use alloc::{
     string::{String, ToString},
@@ -23,7 +23,7 @@ const DOMAIN_TYPEHASH: B256 =
 /// EIP-712 domain version string pinned to `"1"`.
 const VERSION: &[u8] = b"1";
 
-/// First stablecoin B-20 implementation. Frozen as of its activation at Beryl.
+/// First stablecoin H20 implementation. Frozen as of its activation at Beryl.
 #[derive(Debug, Default, Clone, Copy)]
 pub struct StablecoinV1;
 
@@ -157,7 +157,7 @@ impl StablecoinV1 {
         Ok(())
     }
 
-    /// Ensures `policy_scope` names a built-in B-20 policy slot.
+    /// Ensures `policy_scope` names a built-in H20 policy slot.
     fn ensure_supported_policy_type(policy_scope: B256) -> Result<()> {
         if H20PolicyType::from_id(policy_scope).is_some() {
             Ok(())

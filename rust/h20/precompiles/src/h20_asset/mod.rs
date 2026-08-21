@@ -1,4 +1,4 @@
-//! `H20AssetToken` native precompile — asset variant of the B-20 token.
+//! `H20AssetToken` native precompile — asset variant of the H20 token.
 
 mod abi;
 pub use abi::IH20Asset;

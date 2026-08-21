@@ -1,4 +1,4 @@
-//! `H20StablecoinToken` native precompile — stablecoin variant of the B-20 token.
+//! `H20StablecoinToken` native precompile — stablecoin variant of the H20 token.
 
 mod abi;
 pub use abi::IH20Stablecoin;

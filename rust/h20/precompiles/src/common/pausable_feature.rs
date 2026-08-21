@@ -1,16 +1,16 @@
-//! Pause-bit helpers for B-20 tokens.
+//! Pause-bit helpers for H20 tokens.
 
 use alloy_primitives::U256;
 use h20_precompile_storage::{BasePrecompileError, Result};
 
 use crate::IH20;
 
-/// Helpers for mapping B-20 pausable features into storage bits.
+/// Helpers for mapping H20 pausable features into storage bits.
 #[derive(Debug, Clone, Copy)]
 pub struct H20PausableFeature;
 
 impl H20PausableFeature {
-    /// Returns an enum-conversion panic when `feature` is outside the B-20 pause enum.
+    /// Returns an enum-conversion panic when `feature` is outside the H20 pause enum.
     pub const fn ensure_valid(feature: IH20::PausableFeature) -> Result<()> {
         match feature {
             IH20::PausableFeature::TRANSFER

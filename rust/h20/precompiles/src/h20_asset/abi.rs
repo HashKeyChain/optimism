@@ -1,4 +1,4 @@
-//! ABI definitions for the asset B-20 variant.
+//! ABI definitions for the asset H20 variant.
 //!
 //! [`IH20Asset`] defines only the asset-specific surface.
 //! All inherited selectors come from [`crate::IH20`] defined in `h20/abi.rs`.
@@ -106,7 +106,7 @@ sol! {
 }
 
 impl IH20Asset::IH20AssetCalls {
-    /// Returns the stable label for this decoded asset B-20 call.
+    /// Returns the stable label for this decoded asset H20 call.
     pub const fn as_label(&self) -> &'static str {
         match self {
             Self::OPERATOR_ROLE(_) => "precompile-h20-asset-OPERATOR_ROLE",

@@ -144,7 +144,7 @@ mod namespaced_layout {
 
     const NAMESPACED_ADDR: Address = address!("0000000000000000000000000000000000004321");
     const EXPECTED_ROOT: U256 =
-        uint!(0x50861ae81a7f4392b927efbaeecf8f091f3bd39245aa45ea91499a137b8b3100_U256);
+        uint!(0xae46bf7e56e8338669218b5d6c509ca22d5b0f4bfff40bc0e36869b0ebd31000_U256);
 
     /// A storage section embedded into the token storage layout.
     #[derive(Debug, Clone, Storable)]
@@ -314,7 +314,7 @@ mod type_namespaced_layouts {
 
     const TYPE_NAMESPACE_ADDR: Address = address!("0000000000000000000000000000000000002468");
 
-    /// Core B-20 storage rooted at the canonical B-20 namespace.
+    /// Core H20 storage rooted at the canonical H20 namespace.
     #[allow(clippy::collection_is_never_read)]
     #[derive(Debug, Clone, Storable)]
     #[namespace("h20")]
@@ -323,7 +323,7 @@ mod type_namespaced_layouts {
         balances: Mapping<Address, U256>,
     }
 
-    /// Asset-specific B-20 extension storage.
+    /// Asset-specific H20 extension storage.
     #[allow(clippy::collection_is_never_read)]
     #[derive(Debug, Clone, Storable)]
     #[namespace("h20.asset")]
@@ -333,7 +333,7 @@ mod type_namespaced_layouts {
         extra_metadata: Mapping<String, bool>,
     }
 
-    /// Redeem-specific B-20 extension storage.
+    /// Redeem-specific H20 extension storage.
     #[derive(Debug, Clone, Storable)]
     #[namespace("h20.redeem")]
     struct H20RedeemStorage {
@@ -467,7 +467,7 @@ mod namespaced_fields {
 
     const FIELD_NAMESPACE_ADDR: Address = address!("0000000000000000000000000000000000008765");
     const EXPECTED_ROOT: U256 =
-        uint!(0x50861ae81a7f4392b927efbaeecf8f091f3bd39245aa45ea91499a137b8b3100_U256);
+        uint!(0xae46bf7e56e8338669218b5d6c509ca22d5b0f4bfff40bc0e36869b0ebd31000_U256);
 
     /// Token storage with individual fields routed into a shared namespace-local layout.
     #[contract(addr = FIELD_NAMESPACE_ADDR)]

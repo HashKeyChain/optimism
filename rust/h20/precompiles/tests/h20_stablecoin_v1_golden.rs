@@ -1,4 +1,4 @@
-//! Golden tests pinning Stablecoin **V1** behavior of the B-20 precompile (BOP-425).
+//! Golden tests pinning Stablecoin **V1** behavior of the H20 precompile (BOP-425).
 //!
 //! Every op (mutations, computed reads, direct/const reads) is driven through the
 //! **version-resolver-gated** dispatch path (`H20Spec::Beryl` -> `StablecoinVersion::V1`)

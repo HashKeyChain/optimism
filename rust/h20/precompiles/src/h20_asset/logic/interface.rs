@@ -1,4 +1,4 @@
-//! Append-only business-logic interface for the asset B-20 precompile.
+//! Append-only business-logic interface for the asset H20 precompile.
 
 use alloc::{string::String, vec::Vec};
 

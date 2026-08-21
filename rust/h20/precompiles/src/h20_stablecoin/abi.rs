@@ -1,4 +1,4 @@
-//! ABI definitions for the stablecoin B-20 variant.
+//! ABI definitions for the stablecoin H20 variant.
 //!
 //! [`IH20Stablecoin`] defines only the stablecoin-specific extension.
 //! All inherited selectors come from [`crate::IH20`] defined in `h20/abi.rs`.
@@ -13,7 +13,7 @@ sol! {
 }
 
 impl IH20Stablecoin::IH20StablecoinCalls {
-    /// Returns the stable label for this decoded stablecoin B-20 call.
+    /// Returns the stable label for this decoded stablecoin H20 call.
     pub const fn as_label(&self) -> &'static str {
         match self {
             Self::currency(_) => "precompile-h20-stablecoin-currency",

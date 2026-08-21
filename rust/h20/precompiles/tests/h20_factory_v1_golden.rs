@@ -1,4 +1,4 @@
-//! Golden tests pinning Factory **V1** behavior of the B-20 precompile.
+//! Golden tests pinning Factory **V1** behavior of the H20 precompile.
 //!
 //! These are authored and pinned against the shipped **v1.1.1** (pre-versioned) factory
 //! implementation; the conversion to the versioned precompile structure is behavior-preserving
@@ -65,7 +65,7 @@ const fn factory() -> Address {
     H20FactoryStorage::ADDRESS
 }
 
-/// Activates both B-20 variants so `createH20` is permitted.
+/// Activates both H20 variants so `createH20` is permitted.
 fn activate(storage: &mut HashMapStorageProvider) {
     storage.set_caller(ACTIVATION_ADMIN);
     for key in [ActivationFeature::H20Stablecoin.id(), ActivationFeature::H20Asset.id()] {
@@ -77,7 +77,7 @@ fn activate(storage: &mut HashMapStorageProvider) {
     }
 }
 
-/// A fresh provider with both B-20 variants activated.
+/// A fresh provider with both H20 variants activated.
 fn fresh() -> HashMapStorageProvider {
     let mut storage = HashMapStorageProvider::new(CHAIN_ID);
     activate(&mut storage);
@@ -275,7 +275,7 @@ fn golden_get_h20_address() {
 #[test]
 fn golden_is_h20() {
     let mut s = fresh();
-    // A derived B-20 address has the structural prefix.
+    // A derived H20 address has the structural prefix.
     let (rev, bytes) = call_factory(
         &mut s,
         ALICE,

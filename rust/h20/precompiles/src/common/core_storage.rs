@@ -1,4 +1,4 @@
-//! Core B-20 EVM storage layout shared by all token variants.
+//! Core H20 EVM storage layout shared by all token variants.
 
 use alloc::string::String;
 
