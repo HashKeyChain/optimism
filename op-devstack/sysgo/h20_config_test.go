@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 )
 
@@ -60,4 +61,21 @@ func TestInjectH20ConfigRejectsInvalidTimestamp(t *testing.T) {
 
 	_, err := injectH20Config([]byte(`{}`), false)
 	require.ErrorContains(t, err, "invalid DEVSTACK_H20_TIME")
+}
+
+func TestInjectH20ConfigOverrideIsDeterministic(t *testing.T) {
+	t.Setenv(h20TimeEnv, "99999")
+	t.Setenv(h20AdminEnv, "0x9999999999999999999999999999999999999999")
+
+	override := &h20RuntimeConfig{
+		timestamp: 12345,
+		admin:     common.HexToAddress("0x1111111111111111111111111111111111111111"),
+	}
+	rollup, err := injectH20ConfigWithOverride([]byte(`{"l2_chain_id":901}`), false, override)
+	require.NoError(t, err)
+
+	var got map[string]any
+	require.NoError(t, json.Unmarshal(rollup, &got))
+	require.Equal(t, float64(12345), got["h20_time"])
+	require.Equal(t, override.admin.Hex(), got["h20_activation_admin"])
 }

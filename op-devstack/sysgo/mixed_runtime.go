@@ -51,11 +51,27 @@ const (
 	h20AdminEnv = "DEVSTACK_H20_ACTIVATION_ADMIN"
 )
 
+type h20RuntimeConfig struct {
+	timestamp uint64
+	admin     common.Address
+}
+
 // injectH20Config adds the HSK H20 consensus fields to a JSON object when the
 // devstack-specific environment variables are configured. The Go OP types do
 // not own these HSK extension fields, so preserving the extension at the JSON
 // boundary keeps upstream deployment and rollup types unchanged.
 func injectH20Config(data []byte, genesis bool) ([]byte, error) {
+	return injectH20ConfigWithOverride(data, genesis, nil)
+}
+
+func injectH20ConfigWithOverride(data []byte, genesis bool, override *h20RuntimeConfig) ([]byte, error) {
+	if override != nil {
+		if override.admin == (common.Address{}) {
+			return nil, fmt.Errorf("H20 activation admin must be a non-zero address")
+		}
+		return injectH20ConfigValues(data, genesis, override.timestamp, override.admin)
+	}
+
 	timeValue, timeOK := os.LookupEnv(h20TimeEnv)
 	admin, adminOK := os.LookupEnv(h20AdminEnv)
 	if timeOK != adminOK {
@@ -72,6 +88,10 @@ func injectH20Config(data []byte, genesis bool) ([]byte, error) {
 		return nil, fmt.Errorf("%s must be a non-zero address", h20AdminEnv)
 	}
 
+	return injectH20ConfigValues(data, genesis, timestamp, common.HexToAddress(admin))
+}
+
+func injectH20ConfigValues(data []byte, genesis bool, timestamp uint64, admin common.Address) ([]byte, error) {
 	var root map[string]any
 	if err := json.Unmarshal(data, &root); err != nil {
 		return nil, err
@@ -82,10 +102,10 @@ func injectH20Config(data []byte, genesis bool) ([]byte, error) {
 			return nil, fmt.Errorf("genesis config is not a JSON object")
 		}
 		config["h20Time"] = timestamp
-		config["h20ActivationAdmin"] = common.HexToAddress(admin).Hex()
+		config["h20ActivationAdmin"] = admin.Hex()
 	} else {
 		root["h20_time"] = timestamp
-		root["h20_activation_admin"] = common.HexToAddress(admin).Hex()
+		root["h20_activation_admin"] = admin.Hex()
 	}
 	return json.Marshal(root)
 }
@@ -208,6 +228,11 @@ type MixedSingleChainPresetConfig struct {
 	// the resulting dependency set to op-node CL startup. Required by any test that exercises
 	// Interop-gated consensus features (e.g. SDM PostExec) without a supervisor.
 	InteropAtGenesis bool
+	// H20ActivationOffset activates H20 at Genesis.L2Time + offset. This makes
+	// pre/post-activation acceptance tests deterministic and independent of wall-clock time.
+	// When nil, H20 configuration remains controlled by DEVSTACK_H20_*.
+	H20ActivationOffset *uint64
+	H20ActivationAdmin  common.Address
 }
 
 type mixedSingleChainNode struct {
@@ -252,6 +277,16 @@ func NewMixedSingleChainRuntime(t devtest.T, cfg MixedSingleChainPresetConfig) *
 		l1Net, l2Net, depSet, _ = buildSingleChainWorldWithInterop(t, keys, true, cfg.LocalContractArtifactsPath, cfg.DeployerOptions...)
 	} else {
 		l1Net, l2Net = buildSingleChainWorld(t, keys, cfg.LocalContractArtifactsPath, cfg.DeployerOptions...)
+	}
+	if cfg.H20ActivationOffset != nil {
+		require.NotEqual(common.Address{}, cfg.H20ActivationAdmin, "H20 activation admin must be non-zero")
+		require.LessOrEqual(*cfg.H20ActivationOffset, ^uint64(0)-l2Net.rollupCfg.Genesis.L2Time, "H20 activation timestamp overflows")
+		l2Net.h20Config = &h20RuntimeConfig{
+			timestamp: l2Net.rollupCfg.Genesis.L2Time + *cfg.H20ActivationOffset,
+			admin:     cfg.H20ActivationAdmin,
+		}
+	} else {
+		require.Equal(common.Address{}, cfg.H20ActivationAdmin, "H20 activation admin requires H20ActivationOffset")
 	}
 	jwtPath, jwtSecret := writeJWTSecret(t)
 	l1EL, l1CL := startInProcessL1(t, l1Net, jwtPath)
@@ -397,7 +432,7 @@ func buildMixedOpRethNode(
 
 	data, err := json.Marshal(l2Net.genesis)
 	t.Require().NoError(err, "must json-encode genesis")
-	data, err = injectH20Config(data, true)
+	data, err = injectH20ConfigWithOverride(data, true, l2Net.h20Config)
 	t.Require().NoError(err, "must inject H20 genesis config")
 	chainConfigPath := filepath.Join(tempDir, "genesis.json")
 	t.Require().NoError(os.WriteFile(chainConfigPath, data, 0o640), "must write genesis file")
@@ -578,7 +613,7 @@ func startMixedKonaNode(
 	tempRollupCfgPath := filepath.Join(tempKonaDir, "rollup.json")
 	rollupCfgData, err := json.Marshal(l2Net.rollupCfg)
 	t.Require().NoError(err, "must write rollup config")
-	rollupCfgData, err = injectH20Config(rollupCfgData, false)
+	rollupCfgData, err = injectH20ConfigWithOverride(rollupCfgData, false, l2Net.h20Config)
 	t.Require().NoError(err, "must inject H20 rollup config")
 	t.Require().NoError(os.WriteFile(tempRollupCfgPath, rollupCfgData, 0o640))
 
