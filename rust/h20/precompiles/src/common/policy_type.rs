@@ -1,4 +1,4 @@
-//! Built-in B-20 policy slot identifiers.
+//! Built-in H20 policy slot identifiers.
 
 use alloy_primitives::{B256, b256};
 
@@ -11,7 +11,7 @@ const TRANSFER_EXECUTOR_POLICY: B256 =
 const MINT_RECEIVER_POLICY: B256 =
     b256!("a0d5ae037e66a09119acf080a1d807abb9b6d03b6b9130eb19f7c1e6bdb8ffc8");
 
-/// Built-in B-20 policy slots.
+/// Built-in H20 policy slots.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum H20PolicyType {
     /// Policy slot checked against transfer senders.
@@ -48,5 +48,20 @@ impl H20PolicyType {
             Self::TransferExecutor => TRANSFER_EXECUTOR_POLICY,
             Self::MintReceiver => MINT_RECEIVER_POLICY,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use alloy_primitives::keccak256;
+
+    use super::H20PolicyType;
+
+    #[test]
+    fn h20_policy_scope_ids_match_canonical_protocol_hashes() {
+        assert_eq!(H20PolicyType::TransferSender.id(), keccak256("TRANSFER_SENDER_POLICY"));
+        assert_eq!(H20PolicyType::TransferReceiver.id(), keccak256("TRANSFER_RECEIVER_POLICY"));
+        assert_eq!(H20PolicyType::TransferExecutor.id(), keccak256("TRANSFER_EXECUTOR_POLICY"));
+        assert_eq!(H20PolicyType::MintReceiver.id(), keccak256("MINT_RECEIVER_POLICY"));
     }
 }

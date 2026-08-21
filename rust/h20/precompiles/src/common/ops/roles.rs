@@ -1,4 +1,4 @@
-//! Role-management operations for B-20 tokens.
+//! Role-management operations for H20 tokens.
 
 use alloy_primitives::{Address, B256, U256, b256};
 use alloy_sol_types::SolEvent;
@@ -16,7 +16,7 @@ const UNPAUSE_ROLE: B256 =
 const METADATA_ROLE: B256 =
     b256!("6bd6b5318a46e5fff572d5e4258a20774aab40cc35ac7680654b9081fcc82f80");
 
-/// Built-in B-20 roles.
+/// Built-in H20 roles.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum H20TokenRole {
     /// The default top-level admin role.
@@ -264,12 +264,12 @@ pub trait RoleManaged: Token {
 
 #[cfg(test)]
 mod tests {
-    use alloy_primitives::{Address, B256, U256};
+    use alloy_primitives::{Address, B256, U256, keccak256};
     use alloy_sol_types::SolEvent;
     use h20_precompile_storage::BasePrecompileError;
 
     use crate::{
-        H20TokenRole, FakePolicyAccounting, IH20, InMemoryTokenAccounting, RoleManaged, TestToken,
+        FakePolicyAccounting, H20TokenRole, IH20, InMemoryTokenAccounting, RoleManaged, TestToken,
         Token, TokenAccounting,
     };
 
@@ -296,6 +296,16 @@ mod tests {
     #[test]
     fn default_admin_role_matches_access_control_zero() {
         assert_eq!(H20TokenRole::DefaultAdmin.id(), B256::ZERO);
+    }
+
+    #[test]
+    fn h20_role_ids_match_canonical_protocol_hashes() {
+        assert_eq!(H20TokenRole::Mint.id(), keccak256("MINT_ROLE"));
+        assert_eq!(H20TokenRole::Burn.id(), keccak256("BURN_ROLE"));
+        assert_eq!(H20TokenRole::BurnBlocked.id(), keccak256("BURN_BLOCKED_ROLE"));
+        assert_eq!(H20TokenRole::Pause.id(), keccak256("PAUSE_ROLE"));
+        assert_eq!(H20TokenRole::Unpause.id(), keccak256("UNPAUSE_ROLE"));
+        assert_eq!(H20TokenRole::Metadata.id(), keccak256("METADATA_ROLE"));
     }
 
     #[test]
