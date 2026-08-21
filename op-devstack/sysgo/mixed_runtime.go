@@ -51,7 +51,7 @@ const (
 	h20AdminEnv = "DEVSTACK_H20_ACTIVATION_ADMIN"
 )
 
-// injectH20Config adds the HSK B20 consensus fields to a JSON object when the
+// injectH20Config adds the HSK H20 consensus fields to a JSON object when the
 // devstack-specific environment variables are configured. The Go OP types do
 // not own these HSK extension fields, so preserving the extension at the JSON
 // boundary keeps upstream deployment and rollup types unchanged.
@@ -398,7 +398,7 @@ func buildMixedOpRethNode(
 	data, err := json.Marshal(l2Net.genesis)
 	t.Require().NoError(err, "must json-encode genesis")
 	data, err = injectH20Config(data, true)
-	t.Require().NoError(err, "must inject B20 genesis config")
+	t.Require().NoError(err, "must inject H20 genesis config")
 	chainConfigPath := filepath.Join(tempDir, "genesis.json")
 	t.Require().NoError(os.WriteFile(chainConfigPath, data, 0o640), "must write genesis file")
 
@@ -579,7 +579,7 @@ func startMixedKonaNode(
 	rollupCfgData, err := json.Marshal(l2Net.rollupCfg)
 	t.Require().NoError(err, "must write rollup config")
 	rollupCfgData, err = injectH20Config(rollupCfgData, false)
-	t.Require().NoError(err, "must inject B20 rollup config")
+	t.Require().NoError(err, "must inject H20 rollup config")
 	t.Require().NoError(os.WriteFile(tempRollupCfgPath, rollupCfgData, 0o640))
 
 	tempL1CfgPath := filepath.Join(tempKonaDir, "l1-chain-config.json")

@@ -201,6 +201,7 @@ mod tests {
 
     #[test]
     fn test_chain_config_json() {
+        // Keep registry addresses verbatim; embedded hex such as `b20` is not a brand identifier.
         let raw: &str = r#"
         {
             "Name": "Base",
@@ -267,7 +268,7 @@ mod tests {
                 "SystemConfigProxy": "0x73a79fab69143498ed3712e519a88a918e1f4072",
                 "ProxyAdmin": "0x0475cbcaebd9ce8afa5025828d5b98dfb67e059e",
                 "AnchorStateRegistryProxy": "0xdb9091e48b1c42992a1213e6916184f9ebdbfedf",
-                "DelayedWethProxy": "0xa2f2ac6f5af72e494a227d79dh20473cf7a1ffe8",
+                "DelayedWethProxy": "0xa2f2ac6f5af72e494a227d79db20473cf7a1ffe8",
                 "DisputeGameFactoryProxy": "0x43edb88c4b80fdd2adff2412a7bebf9df42cb40e",
                 "FaultDisputeGame": "0xcd3c0194db74c23807d4b90a5181e1b28cf7007c",
                 "Mips": "0x16e83ce5ce29bf90ad9da06d2fe6a15d5f344ce4",
@@ -378,7 +379,7 @@ mod tests {
                 "SystemConfigProxy": "0x73a79fab69143498ed3712e519a88a918e1f4072",
                 "ProxyAdmin": "0x0475cbcaebd9ce8afa5025828d5b98dfb67e059e",
                 "AnchorStateRegistryProxy": "0xdb9091e48b1c42992a1213e6916184f9ebdbfedf",
-                "DelayedWethProxy": "0xa2f2ac6f5af72e494a227d79dh20473cf7a1ffe8",
+                "DelayedWethProxy": "0xa2f2ac6f5af72e494a227d79db20473cf7a1ffe8",
                 "DisputeGameFactoryProxy": "0x43edb88c4b80fdd2adff2412a7bebf9df42cb40e",
                 "FaultDisputeGame": "0xcd3c0194db74c23807d4b90a5181e1b28cf7007c",
                 "Mips": "0x16e83ce5ce29bf90ad9da06d2fe6a15d5f344ce4",
