@@ -224,6 +224,18 @@ mod tests {
     }
 
     #[test]
+    fn deterministic_addresses_match_the_hsk_h20_golden_vector() {
+        assert_eq!(
+            H20Variant::Asset.compute_address(CREATOR, SALT).0,
+            address!("0177000000000000000000f4f69ba108f6504dc5")
+        );
+        assert_eq!(
+            H20Variant::Stablecoin.compute_address(CREATOR, SALT).0,
+            address!("0177000000000000000001f4f69ba108f6504dc5")
+        );
+    }
+
+    #[test]
     fn unknown_variant_has_the_structural_prefix_but_is_not_supported() {
         let (address, _) = H20Variant::compute_address_for_discriminant(CREATOR, 0x02, SALT);
 

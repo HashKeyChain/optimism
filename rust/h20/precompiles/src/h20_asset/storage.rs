@@ -8,9 +8,9 @@ use h20_precompile_storage::{Handler, Mapping, Result, StorageCtx};
 
 use crate::H20CoreStorage;
 
-/// Asset-specific H20 storage rooted at the `base.b20.asset` ERC-7201 namespace.
+/// Asset-specific H20 storage rooted at the `hsk.h20.asset` ERC-7201 namespace.
 #[derive(Debug, Clone, Storable)]
-#[namespace("base.b20.asset")]
+#[namespace("hsk.h20.asset")]
 pub struct H20AssetExtensionStorage {
     /// Custom decimal precision for this token; stored once at creation time.
     #[accessor]
@@ -96,9 +96,9 @@ mod tests {
 
     const TOKEN: Address = address!("000000000000000000000000000000000000b021");
     const H20_ROOT: U256 =
-        uint!(0xc78b71fee795ddd74aff64ea9b2474194c938c3196430e10bb5f01ed48434000_U256);
+        uint!(0x79a254405ca90aaaef001c57bda9b239cd737f68ab02f6809b70a3d701ac6100_U256);
     const ASSET_ROOT: U256 =
-        uint!(0xfdc6d4552d1286ade4d9facdbf0fb50d2ec9b89a90e104f26fd277585e374b00_U256);
+        uint!(0xfe74bd410a591ded9210a4d7494a0e93280a07943e5b364955eb4c29bf352e00_U256);
 
     #[test]
     fn wad_constant_is_ten_to_the_eighteenth() {
@@ -106,11 +106,11 @@ mod tests {
     }
 
     #[test]
-    fn asset_namespaces_match_base_std_roots() {
+    fn asset_namespaces_match_hsk_roots() {
         assert_eq!(<H20CoreStorage as StorableType>::STORAGE_NAMESPACE_ROOT, H20_ROOT);
         assert_eq!(
             <H20AssetExtensionStorage as StorableType>::STORAGE_NAMESPACE_ID,
-            "base.b20.asset"
+            "hsk.h20.asset"
         );
         assert_eq!(<H20AssetExtensionStorage as StorableType>::STORAGE_NAMESPACE_ROOT, ASSET_ROOT);
 

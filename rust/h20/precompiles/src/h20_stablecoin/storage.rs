@@ -9,10 +9,10 @@ use h20_precompile_storage::{BasePrecompileError, Handler, Result, StorageCtx};
 
 use crate::{H20CoreStorage, IH20Factory};
 
-/// Stablecoin-specific H20 storage rooted at the `base.b20.stablecoin` ERC-7201 namespace.
+/// Stablecoin-specific H20 storage rooted at the `hsk.h20.stablecoin` ERC-7201 namespace.
 #[allow(clippy::collection_is_never_read)]
 #[derive(Debug, Clone, Storable)]
-#[namespace("base.b20.stablecoin")]
+#[namespace("hsk.h20.stablecoin")]
 pub struct H20StablecoinExtensionStorage {
     /// Stablecoin currency identifier.
     #[accessor]
@@ -86,16 +86,16 @@ mod tests {
 
     const TOKEN: Address = address!("000000000000000000000000000000000000b022");
     const H20_ROOT: U256 =
-        uint!(0xc78b71fee795ddd74aff64ea9b2474194c938c3196430e10bb5f01ed48434000_U256);
+        uint!(0x79a254405ca90aaaef001c57bda9b239cd737f68ab02f6809b70a3d701ac6100_U256);
     const STABLECOIN_ROOT: U256 =
-        uint!(0x35827975a06ca0e9367ea3129b19441d45d0ca58e30b7693f09e73d0943d6200_U256);
+        uint!(0x1e31a6aa9c13d9ecddf6866fc0c40873aefdceac9965b8b623b763b913725a00_U256);
 
     #[test]
-    fn stablecoin_namespaces_match_base_std_roots() {
+    fn stablecoin_namespaces_match_hsk_roots() {
         assert_eq!(<H20CoreStorage as StorableType>::STORAGE_NAMESPACE_ROOT, H20_ROOT);
         assert_eq!(
             <H20StablecoinExtensionStorage as StorableType>::STORAGE_NAMESPACE_ID,
-            "base.b20.stablecoin"
+            "hsk.h20.stablecoin"
         );
         assert_eq!(
             <H20StablecoinExtensionStorage as StorableType>::STORAGE_NAMESPACE_ROOT,

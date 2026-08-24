@@ -6,9 +6,9 @@ use alloy_primitives::{Address, B256, FixedBytes, U256};
 use h20_precompile_macros::Storable;
 use h20_precompile_storage::Mapping;
 
-/// Core H20 storage rooted at the `base.b20` ERC-7201 namespace.
+/// Core H20 storage rooted at the `hsk.h20` ERC-7201 namespace.
 #[derive(Debug, Clone, Storable)]
-#[namespace("base.b20")]
+#[namespace("hsk.h20")]
 pub struct H20CoreStorage {
     /// Mutable token name.
     #[accessor]
@@ -89,11 +89,11 @@ mod tests {
     use crate::H20CoreStorage;
 
     const H20_ROOT: U256 =
-        uint!(0xc78b71fee795ddd74aff64ea9b2474194c938c3196430e10bb5f01ed48434000_U256);
+        uint!(0x79a254405ca90aaaef001c57bda9b239cd737f68ab02f6809b70a3d701ac6100_U256);
 
     #[test]
-    fn h20_namespaces_match_base_std_roots() {
-        assert_eq!(<H20CoreStorage as StorableType>::STORAGE_NAMESPACE_ID, "base.b20");
+    fn h20_namespace_matches_hsk_root() {
+        assert_eq!(<H20CoreStorage as StorableType>::STORAGE_NAMESPACE_ID, "hsk.h20");
         assert_eq!(<H20CoreStorage as StorableType>::STORAGE_NAMESPACE_ROOT, H20_ROOT);
     }
 
