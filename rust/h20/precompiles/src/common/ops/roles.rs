@@ -2,7 +2,7 @@
 
 use alloy_primitives::{Address, B256, U256, b256};
 use alloy_sol_types::SolEvent;
-use h20_precompile_storage::{BasePrecompileError, Result};
+use h20_precompile_storage::{H20PrecompileError, Result};
 
 use crate::{H20Guards, IH20, Token, TokenAccounting};
 
@@ -114,7 +114,7 @@ pub trait RoleManaged: Token {
         if role == Self::default_admin_role() {
             let current = self.accounting().role_member_count(role)?;
             let next =
-                current.checked_add(U256::ONE).ok_or_else(BasePrecompileError::under_overflow)?;
+                current.checked_add(U256::ONE).ok_or_else(H20PrecompileError::under_overflow)?;
             self.accounting_mut().set_role_member_count(role, next)?;
         }
         self.accounting_mut()
@@ -135,7 +135,7 @@ pub trait RoleManaged: Token {
         if role == Self::default_admin_role() {
             let current = self.accounting().role_member_count(role)?;
             let next =
-                current.checked_sub(U256::ONE).ok_or_else(BasePrecompileError::under_overflow)?;
+                current.checked_sub(U256::ONE).ok_or_else(H20PrecompileError::under_overflow)?;
             self.accounting_mut().set_role_member_count(role, next)?;
         }
         self.accounting_mut()
@@ -151,7 +151,7 @@ pub trait RoleManaged: Token {
     fn ensure_role_admin_mutations_available(&self, caller: Address) -> Result<()> {
         let admin_role = Self::default_admin_role();
         if self.accounting().role_member_count(admin_role)? == U256::ZERO {
-            return Err(BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+            return Err(H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
                 account: caller,
                 neededRole: admin_role,
             }));
@@ -193,11 +193,11 @@ pub trait RoleManaged: Token {
             self.ensure_role_admin_mutations_available(caller)?;
             self.ensure_role(caller, self.role_admin(role)?)?;
         }
-        if role == Self::default_admin_role()
-            && self.accounting().has_role(role, account)?
-            && self.accounting().role_member_count(role)? == U256::ONE
+        if role == Self::default_admin_role() &&
+            self.accounting().has_role(role, account)? &&
+            self.accounting().role_member_count(role)? == U256::ONE
         {
-            return Err(BasePrecompileError::revert(IH20::LastAdminCannotRenounce {}));
+            return Err(H20PrecompileError::revert(IH20::LastAdminCannotRenounce {}));
         }
         self.revoke_role_unchecked(role, account, caller)
     }
@@ -209,13 +209,13 @@ pub trait RoleManaged: Token {
     /// `DEFAULT_ADMIN_ROLE` holder, which must use [`Self::renounce_last_admin`].
     fn renounce_role(&mut self, caller: Address, role: B256, confirmation: Address) -> Result<()> {
         if confirmation != caller {
-            return Err(BasePrecompileError::revert(IH20::AccessControlBadConfirmation {}));
+            return Err(H20PrecompileError::revert(IH20::AccessControlBadConfirmation {}));
         }
-        if role == Self::default_admin_role()
-            && self.accounting().has_role(role, caller)?
-            && self.accounting().role_member_count(role)? == U256::ONE
+        if role == Self::default_admin_role() &&
+            self.accounting().has_role(role, caller)? &&
+            self.accounting().role_member_count(role)? == U256::ONE
         {
-            return Err(BasePrecompileError::revert(IH20::LastAdminCannotRenounce {}));
+            return Err(H20PrecompileError::revert(IH20::LastAdminCannotRenounce {}));
         }
         self.revoke_role_unchecked(role, caller, caller)
     }
@@ -225,7 +225,7 @@ pub trait RoleManaged: Token {
         let admin_role = Self::default_admin_role();
         self.ensure_role(caller, admin_role)?;
         if self.accounting().role_member_count(admin_role)? != U256::ONE {
-            return Err(BasePrecompileError::revert(IH20::NotSoleAdmin {}));
+            return Err(H20PrecompileError::revert(IH20::NotSoleAdmin {}));
         }
         self.revoke_role_unchecked(admin_role, caller, caller)?;
         self.accounting_mut()
@@ -266,7 +266,7 @@ pub trait RoleManaged: Token {
 mod tests {
     use alloy_primitives::{Address, B256, U256, keccak256};
     use alloy_sol_types::SolEvent;
-    use h20_precompile_storage::BasePrecompileError;
+    use h20_precompile_storage::H20PrecompileError;
 
     use crate::{
         FakePolicyAccounting, H20TokenRole, IH20, InMemoryTokenAccounting, RoleManaged, TestToken,
@@ -328,7 +328,7 @@ mod tests {
 
         assert_eq!(
             token.grant_role(ADMIN, H20TokenRole::Mint.id(), ALICE, false).unwrap_err(),
-            BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+            H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
                 account: ADMIN,
                 neededRole: B256::ZERO,
             })
@@ -341,7 +341,7 @@ mod tests {
 
         assert_eq!(
             token.renounce_role(ADMIN, H20TokenRole::DefaultAdmin.id(), ADMIN).unwrap_err(),
-            BasePrecompileError::revert(IH20::LastAdminCannotRenounce {})
+            H20PrecompileError::revert(IH20::LastAdminCannotRenounce {})
         );
     }
 
@@ -351,7 +351,7 @@ mod tests {
 
         assert_eq!(
             token.revoke_role(ADMIN, H20TokenRole::DefaultAdmin.id(), ADMIN, false).unwrap_err(),
-            BasePrecompileError::revert(IH20::LastAdminCannotRenounce {})
+            H20PrecompileError::revert(IH20::LastAdminCannotRenounce {})
         );
         assert!(token.has_role(H20TokenRole::DefaultAdmin.id(), ADMIN).unwrap());
         assert_eq!(
@@ -366,7 +366,7 @@ mod tests {
 
         assert_eq!(
             token.revoke_role(ALICE, H20TokenRole::DefaultAdmin.id(), ADMIN, true).unwrap_err(),
-            BasePrecompileError::revert(IH20::LastAdminCannotRenounce {})
+            H20PrecompileError::revert(IH20::LastAdminCannotRenounce {})
         );
         assert!(token.has_role(H20TokenRole::DefaultAdmin.id(), ADMIN).unwrap());
         assert_eq!(
@@ -382,7 +382,7 @@ mod tests {
 
         assert_eq!(
             token.grant_role(ALICE, H20TokenRole::DefaultAdmin.id(), ALICE, true).unwrap_err(),
-            BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+            H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
                 account: ALICE,
                 neededRole: H20TokenRole::DefaultAdmin.id(),
             })
@@ -446,7 +446,7 @@ mod tests {
 
         assert_eq!(
             token.grant_role(ALICE, H20TokenRole::DefaultAdmin.id(), ALICE, false).unwrap_err(),
-            BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+            H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
                 account: ALICE,
                 neededRole: H20TokenRole::DefaultAdmin.id(),
             })
@@ -464,7 +464,7 @@ mod tests {
 
         assert_eq!(
             token.grant_role(ALICE, H20TokenRole::Mint.id(), ALICE, false).unwrap_err(),
-            BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+            H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
                 account: ALICE,
                 neededRole: H20TokenRole::DefaultAdmin.id(),
             })
@@ -483,7 +483,7 @@ mod tests {
 
         assert_eq!(
             token.revoke_role(ALICE, H20TokenRole::Mint.id(), BOB, false).unwrap_err(),
-            BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+            H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
                 account: ALICE,
                 neededRole: H20TokenRole::DefaultAdmin.id(),
             })
@@ -503,7 +503,7 @@ mod tests {
             token
                 .set_role_admin(ALICE, H20TokenRole::Mint.id(), H20TokenRole::Burn.id(), false)
                 .unwrap_err(),
-            BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+            H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
                 account: ALICE,
                 neededRole: H20TokenRole::DefaultAdmin.id(),
             })

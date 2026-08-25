@@ -8,13 +8,13 @@
 use crate::H20Spec;
 use alloy_primitives::{Address, Bytes, keccak256};
 use alloy_sol_types::{SolCall, SolValue};
-use h20_precompile_storage::{BasePrecompileError, Result, StorageCtx};
+use h20_precompile_storage::{H20PrecompileError, Result, StorageCtx};
 use revm::precompile::PrecompileResult;
 
 use crate::{
-    H20FactoryStorage, H20Variant, BerylAuxiliaryMetrics, BerylCallRecorder, BerylMetricLabels,
-    Factory, FactoryV1, FactoryVersion, FactoryVersions, IH20Factory, NoopPrecompileCallObserver,
-    PrecompileCallObserver, macros::decode_precompile_call,
+    BerylAuxiliaryMetrics, BerylCallRecorder, BerylMetricLabels, Factory, FactoryV1,
+    FactoryVersion, FactoryVersions, H20FactoryStorage, H20Variant, IH20Factory,
+    NoopPrecompileCallObserver, PrecompileCallObserver, macros::decode_precompile_call,
 };
 
 impl<'a> H20FactoryStorage<'a> {
@@ -42,20 +42,19 @@ impl<'a> H20FactoryStorage<'a> {
         let mut recorder =
             BerylCallRecorder::start(observer.clone(), BerylMetricLabels::factory_call(calldata));
         if !ctx.call_value().is_zero() {
-            return recorder.record_base_error_result(
+            return recorder.record_h20_error_result(
                 ctx,
-                BasePrecompileError::revert(IH20Factory::NonPayable {}),
+                H20PrecompileError::revert(IH20Factory::NonPayable {}),
             );
         }
         if let Err(error) = recorder.deduct_calldata_gas(ctx, calldata) {
-            return recorder.record_base_error_result(ctx, error);
+            return recorder.record_h20_error_result(ctx, error);
         }
         // Gate by hardfork: resolve the active version once.
         let Some(version) = FactoryVersions::from_spec(upgrade) else {
-            return recorder
-                .record_base_error_result(ctx, BasePrecompileError::Revert(Bytes::new()));
+            return recorder.record_h20_error_result(ctx, H20PrecompileError::Revert(Bytes::new()));
         };
-        recorder.record_base_result(
+        recorder.record_h20_result(
             ctx,
             self.route(ctx, calldata, version, upgrade, observer),
             |b| b,

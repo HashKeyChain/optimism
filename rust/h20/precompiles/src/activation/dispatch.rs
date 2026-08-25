@@ -37,9 +37,9 @@ impl ActivationRegistryStorage<'_> {
         let mut recorder =
             BerylCallRecorder::start(observer, BerylMetricLabels::activation_call(calldata));
         if let Err(error) = recorder.deduct_calldata_gas(ctx, calldata) {
-            return recorder.record_base_error_result(ctx, error);
+            return recorder.record_h20_error_result(ctx, error);
         }
-        recorder.record_base_result(ctx, self.inner(calldata, admin_config), |output| output)
+        recorder.record_h20_result(ctx, self.inner(calldata, admin_config), |output| output)
     }
 
     fn inner(

@@ -16,15 +16,15 @@
 //!
 //! ## Blessing storage hashes
 //! State-root constants below are pinned. To (re)generate them after an intentional change, run:
-//! `BLESS_GOLDEN=1 cargo test -p base-common-precompiles --features test-utils \
+//! `BLESS_GOLDEN=1 cargo test -p hsk-h20-precompiles --features test-utils \
 //!    --test h20_stablecoin_v1_golden -- --nocapture` and copy the printed `GOLDEN_ROOT` values.
 
 use alloy_primitives::{Address, B256, Bytes, U256, b256};
 use alloy_sol_types::{SolCall, SolError, SolEvent, SolValue};
-use h20_precompile_storage::{BasePrecompileError, HashMapStorageProvider, StorageCtx};
+use h20_precompile_storage::{H20PrecompileError, HashMapStorageProvider, StorageCtx};
 use hsk_h20_precompiles::{
-    H20_MAX_SUPPLY_CAP, H20PolicyType, H20Spec, H20StablecoinInit, H20StablecoinStorage,
-    H20StablecoinToken, H20TokenRole, FakePolicyAccounting, IH20, IH20Stablecoin,
+    FakePolicyAccounting, H20_MAX_SUPPLY_CAP, H20PolicyType, H20Spec, H20StablecoinInit,
+    H20StablecoinStorage, H20StablecoinToken, H20TokenRole, IH20, IH20Stablecoin,
     NoopPrecompileCallObserver, PolicyVersion, Stablecoin, StablecoinV1, StablecoinVersion,
     StablecoinVersions, TokenAccounting,
 };
@@ -44,62 +44,62 @@ const LOGIC: StablecoinV1 = StablecoinV1;
 
 // --- pinned storage hashes (bless with BLESS_GOLDEN=1; see module docs) --------
 
-const ROOT_FRESH: B256 = b256!("7f52ac593dc5c5de5e040f65148db8c081010c85db757516d9eb2c19e8903951");
+const ROOT_FRESH: B256 = b256!("ca198195752b7e5d28e07c56904d687c5137a6f00a297e2f5343dd2e7c9c1c15");
 const ROOT_TRANSFER_PRIV: B256 =
-    b256!("55bdd0b008a5e28bd9dee4572766a7bce75b0147fb614c9b4874963fc18ef390");
+    b256!("5666e6eaf475abe883ad8aa9b9cb4be324e14fef22425ff00ae2d9187ba69c40");
 const ROOT_TRANSFER_UNPRIV: B256 =
-    b256!("dc5dfb01848c6061b25b98deee929c2bc9dd05191e1892186254aedef4445ace");
+    b256!("fbec0fce8a4658e8fca6ca58175996c9392d1ab34b0922adc15da9b23f72bc6c");
 const ROOT_TRANSFER_WITH_MEMO: B256 =
-    b256!("8c9923a10e52e0dd795aed030a844bcff443ee66d4908caf897a525e1de4f867");
+    b256!("a0157160759124eb35398d3563617baf9e84ed3ce6c859c57f9a678be12d3b6d");
 const ROOT_TRANSFER_FROM_FINITE: B256 =
-    b256!("9f644119a7130cd4fabba18dae6980e4b9a48f5416819c1954e9e932e514e6e7");
+    b256!("ef95f50495ea13131b32e3e52bb5ba60fc4c89292a327619a857331cb17cadc5");
 const ROOT_TRANSFER_FROM_INFINITE: B256 =
-    b256!("82e62dc5394bea0ebfe17dd63a093c52b4ceae8facf063b44ccc0597480cc49c");
+    b256!("80abe3e0e5d5b4159718313fa57b9679004d3ee597be41d315db42be4562d542");
 const ROOT_TRANSFER_FROM_WITH_MEMO: B256 =
-    b256!("982762526afaf9b37c8bc0090352cb27d2150603791690d7344ea19ae7143269");
+    b256!("2e14d6e9c2b536b01fbe310610d7bc40835c45eb9e224b00a80a0bf4adf940fe");
 const ROOT_APPROVE: B256 =
-    b256!("9837570caf42d864a0bac32087df15d3666a0de714567d951564b145b2b5a41e");
+    b256!("b516721e55d53bc967f4b3646cba5fcc039142a007f3030a25a51bf04687d504");
 const ROOT_MINT_PRIV: B256 =
-    b256!("749a0f706e60853de51cd87c7312c104b0783c731b39d34016be07f9c76c0c50");
+    b256!("f12f96feeb395c37f25be2cb3fb59fa25d4cf4af6d847a20a6507ea4838caee5");
 const ROOT_MINT_UNPRIV: B256 =
-    b256!("1d5cf40eb04aafe96b4a32c9734f58a94ee0eca0ddbffbc3d6ab9f45db9cc587");
+    b256!("8686f1c3907ecf02a9cba58e4d4742cb37af739fac711eed3ea5e47f7a770869");
 const ROOT_MINT_WITH_MEMO: B256 =
-    b256!("aea0744daa897ae140dc5fdabbd66bd520815e87c75086f1caf5bd5d8db45455");
-const ROOT_BURN: B256 = b256!("e292d12852ea52c48bf7869feac153e12aff28fdc301d0c641fa3629d258dcef");
+    b256!("39118642dca90d7d03a78c0cdd70f27dc65f6269c6b89a9188fb9f868b0eb93e");
+const ROOT_BURN: B256 = b256!("16d67b0f42aac51d594716f3fa2c229c3102aecbb441d1f1541e807e6f57dc1c");
 const ROOT_BURN_WITH_MEMO: B256 =
-    b256!("a261f181fb9c7b7143307339be3844de4584275bac4bc002a1cdbc2547757898");
+    b256!("419c20c72acee71538a244ca6e94bd222ea6ac1319f7884b97630d0da65e4bae");
 const ROOT_BURN_BLOCKED: B256 =
-    b256!("adc5a77aca0c7da11dd25ff69d2434badf8d0f035eacd2de7cdf5592efc31c2a");
-const ROOT_PAUSE: B256 = b256!("8fc4e227c8dcc72faebe02a2f0154ff0834d5a99cf472e15ea6e49d742c299ef");
+    b256!("5bd227abc2a7ec4a3c6818a9aca9f056f7f1e126ed5460ad962883764526fe33");
+const ROOT_PAUSE: B256 = b256!("6be2a86ee3bd9551efe06dc3251c34be58073f1838899f2bfd3deaec2a588618");
 const ROOT_UNPAUSE: B256 =
-    b256!("67f1ec70420578aafb490cdc86a5e450211342259aa79b0fb18944bffe3de1e8");
+    b256!("456eaa3cb276a0ddb642b7567ea6b3921ea4613db7da0e90dfcd5f5d6bbcb8e4");
 const ROOT_UPDATE_SUPPLY_CAP: B256 =
-    b256!("18b9e262e9471a0013e0600b698ef9c74bcfccefcfcad83a46251c9f8e817e27");
+    b256!("11d1ba301e7494ba8187b9979627bf22b06eea3eb21819ba159e7cbdede26982");
 const ROOT_UPDATE_NAME: B256 =
-    b256!("a9b4b1d35935031022f5f9da53db1b75cca0f290cd0c477d88452806abfb802c");
+    b256!("fc6c934f4add01e9931cbd6424fe6e83368b45d77d3e95260e37a7a98bc5c689");
 const ROOT_UPDATE_SYMBOL: B256 =
-    b256!("aad153e419c17753d3bf730d6183164458c858379a81e4eb35687b08005617ad");
+    b256!("2f4bc198a6f0c5e8e4acdf2b0dde37fa02d78e53e5619c1e854252a002289999");
 const ROOT_UPDATE_CONTRACT_URI: B256 =
-    b256!("2678f67a192fd017125a2b1b9616a894a156018956e7bb99a15ac8bdf475a7a1");
+    b256!("d585383d15505c8dcdb751b8d522d32984efcf8e4a7ea17a52c195e85d1ae50a");
 const ROOT_GRANT_ROLE: B256 =
-    b256!("e8ec8239f7b10e736151fc068e82a2d0940a4f6ebf184bf71616d9058467570f");
+    b256!("f59dd572c2ea51d2b1ab46dd2902271a84c6f7ae6e040bffbc33fc7d30226af3");
 const ROOT_REVOKE_ROLE: B256 =
-    b256!("9cd346a450843658a0d04ec37a78709b1faf2a973cbdcf796b44f03643243bad");
+    b256!("6a136a30d5dd7c8599cc7e2a9ae1af9eae5ce22e272333ba6c414ee4ad4f7889");
 const ROOT_RENOUNCE_ROLE: B256 =
-    b256!("4de44c01372b636686247aea8724576df6e778f2a94535a2efd71b6b81625441");
+    b256!("93730de9a1692ba54cc0dea40e1f58cd1241cb37189f32a778e5c4bf94a20e88");
 const ROOT_RENOUNCE_LAST_ADMIN: B256 =
-    b256!("143ade4c83f79a0ebc2bbc75c7d6e8a4ce7ace0235c0ffce003e5f6518276826");
+    b256!("54ef9d7b921a732e0cfab1e2ee6f65db93642ea9a54cae1cea3a3d3338c3757a");
 const ROOT_SET_ROLE_ADMIN: B256 =
-    b256!("fd229bb98a9695f489f482515f62a4389565473c86517c76de97e7731a60c5fe");
+    b256!("eef12fc970995eca28ebab24f5efb868a1bce058dabc9f8cad4a2cc5ae1769f3");
 const ROOT_UPDATE_POLICY: B256 =
-    b256!("b2c704ab3f2d4cb586548ef9374a83d1727515c33d599295904056fcecd97775");
-const ROOT_PERMIT: B256 = b256!("7c710860355d6a906d9342a724549a59f7359b2d8aff6bf8b5039562c93c71a6");
+    b256!("f2f1f3f12596b4c6f3baba34b9ce7fc8c093a3b8eed3902311f3d06f0e8ac2b6");
+const ROOT_PERMIT: B256 = b256!("40bd2a9096a15361c0b36aa1a8494bc010374dfc0c5fc30bb154ecca4475e0cf");
 const ROOT_GRANT_DEFAULT_ADMIN: B256 =
-    b256!("c828bb784b6ca1d7a3a255a7e5264350ce4293acc38820a57bcc93853abea9f4");
+    b256!("75e544752fe6349df359a1ad2e2093b1e17c85c1138d73457cebe52f5c2eac83");
 const ROOT_GRANT_IDEMPOTENT: B256 =
-    b256!("76f5d7e14530b4534e18e2e3c4a3a3035da857704c314ccfc7f9445ecfe90da8");
+    b256!("1765d17981dcb6a39ca93cd61d01c05e265022f8f3f28e83ceb07baa44122509");
 const ROOT_GRANT_UNCHECKED: B256 =
-    b256!("c83dd3df2a6f62c0775fb908d7a921f65c8e0e735bdb9b0adf7d1e489b657688");
+    b256!("8bdc3a766886e0a497ee8550f4dcc2cc6db50a9768ed11fd5be73e890ad3b94a");
 
 // --- harness ----------------------------------------------------------------
 
@@ -142,7 +142,7 @@ fn op(
     caller: Address,
     policy: FakePolicyAccounting,
     calldata: Vec<u8>,
-) -> Result<Bytes, BasePrecompileError> {
+) -> Result<Bytes, H20PrecompileError> {
     storage.set_caller(caller);
     StorageCtx::enter(storage, |ctx| {
         let version = StablecoinVersions::from_spec(H20Spec::Beryl).expect("Beryl activates V1");
@@ -161,7 +161,7 @@ fn op_privileged(
     caller: Address,
     policy: FakePolicyAccounting,
     calldata: Vec<u8>,
-) -> Result<Bytes, BasePrecompileError> {
+) -> Result<Bytes, H20PrecompileError> {
     storage.set_caller(caller);
     StorageCtx::enter(storage, |ctx| {
         H20StablecoinToken::with_storage_and_policy(
@@ -287,7 +287,7 @@ fn golden_transfer_unprivileged_blocked_sender_reverts() {
     .unwrap_err();
     assert_eq!(
         err,
-        BasePrecompileError::revert(IH20::PolicyForbids {
+        H20PrecompileError::revert(IH20::PolicyForbids {
             policyScope: H20PolicyType::TransferSender.id(),
             policyId: POLICY_ID,
         })
@@ -305,7 +305,7 @@ fn golden_transfer_reverts_zero_receiver() {
         IH20::transferCall { to: Address::ZERO, amount: u(1) }.abi_encode(),
     )
     .unwrap_err();
-    assert_eq!(err, BasePrecompileError::revert(IH20::InvalidReceiver { receiver: Address::ZERO }));
+    assert_eq!(err, H20PrecompileError::revert(IH20::InvalidReceiver { receiver: Address::ZERO }));
 }
 
 #[test]
@@ -321,7 +321,7 @@ fn golden_transfer_reverts_insufficient_balance() {
     .unwrap_err();
     assert_eq!(
         err,
-        BasePrecompileError::revert(IH20::InsufficientBalance {
+        H20PrecompileError::revert(IH20::InsufficientBalance {
             sender: ALICE,
             balance: u(10),
             needed: u(50),
@@ -349,7 +349,7 @@ fn golden_transfer_reverts_when_paused() {
     .unwrap_err();
     assert_eq!(
         err,
-        BasePrecompileError::revert(IH20::ContractPaused {
+        H20PrecompileError::revert(IH20::ContractPaused {
             feature: IH20::PausableFeature::TRANSFER
         })
     );
@@ -437,7 +437,7 @@ fn golden_transfer_from_reverts_insufficient_allowance() {
     .unwrap_err();
     assert_eq!(
         err,
-        BasePrecompileError::revert(IH20::InsufficientAllowance {
+        H20PrecompileError::revert(IH20::InsufficientAllowance {
             spender: BOB,
             allowance: u(5),
             needed: u(30),
@@ -465,7 +465,7 @@ fn golden_transfer_from_unprivileged_enforces_executor_policy() {
     .unwrap_err();
     assert_eq!(
         err,
-        BasePrecompileError::revert(IH20::PolicyForbids {
+        H20PrecompileError::revert(IH20::PolicyForbids {
             policyScope: H20PolicyType::TransferExecutor.id(),
             policyId: POLICY_ID,
         })
@@ -526,7 +526,7 @@ fn golden_approve_reverts_zero_spender() {
         IH20::approveCall { spender: Address::ZERO, amount: u(1) }.abi_encode(),
     )
     .unwrap_err();
-    assert_eq!(err, BasePrecompileError::revert(IH20::InvalidSpender { spender: Address::ZERO }));
+    assert_eq!(err, H20PrecompileError::revert(IH20::InvalidSpender { spender: Address::ZERO }));
 }
 
 // ============================================================================
@@ -565,7 +565,7 @@ fn golden_mint_unprivileged_requires_role_and_policy() {
         .unwrap_err();
     assert_eq!(
         err,
-        BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+        H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
             account: ALICE,
             neededRole: H20TokenRole::Mint.id(),
         })
@@ -598,7 +598,7 @@ fn golden_mint_reverts_over_supply_cap() {
     .unwrap_err();
     assert_eq!(
         err,
-        BasePrecompileError::revert(IH20::SupplyCapExceeded { cap: u(50), attempted: u(100) })
+        H20PrecompileError::revert(IH20::SupplyCapExceeded { cap: u(50), attempted: u(100) })
     );
 }
 
@@ -640,7 +640,7 @@ fn golden_burn_requires_role_then_reduces_supply() {
     .unwrap_err();
     assert_eq!(
         err,
-        BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+        H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
             account: ALICE,
             neededRole: H20TokenRole::Burn.id(),
         })
@@ -725,7 +725,7 @@ fn golden_burn_blocked_reverts_when_not_blocked() {
         IH20::burnBlockedCall { from: ALICE, amount: u(1) }.abi_encode(),
     )
     .unwrap_err();
-    assert_eq!(err, BasePrecompileError::revert(IH20::AccountNotBlocked { account: ALICE }));
+    assert_eq!(err, H20PrecompileError::revert(IH20::AccountNotBlocked { account: ALICE }));
 }
 
 // ============================================================================
@@ -781,7 +781,7 @@ fn golden_pause_reverts_empty_feature_set() {
         IH20::pauseCall { features: vec![] }.abi_encode(),
     )
     .unwrap_err();
-    assert_eq!(err, BasePrecompileError::revert(IH20::EmptyFeatureSet {}));
+    assert_eq!(err, H20PrecompileError::revert(IH20::EmptyFeatureSet {}));
 }
 
 #[test]
@@ -796,7 +796,7 @@ fn golden_pause_unprivileged_requires_role() {
     .unwrap_err();
     assert_eq!(
         err,
-        BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+        H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
             account: ALICE,
             neededRole: H20TokenRole::Pause.id(),
         })
@@ -837,7 +837,7 @@ fn golden_update_supply_cap_reverts_below_supply() {
     .unwrap_err();
     assert_eq!(
         err,
-        BasePrecompileError::revert(IH20::InvalidSupplyCap {
+        H20PrecompileError::revert(IH20::InvalidSupplyCap {
             currentSupply: u(500),
             proposedCap: u(100),
         })
@@ -947,7 +947,7 @@ fn golden_revoke_last_admin_rejected() {
         IH20::revokeRoleCall { role: H20TokenRole::DefaultAdmin.id(), account: ADMIN }.abi_encode(),
     )
     .unwrap_err();
-    assert_eq!(err, BasePrecompileError::revert(IH20::LastAdminCannotRenounce {}));
+    assert_eq!(err, H20PrecompileError::revert(IH20::LastAdminCannotRenounce {}));
 }
 
 #[test]
@@ -981,7 +981,7 @@ fn golden_renounce_role_bad_confirmation() {
             .abi_encode(),
     )
     .unwrap_err();
-    assert_eq!(err, BasePrecompileError::revert(IH20::AccessControlBadConfirmation {}));
+    assert_eq!(err, H20PrecompileError::revert(IH20::AccessControlBadConfirmation {}));
 }
 
 #[test]
@@ -1011,7 +1011,7 @@ fn golden_renounce_last_admin_reverts_when_not_sole() {
     let err =
         op(&mut s, ADMIN, FakePolicyAccounting::new(), IH20::renounceLastAdminCall {}.abi_encode())
             .unwrap_err();
-    assert_eq!(err, BasePrecompileError::revert(IH20::NotSoleAdmin {}));
+    assert_eq!(err, H20PrecompileError::revert(IH20::NotSoleAdmin {}));
 }
 
 #[test]
@@ -1072,7 +1072,7 @@ fn golden_update_policy_reverts_missing_policy() {
             .abi_encode(),
     )
     .unwrap_err();
-    assert_eq!(err, BasePrecompileError::revert(IH20::PolicyNotFound { policyId: 99 }));
+    assert_eq!(err, H20PrecompileError::revert(IH20::PolicyNotFound { policyId: 99 }));
 }
 
 // ============================================================================
@@ -1105,7 +1105,7 @@ fn golden_permit_reverts_when_expired() {
     let call = signed_permit(domain, U256::ZERO, owner, BOB, u(1), u(10));
     s.set_timestamp(u(11));
     let err = op(&mut s, owner, FakePolicyAccounting::new(), call.abi_encode()).unwrap_err();
-    assert_eq!(err, BasePrecompileError::revert(IH20::ExpiredSignature { deadline: u(10) }));
+    assert_eq!(err, H20PrecompileError::revert(IH20::ExpiredSignature { deadline: u(10) }));
 }
 
 // ============================================================================
@@ -1183,7 +1183,7 @@ fn golden_read_policy_id_and_unsupported_scope() {
     .unwrap_err();
     assert_eq!(
         err,
-        BasePrecompileError::revert(IH20::UnsupportedPolicyType { policyScope: bad_scope })
+        H20PrecompileError::revert(IH20::UnsupportedPolicyType { policyScope: bad_scope })
     );
 }
 
@@ -1348,7 +1348,7 @@ fn golden_transfer_reverts_zero_sender() {
         IH20::transferCall { to: BOB, amount: u(1) }.abi_encode(),
     )
     .unwrap_err();
-    assert_eq!(err, BasePrecompileError::revert(IH20::InvalidSender { sender: Address::ZERO }));
+    assert_eq!(err, H20PrecompileError::revert(IH20::InvalidSender { sender: Address::ZERO }));
 }
 
 #[test]
@@ -1361,7 +1361,7 @@ fn golden_transfer_from_reverts_zero_receiver() {
         IH20::transferFromCall { from: ALICE, to: Address::ZERO, amount: u(1) }.abi_encode(),
     )
     .unwrap_err();
-    assert_eq!(err, BasePrecompileError::revert(IH20::InvalidReceiver { receiver: Address::ZERO }));
+    assert_eq!(err, H20PrecompileError::revert(IH20::InvalidReceiver { receiver: Address::ZERO }));
 }
 
 #[test]
@@ -1374,7 +1374,7 @@ fn golden_transfer_from_reverts_zero_sender() {
         IH20::transferFromCall { from: Address::ZERO, to: CAROL, amount: u(1) }.abi_encode(),
     )
     .unwrap_err();
-    assert_eq!(err, BasePrecompileError::revert(IH20::InvalidSender { sender: Address::ZERO }));
+    assert_eq!(err, H20PrecompileError::revert(IH20::InvalidSender { sender: Address::ZERO }));
 }
 
 #[test]
@@ -1388,7 +1388,7 @@ fn golden_approve_reverts_zero_approver() {
         IH20::approveCall { spender: BOB, amount: u(1) }.abi_encode(),
     )
     .unwrap_err();
-    assert_eq!(err, BasePrecompileError::revert(IH20::InvalidApprover { approver: Address::ZERO }));
+    assert_eq!(err, H20PrecompileError::revert(IH20::InvalidApprover { approver: Address::ZERO }));
 }
 
 #[test]
@@ -1401,7 +1401,7 @@ fn golden_mint_reverts_zero_receiver() {
         IH20::mintCall { to: Address::ZERO, amount: u(1) }.abi_encode(),
     )
     .unwrap_err();
-    assert_eq!(err, BasePrecompileError::revert(IH20::InvalidReceiver { receiver: Address::ZERO }));
+    assert_eq!(err, H20PrecompileError::revert(IH20::InvalidReceiver { receiver: Address::ZERO }));
 }
 
 #[test]
@@ -1420,7 +1420,7 @@ fn golden_burn_reverts_insufficient_balance() {
     .unwrap_err();
     assert_eq!(
         err,
-        BasePrecompileError::revert(IH20::InsufficientBalance {
+        H20PrecompileError::revert(IH20::InsufficientBalance {
             sender: ALICE,
             balance: u(10),
             needed: u(50),
@@ -1441,7 +1441,7 @@ fn golden_burn_blocked_unprivileged_requires_role() {
     .unwrap_err();
     assert_eq!(
         err,
-        BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+        H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
             account: ALICE,
             neededRole: H20TokenRole::BurnBlocked.id(),
         })
@@ -1458,7 +1458,7 @@ fn golden_unpause_reverts_empty_feature_set() {
         IH20::unpauseCall { features: vec![] }.abi_encode(),
     )
     .unwrap_err();
-    assert_eq!(err, BasePrecompileError::revert(IH20::EmptyFeatureSet {}));
+    assert_eq!(err, H20PrecompileError::revert(IH20::EmptyFeatureSet {}));
 }
 
 #[test]
@@ -1473,7 +1473,7 @@ fn golden_unpause_unprivileged_requires_role() {
     .unwrap_err();
     assert_eq!(
         err,
-        BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+        H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
             account: ALICE,
             neededRole: H20TokenRole::Unpause.id(),
         })
@@ -1487,7 +1487,7 @@ fn assert_unprivileged_requires_role(calldata: Vec<u8>, role: B256) {
     let err = op(&mut s, ALICE, FakePolicyAccounting::new(), calldata).unwrap_err();
     assert_eq!(
         err,
-        BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+        H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
             account: ALICE,
             neededRole: role,
         })
@@ -1548,7 +1548,7 @@ fn golden_grant_role_unprivileged_no_admin_reverts() {
     .unwrap_err();
     assert_eq!(
         err,
-        BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+        H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
             account: ALICE,
             neededRole: H20TokenRole::DefaultAdmin.id(),
         })
@@ -1569,7 +1569,7 @@ fn golden_grant_role_unprivileged_non_admin_caller_reverts() {
     .unwrap_err();
     assert_eq!(
         err,
-        BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+        H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
             account: ALICE,
             neededRole: H20TokenRole::DefaultAdmin.id(),
         })
@@ -1589,7 +1589,7 @@ fn golden_revoke_role_unprivileged_non_admin_caller_reverts() {
     .unwrap_err();
     assert_eq!(
         err,
-        BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+        H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
             account: BOB,
             neededRole: H20TokenRole::DefaultAdmin.id(),
         })
@@ -1613,7 +1613,7 @@ fn golden_set_role_admin_unprivileged_non_admin_caller_reverts() {
     .unwrap_err();
     assert_eq!(
         err,
-        BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+        H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
             account: BOB,
             neededRole: H20TokenRole::DefaultAdmin.id(),
         })
@@ -1632,7 +1632,7 @@ fn golden_renounce_role_reverts_last_admin() {
             .abi_encode(),
     )
     .unwrap_err();
-    assert_eq!(err, BasePrecompileError::revert(IH20::LastAdminCannotRenounce {}));
+    assert_eq!(err, H20PrecompileError::revert(IH20::LastAdminCannotRenounce {}));
 }
 
 #[test]
@@ -1730,12 +1730,12 @@ fn golden_inner_reverts_before_beryl() {
             PolicyVersion::V1,
         );
         StablecoinVersions::from_spec(H20Spec::Disabled).map_or_else(
-            || Err(BasePrecompileError::Revert(Bytes::new())),
+            || Err(H20PrecompileError::Revert(Bytes::new())),
             |version| token.route(ctx, &calldata, version, false, NoopPrecompileCallObserver),
         )
     })
     .unwrap_err();
-    assert_eq!(err, BasePrecompileError::Revert(Bytes::new()));
+    assert_eq!(err, H20PrecompileError::Revert(Bytes::new()));
 }
 
 #[test]
@@ -1999,10 +1999,9 @@ fn golden_gas_footprints() {
 /// pin the op via [`covered`].
 ///
 /// This gives two compile-time guarantees:
-///   * add an op to the ABI (a new `IH20Calls` / `IH20StablecoinCalls` variant) → the
-///     wildcard-free match fails to build until an arm (and thus a golden) is added;
-///   * rename or remove a golden `#[test]` fn → the `covered(&[...])` reference fails
-///     to build.
+///   * add an op to the ABI (a new `IH20Calls` / `IH20StablecoinCalls` variant) → the wildcard-free
+///     match fails to build until an arm (and thus a golden) is added;
+///   * rename or remove a golden `#[test]` fn → the `covered(&[...])` reference fails to build.
 ///
 /// Because Stablecoin V1 is **frozen**, this checklist is NOT expected to ever be
 /// updated: a compile error here means the frozen V1 op surface changed, which must be
@@ -2132,30 +2131,30 @@ fn v1_op_coverage_checklist(call: IH20::IH20Calls, ext: IH20Stablecoin::IH20Stab
         C::eip712Domain(_) => covered(&[golden_read_eip712_domain]),
 
         // direct reads
-        C::name(_)
-        | C::symbol(_)
-        | C::decimals(_)
-        | C::totalSupply(_)
-        | C::balanceOf(_)
-        | C::allowance(_)
-        | C::supplyCap(_)
-        | C::nonces(_)
-        | C::contractURI(_)
-        | C::hasRole(_)
-        | C::getRoleAdmin(_) => covered(&[golden_read_metadata_and_supply]),
+        C::name(_) |
+        C::symbol(_) |
+        C::decimals(_) |
+        C::totalSupply(_) |
+        C::balanceOf(_) |
+        C::allowance(_) |
+        C::supplyCap(_) |
+        C::nonces(_) |
+        C::contractURI(_) |
+        C::hasRole(_) |
+        C::getRoleAdmin(_) => covered(&[golden_read_metadata_and_supply]),
 
         // role / policy-id constants
-        C::DEFAULT_ADMIN_ROLE(_)
-        | C::MINT_ROLE(_)
-        | C::BURN_ROLE(_)
-        | C::BURN_BLOCKED_ROLE(_)
-        | C::PAUSE_ROLE(_)
-        | C::UNPAUSE_ROLE(_)
-        | C::METADATA_ROLE(_)
-        | C::TRANSFER_SENDER_POLICY(_)
-        | C::TRANSFER_RECEIVER_POLICY(_)
-        | C::TRANSFER_EXECUTOR_POLICY(_)
-        | C::MINT_RECEIVER_POLICY(_) => covered(&[golden_read_role_and_policy_constants]),
+        C::DEFAULT_ADMIN_ROLE(_) |
+        C::MINT_ROLE(_) |
+        C::BURN_ROLE(_) |
+        C::BURN_BLOCKED_ROLE(_) |
+        C::PAUSE_ROLE(_) |
+        C::UNPAUSE_ROLE(_) |
+        C::METADATA_ROLE(_) |
+        C::TRANSFER_SENDER_POLICY(_) |
+        C::TRANSFER_RECEIVER_POLICY(_) |
+        C::TRANSFER_EXECUTOR_POLICY(_) |
+        C::MINT_RECEIVER_POLICY(_) => covered(&[golden_read_role_and_policy_constants]),
     }
 
     match ext {

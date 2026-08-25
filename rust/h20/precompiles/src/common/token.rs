@@ -5,18 +5,19 @@ use crate::{PolicyAccounting, PolicyRegistryLogic, TokenAccounting};
 /// Token identity layer, bridging the storage port to capability traits.
 ///
 /// `Token` provides:
-/// - Accessors to the underlying storage ([`Self::accounting`] /
-///   [`Self::accounting_mut`]) that all capability trait default impls use to
-///   read and write state without the 22-method delegation block.
+/// - Accessors to the underlying storage ([`Self::accounting`] / [`Self::accounting_mut`]) that all
+///   capability trait default impls use to read and write state without the 22-method delegation
+///   block.
 /// - Access to the policy registry: [`Self::policy`] returns the active version's
-///   [`PolicyRegistryLogic`] contract, and [`Self::policy_storage`] /
-///   [`Self::policy_storage_mut`] expose the storage it operates on. Together they
-///   make the whole policy contract available at the call site, e.g.
-///   `token.policy().is_authorized(token.policy_storage(), policy_id, account)`.
+///   [`PolicyRegistryLogic`] contract, and [`Self::policy_storage`] / [`Self::policy_storage_mut`]
+///   expose the storage it operates on. Together they make the whole policy contract available at
+///   the call site, e.g. `token.policy().is_authorized(token.policy_storage(), policy_id,
+///   account)`.
 /// - [`Self::token_address`], the on-chain address of this token.
 ///
 /// All capability traits extend `Token`. Implement it on a token struct by
-/// wiring the `accounting` and `policy` fields and delegating address identity to the backing storage.
+/// wiring the `accounting` and `policy` fields and delegating address identity to the backing
+/// storage.
 ///
 /// The associated types are resolved at compile time, so storage and policy calls
 /// in the capability traits are monomorphized — no vtable overhead on the hot path.

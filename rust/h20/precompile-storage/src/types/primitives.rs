@@ -46,7 +46,7 @@ impl FromWord for bool {
         match word {
             w if w == U256::ZERO => Ok(false),
             w if w == U256::ONE => Ok(true),
-            _ => Err(crate::error::BasePrecompileError::enum_conversion_error()),
+            _ => Err(crate::error::H20PrecompileError::enum_conversion_error()),
         }
     }
 }

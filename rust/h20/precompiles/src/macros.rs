@@ -1,13 +1,13 @@
 //! Runtime helpers for wrapping native precompile dispatch.
 
-/// Wraps a stateful native precompile body in the Base storage-provider setup.
-macro_rules! base_precompile {
-    ($id:expr, |$ctx:ident, $calldata:ident| $impl:expr $(,)?) => {{
+/// Wraps a stateful native precompile body in the H20 storage-provider setup.
+macro_rules! h20_precompile {
+    ($id:expr, | $ctx:ident, $calldata:ident | $impl:expr $(,)?) => {{
         ::alloy_evm::precompiles::DynPrecompile::new_stateful(
             ::revm::precompile::PrecompileId::Custom($id.into()),
             move |input| {
                 if !input.is_direct_call() {
-                    return ::h20_precompile_storage::BasePrecompileError::revert(
+                    return ::h20_precompile_storage::H20PrecompileError::revert(
                         ::h20_precompile_storage::DelegateCallNotAllowed {},
                     )
                     .into_precompile_result(0, 0);
@@ -23,12 +23,12 @@ macro_rules! base_precompile {
             },
         )
     }};
-    ($id:expr, |$input:ident, $ctx:ident, $calldata:ident| $impl:expr $(,)?) => {{
+    ($id:expr, | $input:ident, $ctx:ident, $calldata:ident | $impl:expr $(,)?) => {{
         ::alloy_evm::precompiles::DynPrecompile::new_stateful(
             ::revm::precompile::PrecompileId::Custom($id.into()),
             move |$input| {
                 if !$input.is_direct_call() {
-                    return ::h20_precompile_storage::BasePrecompileError::revert(
+                    return ::h20_precompile_storage::H20PrecompileError::revert(
                         ::h20_precompile_storage::DelegateCallNotAllowed {},
                     )
                     .into_precompile_result(0, 0);
@@ -44,7 +44,7 @@ macro_rules! base_precompile {
     }};
 }
 
-pub(crate) use base_precompile;
+pub(crate) use h20_precompile;
 
 /// Decodes calldata into the requested ABI interface call or returns an unknown selector error.
 macro_rules! decode_precompile_call {
@@ -57,11 +57,9 @@ macro_rules! decode_precompile_call {
                 selector
             }
             None => {
-                return Err(
-                    ::h20_precompile_storage::BasePrecompileError::UnknownFunctionSelector(
-                        [0u8; 4],
-                    ),
-                );
+                return Err(::h20_precompile_storage::H20PrecompileError::UnknownFunctionSelector(
+                    [0u8; 4],
+                ));
             }
         };
 
@@ -70,17 +68,15 @@ macro_rules! decode_precompile_call {
             Err(error)
                 if <$call_ty as ::alloy_sol_types::SolInterface>::valid_selector(selector) =>
             {
-                return Err(::h20_precompile_storage::BasePrecompileError::AbiDecodeFailed {
+                return Err(::h20_precompile_storage::H20PrecompileError::AbiDecodeFailed {
                     selector,
                     error: ::alloc::string::ToString::to_string(&error),
                 });
             }
             Err(_) => {
-                return Err(
-                    ::h20_precompile_storage::BasePrecompileError::UnknownFunctionSelector(
-                        selector,
-                    ),
-                );
+                return Err(::h20_precompile_storage::H20PrecompileError::UnknownFunctionSelector(
+                    selector,
+                ));
             }
         }
     }};
@@ -91,7 +87,7 @@ pub(crate) use decode_precompile_call;
 #[cfg(test)]
 mod tests {
     use alloy_sol_types::SolCall;
-    use h20_precompile_storage::{BasePrecompileError, Result};
+    use h20_precompile_storage::{H20PrecompileError, Result};
 
     use crate::IPolicyRegistry;
 
@@ -103,14 +99,14 @@ mod tests {
     fn decode_precompile_call_rejects_short_calldata() {
         let err = decode_policy_call(&[1, 2, 3]).unwrap_err();
 
-        assert_eq!(err, BasePrecompileError::UnknownFunctionSelector([0u8; 4]));
+        assert_eq!(err, H20PrecompileError::UnknownFunctionSelector([0u8; 4]));
     }
 
     #[test]
     fn decode_precompile_call_preserves_unknown_selector() {
         let err = decode_policy_call(&[1, 2, 3, 4]).unwrap_err();
 
-        assert_eq!(err, BasePrecompileError::UnknownFunctionSelector([1, 2, 3, 4]));
+        assert_eq!(err, H20PrecompileError::UnknownFunctionSelector([1, 2, 3, 4]));
     }
 
     #[test]
@@ -119,7 +115,7 @@ mod tests {
 
         assert!(matches!(
             err,
-            BasePrecompileError::AbiDecodeFailed {
+            H20PrecompileError::AbiDecodeFailed {
                 selector: IPolicyRegistry::createPolicyCall::SELECTOR,
                 ..
             }
@@ -145,7 +141,7 @@ mod tests {
 
         assert!(matches!(
             err,
-            BasePrecompileError::AbiDecodeFailed {
+            H20PrecompileError::AbiDecodeFailed {
                 selector: IPolicyRegistry::policyExistsCall::SELECTOR,
                 ..
             }

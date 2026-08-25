@@ -11,12 +11,12 @@ use alloc::string::ToString;
 use crate::H20Spec;
 use alloy_primitives::{Address, B256, Bytes, U256};
 use alloy_sol_types::{SolCall, SolInterface, SolValue};
-use h20_precompile_storage::{BasePrecompileError, StorageCtx};
+use h20_precompile_storage::{H20PrecompileError, StorageCtx};
 use revm::precompile::PrecompileResult;
 
 use crate::{
-    H20PolicyType, H20StablecoinToken, H20TokenRole, H20Variant, BerylCallRecorder,
-    BerylMetricLabels, BerylSelector,
+    BerylCallRecorder, BerylMetricLabels, BerylSelector, H20PolicyType, H20StablecoinToken,
+    H20TokenRole, H20Variant,
     IH20::{self, IH20Calls as C},
     IH20Stablecoin::{self, IH20StablecoinCalls as SC},
     NoopPrecompileCallObserver, PermitArgs, PolicyAccounting, PrecompileCallObserver,
@@ -52,34 +52,34 @@ impl<S: StablecoinAccounting, A: PolicyAccounting> H20StablecoinToken<S, A> {
         );
         if !ctx.call_value().is_zero() {
             return recorder
-                .record_base_error_result(ctx, BasePrecompileError::revert(IH20::NonPayable {}));
+                .record_h20_error_result(ctx, H20PrecompileError::revert(IH20::NonPayable {}));
         }
         if let Err(error) = recorder.deduct_calldata_gas(ctx, calldata) {
-            return recorder.record_base_error_result(ctx, error);
+            return recorder.record_h20_error_result(ctx, error);
         }
         // Gate by hardfork: resolve the active version once. `None` is unreachable in practice —
         // the precompile is only installed from Beryl — but we revert defensively.
         let Some(version) = StablecoinVersions::from_spec(upgrade) else {
-            return recorder
-                .record_base_error_result(ctx, BasePrecompileError::Revert(Bytes::new()));
+            return recorder.record_h20_error_result(ctx, H20PrecompileError::Revert(Bytes::new()));
         };
         // Ensure the token has been deployed (has bytecode at its address).
         match version.implementation().is_initialized(self) {
             Ok(true) => {}
             Ok(false) => {
                 return recorder
-                    .record_base_error_result(ctx, BasePrecompileError::Revert(Bytes::new()));
+                    .record_h20_error_result(ctx, H20PrecompileError::Revert(Bytes::new()));
             }
-            Err(error) => return recorder.record_base_error_result(ctx, error),
+            Err(error) => return recorder.record_h20_error_result(ctx, error),
         }
-        recorder.record_base_result(ctx, self.route(ctx, calldata, version, false, observer), |b| b)
+        recorder.record_h20_result(ctx, self.route(ctx, calldata, version, false, observer), |b| b)
     }
 
     /// Grants `role` to `account` without checking caller authorization.
     ///
-    /// The one token-level mutation the factory needs at bootstrap, when no admin exists yet and the
-    /// authorized [`Stablecoin::grant_role`](crate::Stablecoin) path is not yet reachable.
-    // TODO: When factory get's logic for threading fork, remove this and pull in versions into the factory to use that function
+    /// The one token-level mutation the factory needs at bootstrap, when no admin exists yet and
+    /// the authorized [`Stablecoin::grant_role`](crate::Stablecoin) path is not yet reachable.
+    // TODO: When factory get's logic for threading fork, remove this and pull in versions into the
+    // factory to use that function
     pub fn grant_role_unchecked(
         &mut self,
         role: B256,
@@ -104,11 +104,11 @@ impl<S: StablecoinAccounting, A: PolicyAccounting> H20StablecoinToken<S, A> {
     {
         let logic = version.implementation();
 
-        if let Some(selector) = BerylSelector::selector(calldata)
-            && IH20Stablecoin::IH20StablecoinCalls::valid_selector(selector)
+        if let Some(selector) = BerylSelector::selector(calldata) &&
+            IH20Stablecoin::IH20StablecoinCalls::valid_selector(selector)
         {
             let call = IH20Stablecoin::IH20StablecoinCalls::abi_decode_validate(calldata).map_err(
-                |error| BasePrecompileError::AbiDecodeFailed { selector, error: error.to_string() },
+                |error| H20PrecompileError::AbiDecodeFailed { selector, error: error.to_string() },
             )?;
             let label = call.as_label();
             return observer.observe(label, || {
@@ -336,7 +336,7 @@ mod tests {
     use h20_precompile_storage::{HashMapStorageProvider, StorageCtx};
 
     use crate::{
-        H20StablecoinToken, FakePolicyAccounting, IH20, InMemoryTokenAccounting,
+        FakePolicyAccounting, H20StablecoinToken, IH20, InMemoryTokenAccounting,
         NoopPrecompileCallObserver, PolicyVersion, StablecoinVersion, TestStablecoinToken,
     };
 

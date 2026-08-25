@@ -63,7 +63,7 @@ pub struct RollupConfig {
     pub l1_chain_id: u64,
     /// The L2 chain ID
     pub l2_chain_id: Chain,
-    /// First L2 timestamp at which Base Beryl H20 v1 is active.
+    /// First L2 timestamp at which HSK H20 v1 is active.
     ///
     /// H20 is a chain-specific execution feature and is deliberately not represented as an
     /// [`OpHardfork`] or `OpSpecId`.
@@ -216,7 +216,7 @@ impl RollupConfig {
 }
 
 impl RollupConfig {
-    /// Returns the validated Base Beryl H20 v1 consensus configuration carried by proof boot
+    /// Returns the validated HSK H20 v1 consensus configuration carried by proof boot
     /// information.
     pub fn h20_config(&self) -> Result<H20Config, H20ConfigError> {
         H20Config::new(self.h20_time, self.h20_activation_admin)

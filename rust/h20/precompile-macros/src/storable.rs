@@ -280,7 +280,7 @@ fn derive_unit_enum_impl(input: &DeriveInput, data_enum: &DataEnum) -> syn::Resu
                 let value = <u8 as ::h20_precompile_storage::Storable>::load(storage, slot, ctx)?;
                 match value {
                     #(discriminant if discriminant == Self::#variant_names as u8 => Ok(Self::#variant_names),)*
-                    _ => Err(::h20_precompile_storage::BasePrecompileError::enum_conversion_error()),
+                    _ => Err(::h20_precompile_storage::H20PrecompileError::enum_conversion_error()),
                 }
             }
 

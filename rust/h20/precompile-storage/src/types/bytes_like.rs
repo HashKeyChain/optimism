@@ -16,7 +16,7 @@ use core::marker::PhantomData;
 use alloy_primitives::{Address, Bytes, U256, keccak256};
 
 use crate::{
-    error::{BasePrecompileError, Result},
+    error::{H20PrecompileError, Result},
     provider::{
         Handler, Layout, LayoutCtx, Storable, StorableType, StorageKey, StorageOps,
         sealed::OnlyPrimitives,
@@ -141,7 +141,7 @@ impl Storable for String {
         debug_assert_eq!(ctx, LayoutCtx::FULL, "String cannot be packed");
         load_bytes_like(storage, slot, |data| {
             Self::from_utf8(data).map_err(|e| {
-                BasePrecompileError::Fatal(format!("Invalid UTF-8 in stored string: {e}"))
+                H20PrecompileError::Fatal(format!("Invalid UTF-8 in stored string: {e}"))
             })
         })
     }
@@ -195,7 +195,7 @@ where
 
         for i in 0..chunks {
             let slot =
-                slot_start.checked_add(U256::from(i)).ok_or(BasePrecompileError::SlotOverflow)?;
+                slot_start.checked_add(U256::from(i)).ok_or(H20PrecompileError::SlotOverflow)?;
             let chunk_value = storage.load(slot)?;
             let chunk_bytes = chunk_value.to_be_bytes::<32>();
             let bytes_to_take = if i == chunks - 1 { length - (i * 32) } else { 32 };
@@ -221,7 +221,7 @@ fn store_bytes_like<S: StorageOps>(bytes: &[u8], storage: &mut S, base_slot: U25
 
         for i in 0..chunks {
             let slot =
-                slot_start.checked_add(U256::from(i)).ok_or(BasePrecompileError::SlotOverflow)?;
+                slot_start.checked_add(U256::from(i)).ok_or(H20PrecompileError::SlotOverflow)?;
             let chunk_start = i * 32;
             let chunk_end = (chunk_start + 32).min(length);
             let chunk = &bytes[chunk_start..chunk_end];
@@ -245,7 +245,7 @@ fn delete_bytes_like<S: StorageOps>(storage: &mut S, base_slot: U256) -> Result<
         let chunks = calc_chunks(length);
         for i in 0..chunks {
             storage.store(
-                slot_start.checked_add(U256::from(i)).ok_or(BasePrecompileError::SlotOverflow)?,
+                slot_start.checked_add(U256::from(i)).ok_or(H20PrecompileError::SlotOverflow)?,
                 U256::ZERO,
             )?;
         }
@@ -270,14 +270,14 @@ fn calc_string_length(slot_value: U256, is_long: bool) -> Result<usize> {
         let length_times_two: U256 = slot_value - U256::ONE;
         let length_u256: U256 = length_times_two >> 1;
         if length_u256 > U256::from(u32::MAX) {
-            return Err(BasePrecompileError::under_overflow());
+            return Err(H20PrecompileError::under_overflow());
         }
         Ok(length_u256.to::<usize>())
     } else {
         let bytes = slot_value.to_be_bytes::<32>();
         let length = (bytes[31] / 2) as usize;
         if length > 31 {
-            return Err(BasePrecompileError::Fatal(format!(
+            return Err(H20PrecompileError::Fatal(format!(
                 "short string length {length} exceeds maximum of 31 bytes"
             )));
         }
@@ -375,14 +375,14 @@ mod tests {
         assert!(is_long_string(malicious_slot));
         assert_eq!(
             calc_string_length(malicious_slot, true),
-            Err(BasePrecompileError::under_overflow())
+            Err(H20PrecompileError::under_overflow())
         );
 
         let at_max = U256::from(u32::MAX as u64 * 2 + 1);
         assert_eq!(calc_string_length(at_max, true), Ok(u32::MAX as usize));
 
         let above_max = U256::from((u32::MAX as u64 + 1) * 2 + 1);
-        assert_eq!(calc_string_length(above_max, true), Err(BasePrecompileError::under_overflow()));
+        assert_eq!(calc_string_length(above_max, true), Err(H20PrecompileError::under_overflow()));
 
         let malicious_short = U256::from(0xFEu64);
         assert!(!is_long_string(malicious_short));

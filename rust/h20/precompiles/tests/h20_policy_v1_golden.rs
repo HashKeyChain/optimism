@@ -20,7 +20,7 @@
 //!
 //! ## Blessing storage hashes
 //! State-hash constants below are pinned. To (re)generate them after an intentional change, run:
-//! `BLESS_GOLDEN=1 cargo test -p base-common-precompiles --features test-utils \
+//! `BLESS_GOLDEN=1 cargo test -p hsk-h20-precompiles --features test-utils \
 //!    --test h20_policy_v1_golden -- --nocapture` and copy the printed `GOLDEN_ROOT` values.
 
 use IPolicyRegistry::PolicyType;
@@ -50,23 +50,23 @@ const ALLOWLIST_ID: u64 = (1u64 << 56) | 2;
 // --- pinned storage hashes (bless with BLESS_GOLDEN=1; see module docs) --------
 
 const ROOT_CREATE_BLOCKLIST: B256 =
-    b256!("5ff0dab60b6daec34cbc6135f09097ddbbe31c6f662d4cdd9c6c4c7b5a589556");
+    b256!("57d7b95abc9e8ca553041c85cb4ae5c845845d0b019ba03081c53a92098cf5f6");
 const ROOT_CREATE_ALLOWLIST: B256 =
-    b256!("d3897ed8f0dd86ed6a036e2c1386e43d3a54adfc3cf79a05bdd69fbabcdf402f");
+    b256!("237c36ea758cb13ae1c243f9a851c1ca55eefc4efcf20fe83a1947a7b9abbcc5");
 const ROOT_CREATE_WITH_ACCOUNTS: B256 =
-    b256!("5d5964977121364f0c16ef145e1edcafe296cfed6e5a932506cb10a35fa969c1");
+    b256!("46fbbdbc0d0bee7a4ffd8813acd9bcebbd8ab1db9de27089014103247c9c4576");
 const ROOT_CREATE_WITH_ACCOUNTS_BLOCKLIST: B256 =
-    b256!("a7935cb41217a504a2ca9bd9517aebaaef9d54fe58f685bd569a590749f3d569");
+    b256!("d8f1f125ba4dfbbd678418dfa4d95909a5d3ff73d0e757459ce5f474601af737");
 const ROOT_UPDATE_ALLOWLIST: B256 =
-    b256!("ae7e56989c3a1dab0b1de0b272dad0381a62414917d9fd82541f35764087748e");
+    b256!("e525a9dc9d8a9f0e465fbd359a78a005bb3490aa757d1b53fd28470e21c21731");
 const ROOT_UPDATE_ALLOWLIST_REMOVE: B256 =
-    b256!("26874cf1f9e3b7a06e33cc25b500e0fe8fc03c084bb2d6eee390e6adb5cb879d");
+    b256!("bc310676ecdc468177a4dde9eafd01e6346b1217e24be77c6664ae5d3ab5625d");
 const ROOT_UPDATE_BLOCKLIST: B256 =
-    b256!("a7935cb41217a504a2ca9bd9517aebaaef9d54fe58f685bd569a590749f3d569");
+    b256!("d8f1f125ba4dfbbd678418dfa4d95909a5d3ff73d0e757459ce5f474601af737");
 const ROOT_STAGE_FINALIZE_ADMIN: B256 =
-    b256!("8af193788c98e688ce3bb069b241f1fea51bd8dc6d9aa95995bcd956071a111d");
+    b256!("ce3e3d297cf1a5630b4d343e7fb5f81ae4a8044cc8070cd6ba515b56e45d5dbd");
 const ROOT_RENOUNCE_ADMIN: B256 =
-    b256!("5d31ed7e17637df947521d71d43d5d9b93e75b070e6ffeee6e442ac9a2ce0e5b");
+    b256!("1ae9f8a311c5e189421365a9eb5555570f61d3cb0e42a7e4e8f0c954712293f3");
 
 // --- harness ----------------------------------------------------------------
 
@@ -819,7 +819,8 @@ fn golden_gas_footprints() {
 // ============================================================================
 
 /// Compile-time coverage checklist — never called; its exhaustive `match` (no `_` arm) names the
-/// golden `#[test]` fn(s) pinning each op. Adding an ABI op fails the build until a golden is added.
+/// golden `#[test]` fn(s) pinning each op. Adding an ABI op fails the build until a golden is
+/// added.
 #[allow(dead_code)]
 fn v1_op_coverage_checklist(call: IPolicyRegistry::IPolicyRegistryCalls) {
     use IPolicyRegistry::IPolicyRegistryCalls as C;

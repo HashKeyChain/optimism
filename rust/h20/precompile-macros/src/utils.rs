@@ -80,8 +80,8 @@ pub(crate) fn to_snake_case(s: &str) -> String {
 
     while let Some(c) = chars.next() {
         if c.is_uppercase() {
-            if !result.is_empty()
-                && (!prev_upper || chars.peek().is_some_and(|&next| next.is_lowercase()))
+            if !result.is_empty() &&
+                (!prev_upper || chars.peek().is_some_and(|&next| next.is_lowercase()))
             {
                 result.push('_');
             }
@@ -191,8 +191,8 @@ pub(crate) fn extract_storage_namespace(attrs: &[Attribute]) -> syn::Result<Opti
     let mut namespace = None;
 
     for attr in attrs {
-        let is_namespace = attr_path_is(attr.path(), "namespace")
-            || attr_path_is(attr.path(), "storage_namespace");
+        let is_namespace = attr_path_is(attr.path(), "namespace") ||
+            attr_path_is(attr.path(), "storage_namespace");
         if !is_namespace {
             continue;
         }

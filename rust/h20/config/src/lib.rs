@@ -1,9 +1,9 @@
-#![doc = "Consensus configuration for HSK Base Beryl H20 v1."]
+#![doc = "Consensus configuration for HSK H20 v1."]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use alloy_primitives::Address;
 
-/// Consensus configuration for Base Beryl H20 v1.
+/// Consensus configuration for HSK H20 v1.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct H20Config {
     /// First L2 block timestamp at which H20 is active.

@@ -3,7 +3,7 @@
 use crate::H20Spec;
 use alloy_evm::precompiles::{DynPrecompile, PrecompilesMap};
 
-use crate::{H20FactoryStorage, PrecompileCallObserver, macros::base_precompile};
+use crate::{H20FactoryStorage, PrecompileCallObserver, macros::h20_precompile};
 
 /// Entry point for the `H20Factory` precompile.
 #[derive(Debug, Default, Clone, Copy)]
@@ -28,7 +28,7 @@ impl H20Factory {
     where
         O: PrecompileCallObserver,
     {
-        base_precompile!("H20Factory", |ctx, calldata| {
+        h20_precompile!("H20Factory", |ctx, calldata| {
             let observer = observer.clone();
             H20FactoryStorage::new(ctx).dispatch_with_observer(ctx, &calldata, upgrade, observer)
         })

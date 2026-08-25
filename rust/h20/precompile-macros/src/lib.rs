@@ -19,7 +19,8 @@ use syn::{DeriveInput, parse_macro_input};
 
 /// Transforms a struct that represents a storage layout into a contract with helper methods to
 /// easily interact with the EVM storage.
-/// Its packing and encoding schemes aim to be an exact representation of the storage model used by Solidity.
+/// Its packing and encoding schemes aim to be an exact representation of the storage model used by
+/// Solidity.
 #[proc_macro_attribute]
 pub fn contract(attr: TokenStream, item: TokenStream) -> TokenStream {
     let config = parse_macro_input!(attr as contract::ContractConfig);
@@ -38,8 +39,8 @@ pub fn namespace(attr: TokenStream, item: TokenStream) -> TokenStream {
 
 /// Generates EVM precompile constructor and optional singleton installation methods.
 ///
-/// By default this expands through `crate::macros::base_precompile!` in the invoking crate. Callers
-/// outside `base-common-precompiles` can pass `macro_path = path::to::wrapper_macro` to override the
+/// By default this expands through `crate::macros::h20_precompile!` in the invoking crate. Callers
+/// outside `hsk-h20-precompiles` can pass `macro_path = path::to::wrapper_macro` to override the
 /// runtime wrapper macro.
 #[proc_macro_attribute]
 pub fn precompile(attr: TokenStream, item: TokenStream) -> TokenStream {

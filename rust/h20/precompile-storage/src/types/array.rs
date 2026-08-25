@@ -7,7 +7,7 @@
 use alloy_primitives::{Address, U256};
 
 use crate::{
-    error::{BasePrecompileError, Result},
+    error::{H20PrecompileError, Result},
     packing,
     provider::{Handler, LayoutCtx, Storable, StorableType},
     types::{HandlerCache, Slot},
@@ -93,14 +93,14 @@ impl<'a, T: StorableType, const N: usize> ArrayHandler<'a, T, N> {
             (
                 base_slot
                     .checked_add(U256::from(location.offset_slots))
-                    .ok_or(BasePrecompileError::SlotOverflow)?,
+                    .ok_or(H20PrecompileError::SlotOverflow)?,
                 LayoutCtx::packed(location.offset_bytes),
             )
         } else {
             (
                 base_slot
                     .checked_add(U256::from(index * T::SLOTS))
-                    .ok_or(BasePrecompileError::SlotOverflow)?,
+                    .ok_or(H20PrecompileError::SlotOverflow)?,
                 LayoutCtx::FULL,
             )
         };

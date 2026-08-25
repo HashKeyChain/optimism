@@ -90,8 +90,8 @@ pub(crate) fn parse_fields(
         ));
     }
 
-    let named_fields = if let Data::Struct(data) = input.data
-        && let Fields::Named(fields) = data.fields
+    let named_fields = if let Data::Struct(data) = input.data &&
+        let Fields::Named(fields) = data.fields
     {
         fields.named
     } else {

@@ -6,6 +6,6 @@ pub enum H20Spec {
     /// H20 is not active.
     #[default]
     Disabled,
-    /// Base Beryl H20 v1 is active.
+    /// HSK H20 v1 is active.
     Beryl,
 }

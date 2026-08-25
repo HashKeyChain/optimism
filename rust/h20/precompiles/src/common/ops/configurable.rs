@@ -2,7 +2,7 @@ use alloc::string::String;
 
 use alloy_primitives::{Address, U256};
 use alloy_sol_types::SolEvent;
-use h20_precompile_storage::{BasePrecompileError, Result};
+use h20_precompile_storage::{H20PrecompileError, Result};
 
 use crate::{H20_MAX_SUPPLY_CAP, H20Guards, H20TokenRole, IH20, Token, TokenAccounting};
 
@@ -23,7 +23,7 @@ pub trait Configurable: Token {
         }
         let supply = self.accounting().total_supply()?;
         if new_cap < supply || new_cap > H20_MAX_SUPPLY_CAP {
-            return Err(BasePrecompileError::revert(IH20::InvalidSupplyCap {
+            return Err(H20PrecompileError::revert(IH20::InvalidSupplyCap {
                 currentSupply: supply,
                 proposedCap: new_cap,
             }));
@@ -76,10 +76,10 @@ pub trait Configurable: Token {
 #[cfg(test)]
 mod tests {
     use alloy_primitives::{Address, U256};
-    use h20_precompile_storage::BasePrecompileError;
+    use h20_precompile_storage::H20PrecompileError;
 
     use crate::{
-        H20_MAX_SUPPLY_CAP, H20TokenRole, Configurable, FakePolicyAccounting, IH20,
+        Configurable, FakePolicyAccounting, H20_MAX_SUPPLY_CAP, H20TokenRole, IH20,
         InMemoryTokenAccounting, TestToken, Token, TokenAccounting,
     };
 
@@ -116,7 +116,7 @@ mod tests {
 
         assert_eq!(
             token.update_supply_cap(CALLER, U256::from(99u64), true).unwrap_err(),
-            BasePrecompileError::revert(IH20::InvalidSupplyCap {
+            H20PrecompileError::revert(IH20::InvalidSupplyCap {
                 currentSupply: U256::from(100u64),
                 proposedCap: U256::from(99u64),
             })
@@ -130,7 +130,7 @@ mod tests {
 
         assert_eq!(
             token.update_supply_cap(CALLER, proposed_cap, true).unwrap_err(),
-            BasePrecompileError::revert(IH20::InvalidSupplyCap {
+            H20PrecompileError::revert(IH20::InvalidSupplyCap {
                 currentSupply: U256::ZERO,
                 proposedCap: proposed_cap,
             })
@@ -144,7 +144,7 @@ mod tests {
 
         assert_eq!(
             token.update_supply_cap(CALLER, U256::from(99u64), false).unwrap_err(),
-            BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+            H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
                 account: CALLER,
                 neededRole: H20TokenRole::DefaultAdmin.id(),
             })
@@ -187,7 +187,7 @@ mod tests {
 
         assert_eq!(
             token.update_name(CALLER, "MyToken".into(), false).unwrap_err(),
-            BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+            H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
                 account: CALLER,
                 neededRole: H20TokenRole::Metadata.id(),
             })
@@ -223,7 +223,7 @@ mod tests {
 
         assert_eq!(
             token.update_contract_uri(CALLER, "ipfs://abc".into(), false).unwrap_err(),
-            BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+            H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
                 account: CALLER,
                 neededRole: H20TokenRole::Metadata.id(),
             })
@@ -237,7 +237,7 @@ mod tests {
 
         assert_eq!(
             token.update_contract_uri(CALLER, "ipfs://abc".into(), false).unwrap_err(),
-            BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+            H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
                 account: CALLER,
                 neededRole: H20TokenRole::Metadata.id(),
             })

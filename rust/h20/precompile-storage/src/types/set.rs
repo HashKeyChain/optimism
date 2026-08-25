@@ -15,7 +15,7 @@ use core::{fmt, ops::Deref, slice};
 use alloy_primitives::{Address, U256};
 
 use crate::{
-    error::{BasePrecompileError, Result},
+    error::{H20PrecompileError, Result},
     provider::{Handler, Layout, LayoutCtx, Storable, StorableType, StorageKey, StorageOps},
     types::{MappingHandler, Slot, vec::VecHandler},
 };
@@ -126,7 +126,7 @@ where
     }
 
     fn store<S: StorageOps>(&self, _storage: &mut S, _slot: U256, _ctx: LayoutCtx) -> Result<()> {
-        Err(BasePrecompileError::Fatal(
+        Err(H20PrecompileError::Fatal(
             "Set must be stored via SetHandler::write() to maintain position invariants".into(),
         ))
     }
@@ -134,9 +134,8 @@ where
     fn delete<S: StorageOps>(storage: &mut S, slot: U256, ctx: LayoutCtx) -> Result<()> {
         let values: Vec<T> = Vec::load(storage, slot, LayoutCtx::FULL)?;
         for value in values {
-            let pos_slot = value.mapping_slot(
-                slot.checked_add(U256::ONE).ok_or(BasePrecompileError::SlotOverflow)?,
-            );
+            let pos_slot = value
+                .mapping_slot(slot.checked_add(U256::ONE).ok_or(H20PrecompileError::SlotOverflow)?);
             <U256 as Storable>::delete(storage, pos_slot, LayoutCtx::FULL)?;
         }
         <Vec<T> as Storable>::delete(storage, slot, ctx)
@@ -148,7 +147,7 @@ fn checked_position(index: usize) -> Result<u32> {
     u32::try_from(index)
         .ok()
         .and_then(|i| i.checked_add(1))
-        .ok_or_else(BasePrecompileError::under_overflow)
+        .ok_or_else(H20PrecompileError::under_overflow)
 }
 
 impl<'a, T> SetHandler<'a, T>
@@ -315,13 +314,13 @@ where
     }
 
     fn t_read(&self) -> Result<Set<T>> {
-        Err(BasePrecompileError::Fatal("Set does not support transient storage".into()))
+        Err(H20PrecompileError::Fatal("Set does not support transient storage".into()))
     }
     fn t_write(&mut self, _: Set<T>) -> Result<()> {
-        Err(BasePrecompileError::Fatal("Set does not support transient storage".into()))
+        Err(H20PrecompileError::Fatal("Set does not support transient storage".into()))
     }
     fn t_delete(&mut self) -> Result<()> {
-        Err(BasePrecompileError::Fatal("Set does not support transient storage".into()))
+        Err(H20PrecompileError::Fatal("Set does not support transient storage".into()))
     }
 }
 

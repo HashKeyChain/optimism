@@ -3,7 +3,7 @@ use alloc::string::ToString;
 use crate::H20Spec;
 use alloy_primitives::Bytes;
 use alloy_sol_types::{SolCall, SolInterface};
-use h20_precompile_storage::{BasePrecompileError, StorageCtx};
+use h20_precompile_storage::{H20PrecompileError, StorageCtx};
 use revm::precompile::PrecompileResult;
 
 use crate::{
@@ -43,27 +43,26 @@ impl PolicyRegistryStorage<'_> {
         let mut recorder =
             BerylCallRecorder::start(observer.clone(), BerylMetricLabels::policy_call(calldata));
         if !ctx.call_value().is_zero() {
-            return recorder.record_base_error_result(
+            return recorder.record_h20_error_result(
                 ctx,
-                BasePrecompileError::revert(IPolicyRegistry::NonPayable {}),
+                H20PrecompileError::revert(IPolicyRegistry::NonPayable {}),
             );
         }
         if let Err(error) = recorder.deduct_calldata_gas(ctx, calldata) {
-            return recorder.record_base_error_result(ctx, error);
+            return recorder.record_h20_error_result(ctx, error);
         }
         // Gate by hardfork: resolve the active version once. `None` is unreachable in
         // practice — the precompile is only installed from Beryl — but we revert defensively.
         let Some(version) = PolicyVersions::from_spec(upgrade) else {
-            return recorder
-                .record_base_error_result(ctx, BasePrecompileError::Revert(Bytes::new()));
+            return recorder.record_h20_error_result(ctx, H20PrecompileError::Revert(Bytes::new()));
         };
         let result = match calldata.first_chunk::<4>().copied() {
-            None => Err(BasePrecompileError::UnknownFunctionSelector([0u8; 4])),
+            None => Err(H20PrecompileError::UnknownFunctionSelector([0u8; 4])),
             Some(sel)
-                if sel == IPolicyRegistry::isAuthorizedCall::SELECTOR
-                    || sel == IPolicyRegistry::policyExistsCall::SELECTOR
-                    || sel == IPolicyRegistry::policyAdminCall::SELECTOR
-                    || sel == IPolicyRegistry::pendingPolicyAdminCall::SELECTOR =>
+                if sel == IPolicyRegistry::isAuthorizedCall::SELECTOR ||
+                    sel == IPolicyRegistry::policyExistsCall::SELECTOR ||
+                    sel == IPolicyRegistry::policyAdminCall::SELECTOR ||
+                    sel == IPolicyRegistry::pendingPolicyAdminCall::SELECTOR =>
             {
                 self.route(calldata, version, &observer)
             }
@@ -71,7 +70,7 @@ impl PolicyRegistryStorage<'_> {
                 // Validate ABI encoding before the activation gate so that malformed
                 // arguments return AbiDecodeFailed regardless of activation state.
                 IPolicyRegistry::IPolicyRegistryCalls::abi_decode_validate(calldata)
-                    .map_err(|e| BasePrecompileError::AbiDecodeFailed {
+                    .map_err(|e| H20PrecompileError::AbiDecodeFailed {
                         selector: sel,
                         error: e.to_string(),
                     })
@@ -81,9 +80,9 @@ impl PolicyRegistryStorage<'_> {
                             .and_then(|()| self.route(calldata, version, &observer))
                     })
             }
-            Some(sel) => Err(BasePrecompileError::UnknownFunctionSelector(sel)),
+            Some(sel) => Err(H20PrecompileError::UnknownFunctionSelector(sel)),
         };
-        recorder.record_base_result(ctx, result, |b| b)
+        recorder.record_h20_result(ctx, result, |b| b)
     }
 
     /// Decodes calldata and routes each operation to the active version's logic.

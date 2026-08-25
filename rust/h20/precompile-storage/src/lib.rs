@@ -6,7 +6,7 @@ extern crate alloc;
 extern crate self as h20_precompile_storage;
 
 mod error;
-pub use error::{BasePrecompileError, DelegateCallNotAllowed, IntoPrecompileResult, Result};
+pub use error::{DelegateCallNotAllowed, H20PrecompileError, IntoPrecompileResult, Result};
 
 mod packing;
 pub use packing::{

@@ -58,7 +58,7 @@ impl PackedPolicy {
 ///
 /// Slots are append-only — never reorder across upgrades.
 #[contract(addr = Self::ADDRESS)]
-#[namespace("base.policy_registry")]
+#[namespace("hsk.policy_registry")]
 pub struct PolicyRegistryStorage {
     pub policies: Mapping<u64, U256>,                  // slot 0
     pub members: Mapping<u64, Mapping<Address, bool>>, // slot 1
@@ -149,7 +149,7 @@ impl PolicyAccounting for PolicyRegistryStorage<'_> {
 mod tests {
     use alloy_primitives::{Address, Bytes, U256, address, uint};
     use h20_precompile_storage::{
-        BasePrecompileError, HashMapStorageProvider, PrecompileStorageProvider, StorageCtx,
+        H20PrecompileError, HashMapStorageProvider, PrecompileStorageProvider, StorageCtx,
         StorageKey,
     };
     use revm::state::Bytecode;
@@ -163,7 +163,7 @@ mod tests {
     const ADMIN: Address = address!("0x1000000000000000000000000000000000000001");
     const ALICE: Address = address!("0xA000000000000000000000000000000000000001");
     const POLICY_REGISTRY_ROOT: U256 =
-        uint!(0x00503aeb06982fa1fe3151dc68f90b3946c55c449dfd447e49dcaece71ba4a00_U256);
+        uint!(0x5be2bf351754cfd1b3ecdc0cc178362ec108832ae9c06a1861ee9364c4fd4500_U256);
 
     #[test]
     fn policy_registry_address_matches_h20_singleton_address() {
@@ -260,7 +260,7 @@ mod tests {
     }
 
     #[test]
-    fn policy_registry_namespace_matches_base_std_root() {
+    fn policy_registry_namespace_matches_hsk_root() {
         assert_eq!(slots::POLICIES, POLICY_REGISTRY_ROOT);
         assert_eq!(slots::MEMBERS, POLICY_REGISTRY_ROOT + U256::from(1));
         assert_eq!(slots::PENDING_ADMINS, POLICY_REGISTRY_ROOT + U256::from(2));
@@ -268,7 +268,7 @@ mod tests {
     }
 
     #[test]
-    fn policy_registry_writes_use_base_std_namespace_slots() {
+    fn policy_registry_writes_use_hsk_namespace_slots() {
         let mut s = seeded_storage();
         let id = create_allowlist(&mut s);
 
@@ -331,7 +331,7 @@ mod tests {
             PolicyRegistryV1.create_policy(&mut storage, ADMIN, PolicyType::ALLOWLIST)
         })
         .unwrap_err();
-        assert_eq!(err, BasePrecompileError::StaticCallViolation);
+        assert_eq!(err, H20PrecompileError::StaticCallViolation);
     }
 
     #[test]
@@ -344,6 +344,6 @@ mod tests {
             PolicyRegistryV1.update_allowlist(&mut storage, id, true, alloc::vec![ALICE])
         })
         .unwrap_err();
-        assert_eq!(err, BasePrecompileError::StaticCallViolation);
+        assert_eq!(err, H20PrecompileError::StaticCallViolation);
     }
 }

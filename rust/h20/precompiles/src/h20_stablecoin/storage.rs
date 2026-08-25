@@ -5,7 +5,7 @@ use alloc::string::String;
 
 use alloy_primitives::{Address, U256};
 use h20_precompile_macros::{StablecoinAccounting, Storable, TokenAccounting, contract};
-use h20_precompile_storage::{BasePrecompileError, Handler, Result, StorageCtx};
+use h20_precompile_storage::{H20PrecompileError, Handler, Result, StorageCtx};
 
 use crate::{H20CoreStorage, IH20Factory};
 
@@ -56,12 +56,12 @@ impl<'a> H20StablecoinStorage<'a> {
     /// `InvalidCurrency` for non-A-Z values.
     pub fn initialize(&mut self, init: H20StablecoinInit) -> Result<()> {
         if init.currency.is_empty() {
-            return Err(BasePrecompileError::revert(IH20Factory::MissingRequiredField {
+            return Err(H20PrecompileError::revert(IH20Factory::MissingRequiredField {
                 field: String::from("currency"),
             }));
         }
         if !init.currency.bytes().all(|b| b.is_ascii_uppercase()) {
-            return Err(BasePrecompileError::revert(IH20Factory::InvalidCurrency {
+            return Err(H20PrecompileError::revert(IH20Factory::InvalidCurrency {
                 code: init.currency,
             }));
         }

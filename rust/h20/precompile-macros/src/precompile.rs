@@ -35,7 +35,7 @@ fn expand_impl(attr: TokenStream2, item: TokenStream2) -> syn::Result<TokenStrea
         syn::parse_quote!(#storage<'_>)
     });
     let macro_path =
-        config.macro_path.unwrap_or_else(|| syn::parse_quote!(crate::macros::base_precompile));
+        config.macro_path.unwrap_or_else(|| syn::parse_quote!(crate::macros::h20_precompile));
     let args = config.args;
     let arg_defs = args.iter().map(PrecompileArg::definition);
     let install_arg_defs = args.iter().map(PrecompileArg::definition);

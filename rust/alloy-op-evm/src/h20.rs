@@ -5,7 +5,7 @@ use alloy_primitives::{Address, map::AddressSet};
 use core::{fmt::Debug, marker::PhantomData};
 use hsk_h20_config::H20Config;
 use hsk_h20_precompiles::{
-    ActivationRegistry, H20Factory, H20Spec, BerylLookup, NoopPrecompileCallObserver,
+    ActivationRegistry, BerylLookup, H20Factory, H20Spec, NoopPrecompileCallObserver,
     PolicyRegistryPrecompile,
 };
 use op_revm::{
@@ -22,7 +22,7 @@ use revm::{
 
 use crate::{OpEvm, OpEvmContext, OpTx, OpTxError, post_exec};
 
-/// OP precompile provider extended with Base Beryl H20 v1.
+/// OP precompile provider extended with HSK H20 v1.
 #[derive(Debug)]
 pub struct H20OpPrecompiles {
     /// Canonical OP precompile provider being wrapped.

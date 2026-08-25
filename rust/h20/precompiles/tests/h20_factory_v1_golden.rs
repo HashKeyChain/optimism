@@ -16,7 +16,7 @@
 //!
 //! ## Blessing storage hashes
 //! State-hash constants below are pinned. To (re)generate them after an intentional change, run:
-//! `BLESS_GOLDEN=1 cargo test -p base-common-precompiles --features test-utils \
+//! `BLESS_GOLDEN=1 cargo test -p hsk-h20-precompiles --features test-utils \
 //!    --test h20_factory_v1_golden -- --nocapture` and copy the printed `GOLDEN_ROOT` values.
 
 use alloy_primitives::{Address, B256, Bytes, LogData, U256, b256, keccak256};
@@ -24,9 +24,9 @@ use alloy_sol_types::{SolCall, SolError, SolEvent, SolValue};
 use h20_precompile_storage::{HashMapStorageProvider, StorageCtx};
 use hsk_h20_precompiles::{
     ActivationAdminConfig, ActivationFeature, ActivationRegistryStorage, AssetAccounting,
-    H20AssetStorage, H20FactoryStorage, H20Spec, H20StablecoinStorage, H20TokenRole, H20Variant,
-    FactoryVersion, FactoryVersions, IActivationRegistry, IH20, IH20Factory, StablecoinAccounting,
-    TokenAccounting,
+    FactoryVersion, FactoryVersions, H20AssetStorage, H20FactoryStorage, H20Spec,
+    H20StablecoinStorage, H20TokenRole, H20Variant, IActivationRegistry, IH20, IH20Factory,
+    StablecoinAccounting, TokenAccounting,
 };
 
 mod common;
@@ -38,7 +38,7 @@ use common::{
 
 const CREATOR: Address = Address::repeat_byte(0xC0);
 const SALT: B256 = B256::repeat_byte(0x51);
-const NAME: &str = "Base Asset";
+const NAME: &str = "HSK Asset";
 const SYMBOL: &str = "bASSET";
 const SC_NAME: &str = "USD Coin";
 const SC_SYMBOL: &str = "USDC";
@@ -48,15 +48,15 @@ const ASSET_DECIMALS: u8 = 6;
 // --- pinned storage hashes (bless with BLESS_GOLDEN=1; see module docs) --------
 
 const ROOT_CREATE_ASSET: B256 =
-    b256!("f7f92ca9c8974431d62db57bf3bf8b02e25cc31b37e88521ae1a409f3b522e8b");
+    b256!("04ffb51d3168b9da3a65ba1c2a9e31784edb48d9b53dd80e9ac3a7a92b089399");
 const ROOT_CREATE_STABLECOIN: B256 =
-    b256!("719bcff400266cb793065adaf6636584a8f81d274255852a4433a6d2ca7f2b93");
+    b256!("5a5ee342243963e4d0ddd6db398ff9e5f6fbe67c93d3f927e5f808ef681646d0");
 const ROOT_CREATE_WITH_INIT_CALLS: B256 =
-    b256!("314d42c1d68896acd51829b7b66a9884f8dbeca50838d4a88e8b4c98bfdcdd0f");
+    b256!("32e042a7e5932e124de196bf6d2f80618618b810652bcb46bbd3867d36479d0f");
 const ROOT_CREATE_ZERO_ADMIN: B256 =
-    b256!("483e93df226ac4cf92969a48bfd2d6b67f49e2ab63322c58c3abd95d98b58289");
+    b256!("a3a975bf3641e32b3b499c90671a9b36e2bdcfec80067628f7fa1b08305c9123");
 const ROOT_CREATE_SC_WITH_INIT_CALLS: B256 =
-    b256!("f757f7ed634e58fac4ff7c8fbb82fad003287185337ccb067d5564c8776b2cf2");
+    b256!("4093e44a600ef1bc0d6a6112ac07813f7612c60bdca0e9dee58aea7a334ccb3a");
 
 // --- harness ----------------------------------------------------------------
 
@@ -676,7 +676,8 @@ fn golden_create_reverts_when_not_activated() {
 // gas: storage-access footprint per op
 // ============================================================================
 
-/// Runs `calldata` as `caller` on a fresh activated factory, returning `(sload, sstore, keccak256)`.
+/// Runs `calldata` as `caller` on a fresh activated factory, returning `(sload, sstore,
+/// keccak256)`.
 fn gas(caller: Address, calldata: Vec<u8>) -> (u64, u64, u64) {
     let mut s = fresh();
     s.set_caller(caller);
@@ -757,7 +758,8 @@ fn golden_gas_footprints() {
 // ============================================================================
 
 /// Compile-time coverage checklist — never called; its exhaustive `match` (no `_` arm) names the
-/// golden `#[test]` fn(s) pinning each op. Adding an ABI op fails the build until a golden is added.
+/// golden `#[test]` fn(s) pinning each op. Adding an ABI op fails the build until a golden is
+/// added.
 #[allow(dead_code)]
 fn v1_op_coverage_checklist(call: IH20Factory::IH20FactoryCalls) {
     use IH20Factory::IH20FactoryCalls as C;

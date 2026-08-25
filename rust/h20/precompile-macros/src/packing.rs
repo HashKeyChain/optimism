@@ -190,8 +190,8 @@ fn gen_auto_slot_expr(
     let mut output = (initial_slot_expr, quote! { 0 });
 
     for candidate in previous_auto_fields.iter().filter(|candidate| {
-        matches!(candidate.assigned_slot, SlotAssignment::Auto { .. })
-            && candidate.assigned_slot.ref_slot() == base_slot
+        matches!(candidate.assigned_slot, SlotAssignment::Auto { .. }) &&
+            candidate.assigned_slot.ref_slot() == base_slot
     }) {
         let (prev_slot, prev_offset) = PackingConstants::new(candidate.name).into_tuple();
         let candidate_output = gen_slot_packing_logic(

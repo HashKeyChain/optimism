@@ -2,11 +2,12 @@ use alloc::{string::String, vec, vec::Vec};
 
 use alloy_primitives::{Address, B256, FixedBytes, U256, keccak256};
 use alloy_sol_types::SolValue;
-use h20_precompile_storage::{BasePrecompileError, Result};
+use h20_precompile_storage::{H20PrecompileError, Result};
 
 use crate::{IH20, TokenAccounting, Transferable};
 
-/// ERC-5267 `eip712Domain()` return tuple: (fields, name, version, chainId, verifyingContract, salt, extensions).
+/// ERC-5267 `eip712Domain()` return tuple: (fields, name, version, chainId, verifyingContract,
+/// salt, extensions).
 pub type Eip712Domain = (FixedBytes<1>, String, String, U256, Address, B256, Vec<U256>);
 
 /// Arguments for [`Permittable::permit`], grouping the EIP-2612 ABI fields.
@@ -29,7 +30,8 @@ pub struct PermitArgs {
 }
 
 impl PermitArgs {
-    /// `keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)")`
+    /// `keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256
+    /// deadline)")`
     pub const TYPEHASH: B256 =
         alloy_primitives::b256!("6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9");
 
@@ -65,7 +67,7 @@ impl PermitArgs {
     /// explicit zero-address guard) or when `recovered != owner`.
     pub fn validate_recovered_address(recovered: Address, owner: Address) -> Result<()> {
         if recovered.is_zero() || recovered != owner {
-            return Err(BasePrecompileError::revert(IH20::InvalidSigner {
+            return Err(H20PrecompileError::revert(IH20::InvalidSigner {
                 signer: recovered,
                 owner,
             }));
@@ -79,7 +81,7 @@ impl PermitArgs {
             Self::RECOVERY_ID_EVEN_Y => false,
             Self::RECOVERY_ID_ODD_Y => true,
             _ => {
-                return Err(BasePrecompileError::revert(IH20::InvalidSigner {
+                return Err(H20PrecompileError::revert(IH20::InvalidSigner {
                     signer: Address::ZERO,
                     owner: self.owner,
                 }));
@@ -89,7 +91,7 @@ impl PermitArgs {
         let sig =
             alloy_primitives::Signature::from_scalars_and_parity(self.r, self.s, odd_y_parity);
         sig.recover_address_from_prehash(&signing_hash).map_err(|_| {
-            BasePrecompileError::revert(IH20::InvalidSigner {
+            H20PrecompileError::revert(IH20::InvalidSigner {
                 signer: Address::ZERO,
                 owner: self.owner,
             })
@@ -135,7 +137,8 @@ pub trait Permittable: Transferable {
     fn eip712_domain(&self, chain_id: u64) -> Result<Eip712Domain> {
         let name = self.accounting().name()?;
         Ok((
-            FixedBytes::<1>::from([0x0f]), // bits 0+1+2+3: name + version + chainId + verifyingContract
+            FixedBytes::<1>::from([0x0f]), /* bits 0+1+2+3: name + version + chainId +
+                                            * verifyingContract */
             name,
             String::from("1"),
             U256::from(chain_id),
@@ -148,7 +151,7 @@ pub trait Permittable: Transferable {
     /// EIP-2612 permit. EOA signatures only (no ERC-1271).
     fn permit(&mut self, chain_id: u64, now: U256, args: PermitArgs) -> Result<()> {
         if now > args.deadline {
-            return Err(BasePrecompileError::revert(IH20::ExpiredSignature {
+            return Err(H20PrecompileError::revert(IH20::ExpiredSignature {
                 deadline: args.deadline,
             }));
         }
@@ -168,7 +171,7 @@ pub trait Permittable: Transferable {
 mod tests {
     use alloy_primitives::{Address, B256, U256, keccak256};
     use alloy_sol_types::SolValue;
-    use h20_precompile_storage::BasePrecompileError;
+    use h20_precompile_storage::H20PrecompileError;
     use k256::ecdsa::SigningKey;
 
     use crate::{
@@ -293,7 +296,7 @@ mod tests {
 
         assert_eq!(
             PermitArgs::validate_recovered_address(Address::ZERO, owner).unwrap_err(),
-            BasePrecompileError::revert(IH20::InvalidSigner { signer: Address::ZERO, owner })
+            H20PrecompileError::revert(IH20::InvalidSigner { signer: Address::ZERO, owner })
         );
     }
 
@@ -304,7 +307,7 @@ mod tests {
 
         assert_eq!(
             PermitArgs::validate_recovered_address(wrong, owner).unwrap_err(),
-            BasePrecompileError::revert(IH20::InvalidSigner { signer: wrong, owner })
+            H20PrecompileError::revert(IH20::InvalidSigner { signer: wrong, owner })
         );
     }
 
@@ -333,7 +336,7 @@ mod tests {
 
         assert_eq!(
             args.recover_signer(B256::ZERO).unwrap_err(),
-            BasePrecompileError::revert(IH20::InvalidSigner { signer: Address::ZERO, owner })
+            H20PrecompileError::revert(IH20::InvalidSigner { signer: Address::ZERO, owner })
         );
     }
 
@@ -460,7 +463,7 @@ mod tests {
 
         assert_eq!(
             token.permit(CHAIN_ID, U256::ZERO, args).unwrap_err(),
-            BasePrecompileError::revert(IH20::InvalidSigner {
+            H20PrecompileError::revert(IH20::InvalidSigner {
                 signer: expected_signer,
                 owner: Address::ZERO,
             })

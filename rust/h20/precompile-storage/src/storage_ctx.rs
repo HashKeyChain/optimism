@@ -1,4 +1,4 @@
-//! Explicit storage context for Base native precompiles.
+//! Explicit storage context for HSK native precompiles.
 //!
 //! [`StorageCtx`] is a zero-size token that provides access to the current
 //! scoped [`PrecompileStorageProvider`]. All storage operations within a
@@ -18,7 +18,7 @@ use revm::{
 };
 
 use crate::{
-    error::{BasePrecompileError, IntoPrecompileResult, Result},
+    error::{H20PrecompileError, IntoPrecompileResult, Result},
     provider::PrecompileStorageProvider,
 };
 
@@ -65,7 +65,7 @@ impl<'a> StorageCtx<'a> {
         F: FnOnce(&mut dyn PrecompileStorageProvider) -> Result<R>,
     {
         let mut guard = self.storage.try_borrow_mut().map_err(|_| {
-            BasePrecompileError::Fatal("Storage context is already mutably borrowed".to_string())
+            H20PrecompileError::Fatal("Storage context is already mutably borrowed".to_string())
         })?;
         f(&mut **guard)
     }
@@ -85,9 +85,7 @@ impl<'a> StorageCtx<'a> {
             })
         })?;
         result.unwrap_or_else(|| {
-            Err(BasePrecompileError::Fatal(
-                "with_account_info callback was not invoked".to_string(),
-            ))
+            Err(H20PrecompileError::Fatal("with_account_info callback was not invoked".to_string()))
         })
     }
 
@@ -104,9 +102,7 @@ impl<'a> StorageCtx<'a> {
             })
         })?;
         result.unwrap_or_else(|| {
-            Err(BasePrecompileError::Fatal(
-                "with_account_code callback was not invoked".to_string(),
-            ))
+            Err(H20PrecompileError::Fatal("with_account_code callback was not invoked".to_string()))
         })
     }
 
@@ -247,7 +243,7 @@ impl<'a> StorageCtx<'a> {
     }
 
     /// Returns a [`PrecompileResult`] constructed from the given error.
-    pub fn error_result(&self, error: impl Into<BasePrecompileError>) -> PrecompileResult {
+    pub fn error_result(&self, error: impl Into<H20PrecompileError>) -> PrecompileResult {
         error.into().into_precompile_result(self.gas_used(), self.state_gas_used())
     }
 
@@ -257,7 +253,7 @@ impl<'a> StorageCtx<'a> {
     /// On success, `encode_ok` encodes the value and the output carries `gas_used`,
     /// `state_gas_used`, and `gas_refunded` from the context — the same fields that
     /// [`success_output`](Self::success_output) sets. On error, delegates to
-    /// [`BasePrecompileError::into_precompile_result`].
+    /// [`H20PrecompileError::into_precompile_result`].
     ///
     /// Use this instead of calling [`IntoPrecompileResult::into_precompile_result`] directly,
     /// so callers do not have to manually thread gas values through.
@@ -510,7 +506,7 @@ mod tests {
             ctx.sstore(addr, key, U256::from(1)).unwrap();
             ctx.sstore(addr, key, U256::ZERO).unwrap();
 
-            ctx.result_output::<Bytes>(Err(BasePrecompileError::Revert(Bytes::new())), |b| b)
+            ctx.result_output::<Bytes>(Err(H20PrecompileError::Revert(Bytes::new())), |b| b)
         })
         .unwrap();
 

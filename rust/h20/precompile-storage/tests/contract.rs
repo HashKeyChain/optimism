@@ -232,10 +232,10 @@ mod namespaced_layout {
             let balance_slot = owner.mapping_slot(
                 slots::POLICY + U256::from(__packing_policy_namespace::BALANCES_LOC.offset_slots),
             );
-            let checkpoints_slot = slots::POLICY
-                + U256::from(__packing_policy_namespace::CHECKPOINTS_LOC.offset_slots);
-            let packed_flags_slot = slots::POLICY
-                + U256::from(__packing_policy_namespace::PACKED_FLAGS_LOC.offset_slots);
+            let checkpoints_slot = slots::POLICY +
+                U256::from(__packing_policy_namespace::CHECKPOINTS_LOC.offset_slots);
+            let packed_flags_slot = slots::POLICY +
+                U256::from(__packing_policy_namespace::PACKED_FLAGS_LOC.offset_slots);
             let amounts_slot =
                 slots::POLICY + U256::from(__packing_policy_namespace::AMOUNTS_LOC.offset_slots);
 
@@ -434,8 +434,8 @@ mod type_namespaced_layouts {
             assert_eq!(
                 ctx.sload(
                     TYPE_NAMESPACE_ADDR,
-                    slots::ASSET
-                        + U256::from(__packing_h20_asset_storage::MULTIPLIER_LOC.offset_slots,),
+                    slots::ASSET +
+                        U256::from(__packing_h20_asset_storage::MULTIPLIER_LOC.offset_slots,),
                 )
                 .unwrap(),
                 U256::from(2)
@@ -443,8 +443,8 @@ mod type_namespaced_layouts {
             assert_eq!(
                 ctx.sload(
                     TYPE_NAMESPACE_ADDR,
-                    slots::REDEEM
-                        + U256::from(
+                    slots::REDEEM +
+                        U256::from(
                             __packing_h20_redeem_storage::MINIMUM_REDEEMABLE_LOC.offset_slots
                         ),
                 )

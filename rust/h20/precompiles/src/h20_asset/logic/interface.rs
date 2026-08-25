@@ -6,7 +6,7 @@ use alloy_primitives::{Address, B256, U256};
 use h20_precompile_storage::Result;
 
 use crate::{
-    AssetAccounting, H20AssetToken, Eip712Domain, IH20, PermitArgs, PolicyAccounting, Token,
+    AssetAccounting, Eip712Domain, H20AssetToken, IH20, PermitArgs, PolicyAccounting, Token,
 };
 
 /// The asset logic interface.
@@ -44,7 +44,7 @@ pub trait Asset<S: AssetAccounting, A: PolicyAccounting> {
     /// Emits a `Memo` event attributed to `caller`.
     ///
     /// The memo-decorated ABI calls (`transferWithMemo`, `mintWithMemo`, …) are composed
-    /// by the dispatcher as the base operation followed by this event, so the memo semantics
+    /// by the dispatcher as the core operation followed by this event, so the memo semantics
     /// stay version-defined without widening every operation's signature.
     fn emit_memo(&self, token: &mut H20AssetToken<S, A>, caller: Address, memo: B256)
     -> Result<()>;
@@ -344,7 +344,8 @@ pub trait Asset<S: AssetAccounting, A: PolicyAccounting> {
     /// Converts a raw balance to its scaled view: `rawBalance * multiplier / WAD`.
     fn to_scaled_balance(&self, token: &H20AssetToken<S, A>, balance: U256) -> Result<U256>;
 
-    /// Converts a scaled balance back to its raw representation: `scaledBalance * WAD / multiplier`.
+    /// Converts a scaled balance back to its raw representation: `scaledBalance * WAD /
+    /// multiplier`.
     fn to_raw_balance(&self, token: &H20AssetToken<S, A>, balance: U256) -> Result<U256>;
 
     /// Returns the scaled balance for `account`.

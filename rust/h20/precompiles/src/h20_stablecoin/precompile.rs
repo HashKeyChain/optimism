@@ -3,11 +3,11 @@
 use crate::H20Spec;
 use alloy_evm::precompiles::DynPrecompile;
 use alloy_primitives::{Address, Bytes};
-use h20_precompile_storage::BasePrecompileError;
+use h20_precompile_storage::H20PrecompileError;
 
 use crate::{
     H20StablecoinStorage, H20StablecoinToken, NoopPrecompileCallObserver, PolicyRegistryStorage,
-    PolicyVersions, PrecompileCallObserver, macros::base_precompile,
+    PolicyVersions, PrecompileCallObserver, macros::h20_precompile,
 };
 
 /// Entry point for the stablecoin H20 variant.
@@ -33,10 +33,10 @@ impl H20StablecoinPrecompile {
     where
         O: PrecompileCallObserver,
     {
-        base_precompile!(alloc::format!("H20StablecoinToken@{token_address}"), |ctx, calldata| {
+        h20_precompile!(alloc::format!("H20StablecoinToken@{token_address}"), |ctx, calldata| {
             let observer = observer.clone();
             let Some(version) = PolicyVersions::from_spec(upgrade) else {
-                return BasePrecompileError::Revert(Bytes::new()).into_precompile_result(0, 0);
+                return H20PrecompileError::Revert(Bytes::new()).into_precompile_result(0, 0);
             };
             H20StablecoinToken::with_storage_and_policy(
                 H20StablecoinStorage::from_address(token_address, ctx),

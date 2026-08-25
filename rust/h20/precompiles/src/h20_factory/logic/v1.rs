@@ -5,14 +5,14 @@ use alloc::{string::ToString, vec::Vec};
 use crate::H20Spec;
 use alloy_primitives::{Address, B256, Bytes, U256};
 use alloy_sol_types::{SolCall, SolEvent, SolValue};
-use h20_precompile_storage::{BasePrecompileError, ContractStorage, Result};
+use h20_precompile_storage::{ContractStorage, H20PrecompileError, Result};
 use revm::state::Bytecode;
 
 use crate::{
-    ActivationRegistryStorage, AssetVersion, H20AssetInit, H20AssetStorage, H20AssetToken,
+    ActivationRegistryStorage, AssetVersion, Factory, H20AssetInit, H20AssetStorage, H20AssetToken,
     H20FactoryStorage, H20StablecoinInit, H20StablecoinStorage, H20StablecoinToken, H20TokenRole,
-    H20Variant, Factory, IH20Factory, NoopPrecompileCallObserver, PolicyRegistryStorage,
-    PolicyVersions, StablecoinVersion, Token,
+    H20Variant, IH20Factory, NoopPrecompileCallObserver, PolicyRegistryStorage, PolicyVersions,
+    StablecoinVersion, Token,
 };
 
 /// Version byte for `H20StablecoinEventParams` inside `H20Created.variantParams`.
@@ -47,7 +47,7 @@ impl FactoryV1 {
         upgrade: H20Spec,
     ) -> Result<()> {
         let policy_version = PolicyVersions::from_spec(upgrade)
-            .ok_or_else(|| BasePrecompileError::Revert(Bytes::new()))?;
+            .ok_or_else(|| H20PrecompileError::Revert(Bytes::new()))?;
         let mut token = H20StablecoinToken::with_storage_and_policy(
             H20StablecoinStorage::from_address(token_address, storage.storage()),
             PolicyRegistryStorage::new(storage.storage()),
@@ -93,7 +93,7 @@ impl FactoryV1 {
                     )
                     .map_err(|err| Self::map_init_call_error(index, err))?;
             }
-            Ok::<(), BasePrecompileError>(())
+            Ok::<(), H20PrecompileError>(())
         })?;
         Ok(())
     }
@@ -108,7 +108,7 @@ impl FactoryV1 {
         upgrade: H20Spec,
     ) -> Result<()> {
         let policy_version = PolicyVersions::from_spec(upgrade)
-            .ok_or_else(|| BasePrecompileError::Revert(Bytes::new()))?;
+            .ok_or_else(|| H20PrecompileError::Revert(Bytes::new()))?;
         let mut token = H20AssetToken::with_storage_and_policy(
             H20AssetStorage::from_address(token_address, storage.storage()),
             PolicyRegistryStorage::new(storage.storage()),
@@ -151,14 +151,14 @@ impl FactoryV1 {
                     )
                     .map_err(|err| Self::map_init_call_error(index, err))?;
             }
-            Ok::<(), BasePrecompileError>(())
+            Ok::<(), H20PrecompileError>(())
         })?;
         Ok(())
     }
 
     fn check_version(version: u8, variant: H20Variant) -> Result<()> {
         if version != variant.supported_version() {
-            return Err(BasePrecompileError::revert(IH20Factory::UnsupportedVersion {
+            return Err(H20PrecompileError::revert(IH20Factory::UnsupportedVersion {
                 version,
                 variant: variant.abi(),
             }));
@@ -166,15 +166,15 @@ impl FactoryV1 {
         Ok(())
     }
 
-    fn map_init_call_error(index: usize, err: BasePrecompileError) -> BasePrecompileError {
+    fn map_init_call_error(index: usize, err: H20PrecompileError) -> H20PrecompileError {
         match err {
-            BasePrecompileError::Revert(bytes) if !bytes.is_empty() => {
-                BasePrecompileError::Revert(bytes)
+            H20PrecompileError::Revert(bytes) if !bytes.is_empty() => {
+                H20PrecompileError::Revert(bytes)
             }
             err if err.is_system_error() => err,
-            _ => BasePrecompileError::revert(IH20Factory::InitCallFailed {
-                index: U256::from(index),
-            }),
+            _ => {
+                H20PrecompileError::revert(IH20Factory::InitCallFailed { index: U256::from(index) })
+            }
         }
     }
 }
@@ -188,7 +188,7 @@ impl Factory for FactoryV1 {
         upgrade: H20Spec,
     ) -> Result<Address> {
         let variant = H20Variant::from_abi(call.variant)
-            .ok_or_else(|| BasePrecompileError::revert(IH20Factory::InvalidVariant {}))?;
+            .ok_or_else(|| H20PrecompileError::revert(IH20Factory::InvalidVariant {}))?;
         ActivationRegistryStorage::new(storage.storage())
             .ensure_activated(variant.activation_feature().id())?;
         let params = TokenCreateParams::decode(variant, &call.params)?;
@@ -200,7 +200,7 @@ impl Factory for FactoryV1 {
             .storage()
             .with_account_info(token_address, |info| Ok(!info.is_empty_code_hash()))?;
         if already_deployed {
-            return Err(BasePrecompileError::revert(IH20Factory::TokenAlreadyExists {
+            return Err(H20PrecompileError::revert(IH20Factory::TokenAlreadyExists {
                 token: token_address,
             }));
         }
@@ -316,10 +316,10 @@ impl TokenCreateParams {
 
     /// Validates asset-token initialization fields.
     pub fn validate_asset(init: &H20AssetInit) -> Result<()> {
-        if init.decimals < H20AssetStorage::MIN_DECIMALS
-            || init.decimals > H20AssetStorage::MAX_DECIMALS
+        if init.decimals < H20AssetStorage::MIN_DECIMALS ||
+            init.decimals > H20AssetStorage::MAX_DECIMALS
         {
-            return Err(BasePrecompileError::revert(IH20Factory::InvalidDecimals {
+            return Err(H20PrecompileError::revert(IH20Factory::InvalidDecimals {
                 decimals: init.decimals,
             }));
         }
@@ -327,8 +327,8 @@ impl TokenCreateParams {
     }
 
     /// Maps an ABI parameter decoding error into the factory error surface.
-    pub fn invalid_params(error: impl core::fmt::Display) -> BasePrecompileError {
-        BasePrecompileError::AbiDecodeFailed {
+    pub fn invalid_params(error: impl core::fmt::Display) -> H20PrecompileError {
+        H20PrecompileError::AbiDecodeFailed {
             selector: IH20Factory::createH20Call::SELECTOR,
             error: error.to_string(),
         }

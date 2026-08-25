@@ -6,7 +6,7 @@ use std::time::Instant;
 
 use alloy_primitives::Bytes;
 use alloy_sol_types::{SolCall, SolError};
-use h20_precompile_storage::{BasePrecompileError, Result, StorageCtx};
+use h20_precompile_storage::{H20PrecompileError, Result, StorageCtx};
 use revm::precompile::{PrecompileError, PrecompileOutput, PrecompileResult};
 
 use crate::{IActivationRegistry, IH20, IH20Asset, IH20Factory, IH20Stablecoin, IPolicyRegistry};
@@ -222,17 +222,17 @@ impl BerylErrorKind {
         }
     }
 
-    /// Classifies a Base precompile error into a bounded metric label.
-    pub fn from_base_error(error: &BasePrecompileError) -> Self {
+    /// Classifies an H20 precompile error into a bounded metric label.
+    pub fn from_h20_error(error: &H20PrecompileError) -> Self {
         match error {
-            BasePrecompileError::StaticCallViolation => Self::StaticWrite,
-            BasePrecompileError::UnknownFunctionSelector(_) => Self::UnknownSelector,
-            BasePrecompileError::AbiDecodeFailed { .. } => Self::AbiDecode,
-            BasePrecompileError::OutOfGas => Self::OutOfGas,
-            BasePrecompileError::Panic(_) => Self::Panic,
-            BasePrecompileError::Fatal(_) => Self::Fatal,
-            BasePrecompileError::SlotOverflow => Self::SlotOverflow,
-            BasePrecompileError::Revert(bytes) => Self::from_revert_bytes(bytes),
+            H20PrecompileError::StaticCallViolation => Self::StaticWrite,
+            H20PrecompileError::UnknownFunctionSelector(_) => Self::UnknownSelector,
+            H20PrecompileError::AbiDecodeFailed { .. } => Self::AbiDecode,
+            H20PrecompileError::OutOfGas => Self::OutOfGas,
+            H20PrecompileError::Panic(_) => Self::Panic,
+            H20PrecompileError::Fatal(_) => Self::Fatal,
+            H20PrecompileError::SlotOverflow => Self::SlotOverflow,
+            H20PrecompileError::Revert(bytes) => Self::from_revert_bytes(bytes),
         }
     }
 
@@ -259,10 +259,10 @@ impl BerylErrorKind {
         ) {
             return Self::FeatureInactive;
         }
-        if BerylErrorClassifier::is_error_selector::<IActivationRegistry::Unauthorized>(selector)
-            || BerylErrorClassifier::is_error_selector::<IPolicyRegistry::Unauthorized>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20::Unauthorized>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20::AccessControlUnauthorizedAccount>(
+        if BerylErrorClassifier::is_error_selector::<IActivationRegistry::Unauthorized>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IPolicyRegistry::Unauthorized>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20::Unauthorized>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20::AccessControlUnauthorizedAccount>(
                 selector,
             )
         {
@@ -271,8 +271,8 @@ impl BerylErrorKind {
         if BerylErrorClassifier::is_error_selector::<IH20::PolicyForbids>(selector) {
             return Self::PolicyDenied;
         }
-        if BerylErrorClassifier::is_error_selector::<IPolicyRegistry::PolicyNotFound>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20::PolicyNotFound>(selector)
+        if BerylErrorClassifier::is_error_selector::<IPolicyRegistry::PolicyNotFound>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20::PolicyNotFound>(selector)
         {
             return Self::PolicyMissing;
         }
@@ -282,55 +282,55 @@ impl BerylErrorKind {
         if BerylErrorClassifier::is_error_selector::<IH20Factory::TokenAlreadyExists>(selector) {
             return Self::DuplicateCreate;
         }
-        if BerylErrorClassifier::is_error_selector::<IH20Factory::InitCallFailed>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20Asset::InternalCallFailed>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20Asset::InternalCallMalformed>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20Asset::AnnouncementInProgress>(
+        if BerylErrorClassifier::is_error_selector::<IH20Factory::InitCallFailed>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20Asset::InternalCallFailed>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20Asset::InternalCallMalformed>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20Asset::AnnouncementInProgress>(
                 selector,
             )
         {
             return Self::InternalCallFailed;
         }
-        if BerylErrorClassifier::is_error_selector::<IH20Factory::InvalidVariant>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20Factory::UnsupportedVersion>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20Factory::MissingRequiredField>(
+        if BerylErrorClassifier::is_error_selector::<IH20Factory::InvalidVariant>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20Factory::UnsupportedVersion>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20Factory::MissingRequiredField>(
                 selector,
-            )
-            || BerylErrorClassifier::is_error_selector::<IH20Factory::InvalidCurrency>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20Factory::InvalidDecimals>(selector)
-            || BerylErrorClassifier::is_error_selector::<IPolicyRegistry::IncompatiblePolicyType>(
+            ) ||
+            BerylErrorClassifier::is_error_selector::<IH20Factory::InvalidCurrency>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20Factory::InvalidDecimals>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IPolicyRegistry::IncompatiblePolicyType>(
                 selector,
-            )
-            || BerylErrorClassifier::is_error_selector::<IPolicyRegistry::ZeroAddress>(selector)
-            || BerylErrorClassifier::is_error_selector::<IPolicyRegistry::BatchSizeTooLarge>(
+            ) ||
+            BerylErrorClassifier::is_error_selector::<IPolicyRegistry::ZeroAddress>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IPolicyRegistry::BatchSizeTooLarge>(
                 selector,
-            )
-            || BerylErrorClassifier::is_error_selector::<IPolicyRegistry::NoPendingAdmin>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20Asset::AnnouncementIdAlreadyUsed>(
+            ) ||
+            BerylErrorClassifier::is_error_selector::<IPolicyRegistry::NoPendingAdmin>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20Asset::AnnouncementIdAlreadyUsed>(
                 selector,
-            )
-            || BerylErrorClassifier::is_error_selector::<IH20Asset::InvalidMetadataKey>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20Asset::LengthMismatch>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20Asset::EmptyBatch>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20::InvalidSender>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20::InvalidReceiver>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20::InvalidApprover>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20::InvalidSpender>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20::InvalidAmount>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20::EmptyFeatureSet>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20::InvalidSupplyCap>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20::SupplyCapExceeded>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20::InsufficientAllowance>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20::InsufficientBalance>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20::AccountNotBlocked>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20::ExpiredSignature>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20::InvalidSigner>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20::LastAdminCannotRenounce>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20::NotSoleAdmin>(selector)
-            || BerylErrorClassifier::is_error_selector::<IH20::AccessControlBadConfirmation>(
+            ) ||
+            BerylErrorClassifier::is_error_selector::<IH20Asset::InvalidMetadataKey>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20Asset::LengthMismatch>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20Asset::EmptyBatch>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20::InvalidSender>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20::InvalidReceiver>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20::InvalidApprover>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20::InvalidSpender>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20::InvalidAmount>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20::EmptyFeatureSet>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20::InvalidSupplyCap>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20::SupplyCapExceeded>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20::InsufficientAllowance>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20::InsufficientBalance>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20::AccountNotBlocked>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20::ExpiredSignature>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20::InvalidSigner>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20::LastAdminCannotRenounce>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20::NotSoleAdmin>(selector) ||
+            BerylErrorClassifier::is_error_selector::<IH20::AccessControlBadConfirmation>(
                 selector,
-            )
-            || BerylErrorClassifier::is_error_selector::<IH20::UnsupportedPolicyType>(selector)
+            ) ||
+            BerylErrorClassifier::is_error_selector::<IH20::UnsupportedPolicyType>(selector)
         {
             return Self::InvalidInput;
         }
@@ -542,7 +542,7 @@ impl BerylCallTimer {
 ///
 /// Emulates the cost a Solidity predeploy would incur reading its calldata:
 /// `G_copy` (3 gas/word) + `G_memory` (3 gas/word) = 6 gas/word.
-/// Part of the receipts/gas-used commitment: must be identical across all Base execution clients.
+/// Part of the receipts/gas-used commitment: must be identical across all H20 execution clients.
 pub const CALLDATA_WORD_GAS: u64 = 6;
 
 /// Per-call recorder for Beryl precompile observations.
@@ -590,9 +590,9 @@ where
         ctx.deduct_gas(Self::calldata_gas_cost(calldata))
     }
 
-    /// Records a Base precompile error before it is converted to a [`PrecompileResult`].
-    pub fn record_base_error(&mut self, error: &BasePrecompileError) {
-        self.error = Some(BerylErrorKind::from_base_error(error));
+    /// Records an H20 precompile error before it is converted to a [`PrecompileResult`].
+    pub fn record_h20_error(&mut self, error: &H20PrecompileError) {
+        self.error = Some(BerylErrorKind::from_h20_error(error));
     }
 
     /// Records the final result of the precompile call.
@@ -602,28 +602,28 @@ where
         self.observer.record_call(&self.call, &outcome);
     }
 
-    /// Converts and records a Base precompile result.
-    pub fn record_base_result<T>(
+    /// Converts and records an H20 precompile result.
+    pub fn record_h20_result<T>(
         &mut self,
         ctx: StorageCtx<'_>,
         result: Result<T>,
         encode_ok: impl FnOnce(T) -> Bytes,
     ) -> PrecompileResult {
         if let Err(error) = &result {
-            self.record_base_error(error);
+            self.record_h20_error(error);
         }
         let result = ctx.result_output(result, encode_ok);
         self.record_result(&result);
         result
     }
 
-    /// Converts and records a Base precompile error.
-    pub fn record_base_error_result(
+    /// Converts and records an H20 precompile error.
+    pub fn record_h20_error_result(
         &mut self,
         ctx: StorageCtx<'_>,
-        error: BasePrecompileError,
+        error: H20PrecompileError,
     ) -> PrecompileResult {
-        self.record_base_error(&error);
+        self.record_h20_error(&error);
         let result = error.into_precompile_result(ctx.gas_used(), ctx.state_gas_used());
         self.record_result(&result);
         result
@@ -650,7 +650,7 @@ impl BerylAuxiliaryMetrics {
 mod tests {
     use alloy_primitives::{Address, B256, U256};
     use alloy_sol_types::{SolCall, SolError};
-    use h20_precompile_storage::BasePrecompileError;
+    use h20_precompile_storage::H20PrecompileError;
 
     use crate::{
         BerylCallOutcome, BerylCallRecorder, BerylErrorKind, BerylMetricLabels, BerylSelector,
@@ -678,13 +678,13 @@ mod tests {
     }
 
     #[test]
-    fn base_errors_are_classified() {
+    fn h20_errors_are_classified() {
         assert_eq!(
-            BerylErrorKind::from_base_error(&BasePrecompileError::UnknownFunctionSelector([0; 4])),
+            BerylErrorKind::from_h20_error(&H20PrecompileError::UnknownFunctionSelector([0; 4])),
             BerylErrorKind::UnknownSelector
         );
         assert_eq!(
-            BerylErrorKind::from_base_error(&BasePrecompileError::StaticCallViolation),
+            BerylErrorKind::from_h20_error(&H20PrecompileError::StaticCallViolation),
             BerylErrorKind::StaticWrite
         );
     }

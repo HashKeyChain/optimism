@@ -1,6 +1,6 @@
 use alloy_primitives::{Address, B256, U256};
 use alloy_sol_types::SolEvent;
-use h20_precompile_storage::{BasePrecompileError, Result};
+use h20_precompile_storage::{H20PrecompileError, Result};
 
 use crate::{H20Guards, H20TokenRole, IH20, Token, TokenAccounting};
 
@@ -31,7 +31,7 @@ pub trait Burnable: Token {
     fn burn_inner(&mut self, from: Address, amount: U256) -> Result<()> {
         let balance = self.accounting().balance_of(from)?;
         if balance < amount {
-            return Err(BasePrecompileError::revert(IH20::InsufficientBalance {
+            return Err(H20PrecompileError::revert(IH20::InsufficientBalance {
                 sender: from,
                 balance,
                 needed: amount,
@@ -40,7 +40,7 @@ pub trait Burnable: Token {
         self.accounting_mut().set_balance(from, balance - amount)?;
         let supply = self.accounting().total_supply()?;
         let new_supply =
-            supply.checked_sub(amount).ok_or_else(BasePrecompileError::under_overflow)?;
+            supply.checked_sub(amount).ok_or_else(H20PrecompileError::under_overflow)?;
         self.accounting_mut().set_total_supply(new_supply)?;
         self.accounting_mut()
             .emit_event(IH20::Transfer { from, to: Address::ZERO, amount }.encode_log_data())
@@ -81,11 +81,11 @@ pub trait Burnable: Token {
 #[cfg(test)]
 mod tests {
     use alloy_primitives::{Address, U256};
-    use h20_precompile_storage::BasePrecompileError;
+    use h20_precompile_storage::H20PrecompileError;
     use rstest::rstest;
 
     use crate::{
-        H20PausableFeature, H20PolicyType, H20TokenRole, Burnable, FakePolicyAccounting, IH20,
+        Burnable, FakePolicyAccounting, H20PausableFeature, H20PolicyType, H20TokenRole, IH20,
         InMemoryTokenAccounting, PolicyRegistryStorage, TestToken, Token, TokenAccounting,
     };
 
@@ -125,7 +125,7 @@ mod tests {
 
         assert_eq!(
             token.burn(CALLER, ALICE, U256::from(11u64), true).unwrap_err(),
-            BasePrecompileError::revert(IH20::InsufficientBalance {
+            H20PrecompileError::revert(IH20::InsufficientBalance {
                 sender: ALICE,
                 balance: U256::from(10u64),
                 needed: U256::from(11u64),
@@ -152,7 +152,7 @@ mod tests {
 
         assert_eq!(
             token.burn(CALLER, ALICE, U256::ONE, true).unwrap_err(),
-            BasePrecompileError::revert(IH20::ContractPaused {
+            H20PrecompileError::revert(IH20::ContractPaused {
                 feature: IH20::PausableFeature::BURN,
             })
         );
@@ -166,7 +166,7 @@ mod tests {
 
         assert_eq!(
             token.burn_blocked(CALLER, ALICE, U256::ONE, true).unwrap_err(),
-            BasePrecompileError::revert(IH20::ContractPaused {
+            H20PrecompileError::revert(IH20::ContractPaused {
                 feature: IH20::PausableFeature::BURN,
             })
         );
@@ -178,7 +178,7 @@ mod tests {
 
         assert_eq!(
             token.burn_blocked(CALLER, ALICE, U256::ONE, true).unwrap_err(),
-            BasePrecompileError::revert(IH20::AccountNotBlocked { account: ALICE })
+            H20PrecompileError::revert(IH20::AccountNotBlocked { account: ALICE })
         );
     }
 
@@ -211,7 +211,7 @@ mod tests {
 
         assert_eq!(
             token.burn_blocked(CALLER, ALICE, U256::ONE, false).unwrap_err(),
-            BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+            H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
                 account: CALLER,
                 neededRole: H20TokenRole::BurnBlocked.id(),
             })
@@ -225,19 +225,19 @@ mod tests {
         true,  // paused
         false, // has_role
         false, // privileged
-        BasePrecompileError::revert(IH20::ContractPaused { feature: IH20::PausableFeature::BURN })
+        H20PrecompileError::revert(IH20::ContractPaused { feature: IH20::PausableFeature::BURN })
     )]
     #[case::paused_privileged_still_gets_pause_error(
         true,  // paused
         true,  // has_role
         true,  // privileged
-        BasePrecompileError::revert(IH20::ContractPaused { feature: IH20::PausableFeature::BURN })
+        H20PrecompileError::revert(IH20::ContractPaused { feature: IH20::PausableFeature::BURN })
     )]
     #[case::role_before_balance_for_non_privileged(
         false, // paused
         false, // has_role
         false, // privileged
-        BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+        H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
             account: CALLER,
             neededRole: H20TokenRole::Burn.id(),
         })
@@ -246,7 +246,7 @@ mod tests {
         #[case] paused: bool,
         #[case] has_role: bool,
         #[case] privileged: bool,
-        #[case] expected_error: BasePrecompileError,
+        #[case] expected_error: H20PrecompileError,
     ) {
         let mut accounting = InMemoryTokenAccounting::new(TOKEN_ADDR);
         accounting.balances.insert(ALICE, U256::from(10u64));
@@ -268,21 +268,21 @@ mod tests {
         false, // has_role
         false, // is_blocked
         false, // privileged
-        BasePrecompileError::revert(IH20::ContractPaused { feature: IH20::PausableFeature::BURN })
+        H20PrecompileError::revert(IH20::ContractPaused { feature: IH20::PausableFeature::BURN })
     )]
     #[case::paused_privileged_still_gets_pause_error(
         true,  // paused
         true,  // has_role
         true,  // is_blocked
         true,  // privileged
-        BasePrecompileError::revert(IH20::ContractPaused { feature: IH20::PausableFeature::BURN })
+        H20PrecompileError::revert(IH20::ContractPaused { feature: IH20::PausableFeature::BURN })
     )]
     #[case::role_before_blocked_check(
         false, // paused
         false, // has_role
         true,  // is_blocked
         false, // privileged
-        BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+        H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
             account: CALLER,
             neededRole: H20TokenRole::BurnBlocked.id(),
         })
@@ -292,14 +292,14 @@ mod tests {
         true,  // has_role (not used when privileged, but keep consistent)
         false, // is_blocked
         true,  // privileged
-        BasePrecompileError::revert(IH20::AccountNotBlocked { account: ALICE })
+        H20PrecompileError::revert(IH20::AccountNotBlocked { account: ALICE })
     )]
     fn burn_blocked_guard_ordering(
         #[case] paused: bool,
         #[case] has_role: bool,
         #[case] is_blocked: bool,
         #[case] privileged: bool,
-        #[case] expected_error: BasePrecompileError,
+        #[case] expected_error: H20PrecompileError,
     ) {
         let mut accounting = InMemoryTokenAccounting::new(TOKEN_ADDR);
         accounting.balances.insert(ALICE, U256::from(10u64));

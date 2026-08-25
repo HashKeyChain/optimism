@@ -18,7 +18,7 @@ use revm::{
 };
 
 use crate::{
-    error::{BasePrecompileError, Result},
+    error::{H20PrecompileError, Result},
     provider::{PrecompileStorageProvider, validate_loaded_code_presence},
 };
 
@@ -97,7 +97,7 @@ impl PrecompileStorageProvider for EvmPrecompileStorageProvider<'_> {
 
     fn set_code(&mut self, address: Address, code: Bytecode) -> Result<()> {
         if self.is_static {
-            return Err(BasePrecompileError::StaticCallViolation);
+            return Err(H20PrecompileError::StaticCallViolation);
         }
 
         let code_len = code.len();
@@ -113,7 +113,7 @@ impl PrecompileStorageProvider for EvmPrecompileStorageProvider<'_> {
             let state_load = self
                 .internals
                 .load_account(address)
-                .map_err(|e| BasePrecompileError::Fatal(e.to_string()))?;
+                .map_err(|e| H20PrecompileError::Fatal(e.to_string()))?;
             state_load.data.info.is_empty_code_hash()
         };
 
@@ -125,9 +125,7 @@ impl PrecompileStorageProvider for EvmPrecompileStorageProvider<'_> {
             self.deduct_gas(KECCAK256.saturating_add(KECCAK256WORD.saturating_mul(num_words)))?;
         }
 
-        self.internals
-            .set_code(address, code)
-            .map_err(|e| BasePrecompileError::Fatal(e.to_string()))
+        self.internals.set_code(address, code).map_err(|e| H20PrecompileError::Fatal(e.to_string()))
     }
 
     fn with_account_info(
@@ -143,7 +141,7 @@ impl PrecompileStorageProvider for EvmPrecompileStorageProvider<'_> {
             let state_load = self
                 .internals
                 .load_account(address)
-                .map_err(|e| BasePrecompileError::Fatal(e.to_string()))?;
+                .map_err(|e| H20PrecompileError::Fatal(e.to_string()))?;
             (state_load.data.info.clone(), state_load.is_cold)
         };
 
@@ -164,10 +162,10 @@ impl PrecompileStorageProvider for EvmPrecompileStorageProvider<'_> {
             let state_load = self
                 .internals
                 .load_account_code(address)
-                .map_err(|e| BasePrecompileError::Fatal(e.to_string()))?;
+                .map_err(|e| H20PrecompileError::Fatal(e.to_string()))?;
             let expected_hash = *state_load.data.code_hash();
             let code = state_load.data.code().cloned().ok_or_else(|| {
-                BasePrecompileError::Fatal(
+                H20PrecompileError::Fatal(
                     "account code unavailable after successful EVM load".to_string(),
                 )
             })?;
@@ -191,7 +189,7 @@ impl PrecompileStorageProvider for EvmPrecompileStorageProvider<'_> {
             let s = self
                 .internals
                 .sload(address, key)
-                .map_err(|e| BasePrecompileError::Fatal(e.to_string()))?;
+                .map_err(|e| H20PrecompileError::Fatal(e.to_string()))?;
 
             // EIP-2929: warm base cost always charged
             self.deduct_gas(self.gas_params.warm_storage_read_cost())?;
@@ -219,7 +217,7 @@ impl PrecompileStorageProvider for EvmPrecompileStorageProvider<'_> {
 
     fn sstore(&mut self, address: Address, key: U256, value: U256) -> Result<()> {
         if self.is_static {
-            return Err(BasePrecompileError::StaticCallViolation);
+            return Err(H20PrecompileError::StaticCallViolation);
         }
         // EIP-2200: if remaining gas is at or below the call stipend (2300), halt with
         // out-of-gas. This is the reentrancy sentry that Solidity's `.transfer()` relies on:
@@ -227,14 +225,14 @@ impl PrecompileStorageProvider for EvmPrecompileStorageProvider<'_> {
         // SSTOREs. Without this guard, a warm-dirty rewrite (~200 gas) would succeed where
         // the EVM SSTORE opcode would have halted, breaking the 2300-gas invariant.
         if self.gas.remaining() <= self.gas_params.call_stipend() {
-            return Err(BasePrecompileError::OutOfGas);
+            return Err(H20PrecompileError::OutOfGas);
         }
         let checkpoint = self.internals.checkpoint();
         let result = (|| {
             let s = self
                 .internals
                 .sstore(address, key, value)
-                .map_err(|e| BasePrecompileError::Fatal(e.to_string()))?;
+                .map_err(|e| H20PrecompileError::Fatal(e.to_string()))?;
 
             // EIP-2929: static warm base cost
             self.deduct_gas(self.gas_params.sstore_static_gas())?;
@@ -257,7 +255,7 @@ impl PrecompileStorageProvider for EvmPrecompileStorageProvider<'_> {
 
     fn tstore(&mut self, address: Address, key: U256, value: U256) -> Result<()> {
         if self.is_static {
-            return Err(BasePrecompileError::StaticCallViolation);
+            return Err(H20PrecompileError::StaticCallViolation);
         }
         self.deduct_gas(self.gas_params.warm_storage_read_cost())?;
         self.internals.tstore(address, key, value);
@@ -266,7 +264,7 @@ impl PrecompileStorageProvider for EvmPrecompileStorageProvider<'_> {
 
     fn emit_event(&mut self, address: Address, event: LogData) -> Result<()> {
         if self.is_static {
-            return Err(BasePrecompileError::StaticCallViolation);
+            return Err(H20PrecompileError::StaticCallViolation);
         }
         let cost =
             LOG + self.gas_params.log_cost(event.topics().len() as u8, event.data.len() as u64);
@@ -277,7 +275,7 @@ impl PrecompileStorageProvider for EvmPrecompileStorageProvider<'_> {
 
     fn deduct_gas(&mut self, gas: u64) -> Result<()> {
         if !self.gas.record_regular_cost(gas) {
-            return Err(BasePrecompileError::OutOfGas);
+            return Err(H20PrecompileError::OutOfGas);
         }
         Ok(())
     }
@@ -343,17 +341,17 @@ impl PrecompileStorageProvider for EvmPrecompileStorageProvider<'_> {
 
     fn metered_keccak256(&mut self, data: &[u8]) -> Result<B256> {
         let num_words =
-            u64::try_from(data.len().div_ceil(32)).map_err(|_| BasePrecompileError::OutOfGas)?;
+            u64::try_from(data.len().div_ceil(32)).map_err(|_| H20PrecompileError::OutOfGas)?;
         let price = KECCAK256WORD
             .checked_mul(num_words)
             .and_then(|w| w.checked_add(KECCAK256))
-            .ok_or(BasePrecompileError::OutOfGas)?;
+            .ok_or(H20PrecompileError::OutOfGas)?;
         self.deduct_gas(price)?;
         Ok(keccak256(data))
     }
 }
 
-impl From<alloy_evm::EvmInternalsError> for BasePrecompileError {
+impl From<alloy_evm::EvmInternalsError> for H20PrecompileError {
     fn from(e: alloy_evm::EvmInternalsError) -> Self {
         Self::Fatal(e.to_string())
     }
@@ -369,7 +367,7 @@ mod tests {
     };
 
     use crate::{
-        error::BasePrecompileError, hashmap::HashMapStorageProvider,
+        error::H20PrecompileError, hashmap::HashMapStorageProvider,
         provider::PrecompileStorageProvider,
     };
 
@@ -409,7 +407,7 @@ mod tests {
 
         assert_eq!(
             provider.sstore(Address::ZERO, U256::ZERO, U256::from(1u64)),
-            Err(BasePrecompileError::OutOfGas),
+            Err(H20PrecompileError::OutOfGas),
         );
     }
 
@@ -423,7 +421,7 @@ mod tests {
 
         assert_eq!(
             provider.sstore(Address::ZERO, U256::ZERO, U256::from(1u64)),
-            Err(BasePrecompileError::OutOfGas),
+            Err(H20PrecompileError::OutOfGas),
         );
     }
 
@@ -450,7 +448,7 @@ mod tests {
 
         assert_eq!(
             provider.sstore(Address::ZERO, U256::ZERO, U256::from(1u64)),
-            Err(BasePrecompileError::StaticCallViolation),
+            Err(H20PrecompileError::StaticCallViolation),
         );
     }
 
@@ -481,7 +479,7 @@ mod tests {
 
             let err = provider.sstore(address, key, value).unwrap_err();
 
-            assert_eq!(err, BasePrecompileError::OutOfGas);
+            assert_eq!(err, H20PrecompileError::OutOfGas);
         }
 
         {
@@ -537,7 +535,7 @@ mod tests {
                 internals: EvmInternals::from_context(&mut ctx),
             };
             let mut provider = super::EvmPrecompileStorageProvider::new(input, gas_params.clone());
-            assert_eq!(provider.sload(address, key), Err(BasePrecompileError::OutOfGas));
+            assert_eq!(provider.sload(address, key), Err(H20PrecompileError::OutOfGas));
         }
 
         // Second provider: unlimited gas. The slot must still be cold, so the full
@@ -576,7 +574,7 @@ mod tests {
 
         assert_eq!(
             provider.set_code(Address::ZERO, Bytecode::new_raw([0x60u8, 0x00].as_ref().into())),
-            Err(BasePrecompileError::StaticCallViolation),
+            Err(H20PrecompileError::StaticCallViolation),
         );
         // No gas must have been consumed.
         assert_eq!(provider.gas_used(), 0);
@@ -634,7 +632,7 @@ mod tests {
 
         let err = provider.set_code(addr, code).unwrap_err();
 
-        assert_eq!(err, BasePrecompileError::StaticCallViolation);
+        assert_eq!(err, H20PrecompileError::StaticCallViolation);
         assert!(provider.get_account_info(addr).is_none());
     }
 }

@@ -2,14 +2,14 @@
 
 use alloy_primitives::{Address, B256, Bytes, address, b256};
 use h20_precompile_macros::contract;
-use h20_precompile_storage::{BasePrecompileError, Handler, Mapping, Result};
+use h20_precompile_storage::{H20PrecompileError, Handler, Mapping, Result};
 use revm::precompile::PrecompileResult;
 
 use crate::IActivationRegistry;
 
-/// Runtime activation registry for Base-native features.
+/// Runtime activation registry for HSK-native features.
 #[contract(addr = Self::ADDRESS)]
-#[namespace("base.activation_registry")]
+#[namespace("hsk.activation_registry")]
 pub struct ActivationRegistryStorage {
     /// Runtime activation flags keyed by feature id.
     pub features: Mapping<B256, bool>,
@@ -29,13 +29,13 @@ impl ActivationAdminConfig {
     }
 }
 
-/// Identifies a Base-native precompile feature in the activation registry.
+/// Identifies an HSK-native precompile feature in the activation registry.
 ///
 /// Each variant maps to a stable `keccak256` hash of the feature's canonical name and is used as
 /// the key when querying or mutating activation state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ActivationFeature {
-    /// `keccak256("base.policy_registry")`
+    /// `keccak256("hsk.policy_registry")`
     PolicyRegistry,
     /// `keccak256("hsk.h20_stablecoin")`
     H20Stablecoin,
@@ -48,7 +48,7 @@ impl ActivationFeature {
     pub const fn id(self) -> B256 {
         match self {
             Self::PolicyRegistry => {
-                b256!("0xb582ebae03f16fee49a6763f78df482fb11ae73f103ed0d330bbe556aa90a43f")
+                b256!("0xeb990450d42b51d856d197d9f14d2dbbdb1c1009c9d71c1b70030176e2a7b119")
             }
             Self::H20Stablecoin => {
                 b256!("0x1d9bf0e45406178504b576379f1b1f1df199c332d720d52ed3428174aaa0a72d")
@@ -96,7 +96,7 @@ impl ActivationRegistryStorage<'_> {
             return Ok(());
         }
 
-        Err(BasePrecompileError::revert(IActivationRegistry::FeatureNotActivated { feature }))
+        Err(H20PrecompileError::revert(IActivationRegistry::FeatureNotActivated { feature }))
     }
 
     /// Activates the feature.
@@ -119,7 +119,7 @@ impl ActivationRegistryStorage<'_> {
         // Keep this guard at the shared mutation boundary so `activate`, `deactivate`, and direct
         // `set_activated` callers all get the same static-call behavior after calldata validation.
         if self.storage.is_static() {
-            return Err(BasePrecompileError::revert(IActivationRegistry::StaticCallNotAllowed {}));
+            return Err(H20PrecompileError::revert(IActivationRegistry::StaticCallNotAllowed {}));
         }
 
         let caller = self.require_admin_caller(admin_config)?;
@@ -131,12 +131,12 @@ impl ActivationRegistryStorage<'_> {
             !to_activated_state && !current_activated_state;
 
         if is_activating_and_already_activated {
-            return Err(BasePrecompileError::revert(IActivationRegistry::AlreadyActivated {
+            return Err(H20PrecompileError::revert(IActivationRegistry::AlreadyActivated {
                 feature,
             }));
         }
         if is_deactivating_and_already_deactivated {
-            return Err(BasePrecompileError::revert(IActivationRegistry::FeatureNotActivated {
+            return Err(H20PrecompileError::revert(IActivationRegistry::FeatureNotActivated {
                 feature,
             }));
         }
@@ -157,11 +157,11 @@ impl ActivationRegistryStorage<'_> {
     pub fn authorized_admin(&self, admin_config: ActivationAdminConfig) -> Result<Address> {
         let caller = self.storage.caller();
         if caller.is_zero() {
-            return Err(BasePrecompileError::revert(IActivationRegistry::Unauthorized { caller }));
+            return Err(H20PrecompileError::revert(IActivationRegistry::Unauthorized { caller }));
         }
         let admin = self.admin(admin_config)?;
         if admin.is_zero() {
-            return Err(BasePrecompileError::revert(IActivationRegistry::Unauthorized { caller }));
+            return Err(H20PrecompileError::revert(IActivationRegistry::Unauthorized { caller }));
         }
         Ok(admin)
     }
@@ -171,7 +171,7 @@ impl ActivationRegistryStorage<'_> {
         let caller = self.storage.caller();
         let admin = self.authorized_admin(admin_config)?;
         if caller != admin {
-            return Err(BasePrecompileError::revert(IActivationRegistry::Unauthorized { caller }));
+            return Err(H20PrecompileError::revert(IActivationRegistry::Unauthorized { caller }));
         }
         Ok(caller)
     }
@@ -182,7 +182,7 @@ mod tests {
     use alloy_primitives::{Address, B256, U256, address, keccak256, uint};
     use alloy_sol_types::SolCall;
     use h20_precompile_storage::{
-        BasePrecompileError, HashMapStorageProvider, Result, StorageCtx, StorageKey,
+        H20PrecompileError, HashMapStorageProvider, Result, StorageCtx, StorageKey,
     };
     use revm::precompile::PrecompileOutput;
     use rstest::rstest;
@@ -197,7 +197,7 @@ mod tests {
     const STATIC_ADMIN_CONFIG: ActivationAdminConfig =
         ActivationAdminConfig::static_fallback(Some(ADMIN));
     const ACTIVATION_REGISTRY_ROOT: U256 =
-        uint!(0x43ee1bbe25e988521cccd8b2c8fbd38c8287ebff8e074e825a70dfd3885cce00_U256);
+        uint!(0x43b0e0f3c0537d4369cc4fb834dd99e8c52adcd02badb4497511f9bc78f04b00_U256);
 
     #[derive(Debug, Clone, Copy)]
     enum Transition {
@@ -301,20 +301,20 @@ mod tests {
 
     #[test]
     fn feature_id_constants_match_canonical_names() {
-        assert_eq!(ActivationFeature::PolicyRegistry.id(), keccak256("base.policy_registry"));
+        assert_eq!(ActivationFeature::PolicyRegistry.id(), keccak256("hsk.policy_registry"));
         assert_eq!(ActivationFeature::H20Stablecoin.id(), keccak256("hsk.h20_stablecoin"));
         assert_eq!(ActivationFeature::H20Asset.id(), keccak256("hsk.h20_asset"));
     }
 
     #[test]
-    fn activation_registry_namespace_matches_base_std_root() {
-        assert_eq!(slots::NAMESPACE_ID, "base.activation_registry");
+    fn activation_registry_namespace_matches_hsk_root() {
+        assert_eq!(slots::NAMESPACE_ID, "hsk.activation_registry");
         assert_eq!(slots::NAMESPACE_ROOT, ACTIVATION_REGISTRY_ROOT);
         assert_eq!(slots::FEATURES, ACTIVATION_REGISTRY_ROOT);
     }
 
     #[test]
-    fn activation_registry_writes_use_base_std_namespace_slots() {
+    fn activation_registry_writes_use_hsk_namespace_slots() {
         let mut storage = HashMapStorageProvider::new(1);
 
         activate_feature(&mut storage).unwrap();
@@ -364,7 +364,7 @@ mod tests {
                 .activate(FEATURE, ActivationAdminConfig::static_fallback(Some(configured_admin)))
         })
         .unwrap_err();
-        assert!(matches!(err, BasePrecompileError::Revert(_)));
+        assert!(matches!(err, H20PrecompileError::Revert(_)));
         assert_activated(&mut storage, false);
 
         storage.set_caller(configured_admin);
@@ -391,7 +391,7 @@ mod tests {
         })
         .unwrap_err();
 
-        assert!(matches!(err, BasePrecompileError::Revert(_)));
+        assert!(matches!(err, H20PrecompileError::Revert(_)));
         assert_activated(&mut storage, false);
     }
 
@@ -410,12 +410,12 @@ mod tests {
             result.unwrap_err(),
             match transition {
                 Transition::Activate => {
-                    BasePrecompileError::revert(IActivationRegistry::AlreadyActivated {
+                    H20PrecompileError::revert(IActivationRegistry::AlreadyActivated {
                         feature: FEATURE,
                     })
                 }
                 Transition::Deactivate => {
-                    BasePrecompileError::revert(IActivationRegistry::FeatureNotActivated {
+                    H20PrecompileError::revert(IActivationRegistry::FeatureNotActivated {
                         feature: FEATURE,
                     })
                 }
@@ -491,7 +491,7 @@ mod tests {
 
         assert_eq!(
             result.unwrap_err(),
-            BasePrecompileError::revert(IActivationRegistry::FeatureNotActivated {
+            H20PrecompileError::revert(IActivationRegistry::FeatureNotActivated {
                 feature: FEATURE,
             })
         );
@@ -510,7 +510,7 @@ mod tests {
 
         assert_eq!(
             result.unwrap_err(),
-            BasePrecompileError::revert(IActivationRegistry::FeatureNotActivated {
+            H20PrecompileError::revert(IActivationRegistry::FeatureNotActivated {
                 feature: FEATURE,
             })
         );
@@ -530,7 +530,7 @@ mod tests {
         })
         .unwrap_err();
 
-        assert!(matches!(err, BasePrecompileError::Revert(_)));
+        assert!(matches!(err, H20PrecompileError::Revert(_)));
         assert_activated(&mut storage, false);
     }
 

@@ -8,15 +8,16 @@ use alloc::{
 
 use alloy_primitives::{Address, B256, FixedBytes, U256, b256, keccak256};
 use alloy_sol_types::{SolEvent, SolValue};
-use h20_precompile_storage::{BasePrecompileError, Result};
+use h20_precompile_storage::{H20PrecompileError, Result};
 
 use crate::{
-    Asset, AssetAccounting, H20_MAX_SUPPLY_CAP, H20AssetStorage, H20AssetToken, H20Guards,
-    H20PausableFeature, H20PolicyType, H20TokenRole, Eip712Domain, IH20, IH20Asset, PermitArgs,
+    Asset, AssetAccounting, Eip712Domain, H20_MAX_SUPPLY_CAP, H20AssetStorage, H20AssetToken,
+    H20Guards, H20PausableFeature, H20PolicyType, H20TokenRole, IH20, IH20Asset, PermitArgs,
     PolicyAccounting, Token,
 };
 
-/// `keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)")`
+/// `keccak256("EIP712Domain(string name,string version,uint256 chainId,address
+/// verifyingContract)")`
 const DOMAIN_TYPEHASH: B256 =
     b256!("8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f");
 
@@ -45,10 +46,10 @@ impl AssetV1 {
         privileged: bool,
     ) -> Result<()> {
         if to == Address::ZERO {
-            return Err(BasePrecompileError::revert(IH20::InvalidReceiver { receiver: to }));
+            return Err(H20PrecompileError::revert(IH20::InvalidReceiver { receiver: to }));
         }
         if from == Address::ZERO {
-            return Err(BasePrecompileError::revert(IH20::InvalidSender { sender: from }));
+            return Err(H20PrecompileError::revert(IH20::InvalidSender { sender: from }));
         }
         if !privileged {
             H20Guards::ensure_policy_type(token, H20PolicyType::TransferSender, from)?;
@@ -56,18 +57,18 @@ impl AssetV1 {
         }
         let from_balance = token.accounting().balance_of(from)?;
         if from_balance < amount {
-            return Err(BasePrecompileError::revert(IH20::InsufficientBalance {
+            return Err(H20PrecompileError::revert(IH20::InsufficientBalance {
                 sender: from,
                 balance: from_balance,
                 needed: amount,
             }));
         }
         let new_from_balance =
-            from_balance.checked_sub(amount).ok_or_else(BasePrecompileError::under_overflow)?;
+            from_balance.checked_sub(amount).ok_or_else(H20PrecompileError::under_overflow)?;
         token.accounting_mut().set_balance(from, new_from_balance)?;
         let to_balance = token.accounting().balance_of(to)?;
         let new_to_balance =
-            to_balance.checked_add(amount).ok_or_else(BasePrecompileError::under_overflow)?;
+            to_balance.checked_add(amount).ok_or_else(H20PrecompileError::under_overflow)?;
         token.accounting_mut().set_balance(to, new_to_balance)?;
         token.accounting_mut().emit_event(IH20::Transfer { from, to, amount }.encode_log_data())
     }
@@ -81,7 +82,7 @@ impl AssetV1 {
     ) -> Result<()> {
         let balance = token.accounting().balance_of(from)?;
         if balance < amount {
-            return Err(BasePrecompileError::revert(IH20::InsufficientBalance {
+            return Err(H20PrecompileError::revert(IH20::InsufficientBalance {
                 sender: from,
                 balance,
                 needed: amount,
@@ -90,7 +91,7 @@ impl AssetV1 {
         token.accounting_mut().set_balance(from, balance - amount)?;
         let supply = token.accounting().total_supply()?;
         let new_supply =
-            supply.checked_sub(amount).ok_or_else(BasePrecompileError::under_overflow)?;
+            supply.checked_sub(amount).ok_or_else(H20PrecompileError::under_overflow)?;
         token.accounting_mut().set_total_supply(new_supply)?;
         token
             .accounting_mut()
@@ -99,10 +100,10 @@ impl AssetV1 {
 
     /// Grants `role` to `account` without checking caller authorization.
     ///
-    /// The one token-level mutation the factory needs at bootstrap, when no admin exists yet and the
-    /// authorized [`grant_role`](Asset::grant_role) path is not reachable. Bumps the `DefaultAdmin`
-    /// member count and emits `RoleGranted`. Kept inherent to V1 (off the `Asset` trait) so it stays
-    /// frozen with this version and off `&dyn Asset`.
+    /// The one token-level mutation the factory needs at bootstrap, when no admin exists yet and
+    /// the authorized [`grant_role`](Asset::grant_role) path is not reachable. Bumps the
+    /// `DefaultAdmin` member count and emits `RoleGranted`. Kept inherent to V1 (off the
+    /// `Asset` trait) so it stays frozen with this version and off `&dyn Asset`.
     pub(crate) fn grant_role_unchecked<S: AssetAccounting, A: PolicyAccounting>(
         &self,
         token: &mut H20AssetToken<S, A>,
@@ -117,7 +118,7 @@ impl AssetV1 {
         if role == H20TokenRole::DefaultAdmin.id() {
             let current = token.accounting().role_member_count(role)?;
             let next =
-                current.checked_add(U256::ONE).ok_or_else(BasePrecompileError::under_overflow)?;
+                current.checked_add(U256::ONE).ok_or_else(H20PrecompileError::under_overflow)?;
             token.accounting_mut().set_role_member_count(role, next)?;
         }
         token
@@ -140,7 +141,7 @@ impl AssetV1 {
         if role == H20TokenRole::DefaultAdmin.id() {
             let current = token.accounting().role_member_count(role)?;
             let next =
-                current.checked_sub(U256::ONE).ok_or_else(BasePrecompileError::under_overflow)?;
+                current.checked_sub(U256::ONE).ok_or_else(H20PrecompileError::under_overflow)?;
             token.accounting_mut().set_role_member_count(role, next)?;
         }
         token
@@ -156,7 +157,7 @@ impl AssetV1 {
     ) -> Result<()> {
         let admin_role = H20TokenRole::DefaultAdmin.id();
         if token.accounting().role_member_count(admin_role)? == U256::ZERO {
-            return Err(BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+            return Err(H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
                 account: caller,
                 neededRole: admin_role,
             }));
@@ -169,7 +170,7 @@ impl AssetV1 {
         if H20PolicyType::from_id(policy_scope).is_some() {
             Ok(())
         } else {
-            Err(BasePrecompileError::revert(IH20::UnsupportedPolicyType {
+            Err(H20PrecompileError::revert(IH20::UnsupportedPolicyType {
                 policyScope: policy_scope,
             }))
         }
@@ -224,15 +225,15 @@ impl<S: AssetAccounting, A: PolicyAccounting> Asset<S, A> for AssetV1 {
     ) -> Result<()> {
         H20Guards::ensure_not_paused(token, IH20::PausableFeature::TRANSFER)?;
         if to == Address::ZERO {
-            return Err(BasePrecompileError::revert(IH20::InvalidReceiver { receiver: to }));
+            return Err(H20PrecompileError::revert(IH20::InvalidReceiver { receiver: to }));
         }
         if from == Address::ZERO {
-            return Err(BasePrecompileError::revert(IH20::InvalidSender { sender: from }));
+            return Err(H20PrecompileError::revert(IH20::InvalidSender { sender: from }));
         }
         let allowance = token.accounting().allowance(from, caller)?;
         let is_infinite = allowance == U256::MAX;
         if !is_infinite && allowance < amount {
-            return Err(BasePrecompileError::revert(IH20::InsufficientAllowance {
+            return Err(H20PrecompileError::revert(IH20::InsufficientAllowance {
                 spender: caller,
                 allowance,
                 needed: amount,
@@ -256,10 +257,10 @@ impl<S: AssetAccounting, A: PolicyAccounting> Asset<S, A> for AssetV1 {
         amount: U256,
     ) -> Result<()> {
         if caller == Address::ZERO {
-            return Err(BasePrecompileError::revert(IH20::InvalidApprover { approver: caller }));
+            return Err(H20PrecompileError::revert(IH20::InvalidApprover { approver: caller }));
         }
         if spender == Address::ZERO {
-            return Err(BasePrecompileError::revert(IH20::InvalidSpender { spender }));
+            return Err(H20PrecompileError::revert(IH20::InvalidSpender { spender }));
         }
         token.accounting_mut().set_allowance(caller, spender, amount)?;
         token
@@ -289,15 +290,15 @@ impl<S: AssetAccounting, A: PolicyAccounting> Asset<S, A> for AssetV1 {
             H20Guards::ensure_token_role(token, caller, H20TokenRole::Mint)?;
         }
         if to == Address::ZERO {
-            return Err(BasePrecompileError::revert(IH20::InvalidReceiver { receiver: to }));
+            return Err(H20PrecompileError::revert(IH20::InvalidReceiver { receiver: to }));
         }
         H20Guards::ensure_policy_type(token, H20PolicyType::MintReceiver, to)?;
         let supply = token.accounting().total_supply()?;
         let cap = token.accounting().supply_cap()?;
         let new_supply =
-            supply.checked_add(amount).ok_or_else(BasePrecompileError::under_overflow)?;
+            supply.checked_add(amount).ok_or_else(H20PrecompileError::under_overflow)?;
         if new_supply > cap {
-            return Err(BasePrecompileError::revert(IH20::SupplyCapExceeded {
+            return Err(H20PrecompileError::revert(IH20::SupplyCapExceeded {
                 cap,
                 attempted: new_supply,
             }));
@@ -305,7 +306,7 @@ impl<S: AssetAccounting, A: PolicyAccounting> Asset<S, A> for AssetV1 {
         token.accounting_mut().set_total_supply(new_supply)?;
         let to_balance = token.accounting().balance_of(to)?;
         let new_balance =
-            to_balance.checked_add(amount).ok_or_else(BasePrecompileError::under_overflow)?;
+            to_balance.checked_add(amount).ok_or_else(H20PrecompileError::under_overflow)?;
         token.accounting_mut().set_balance(to, new_balance)?;
         token
             .accounting_mut()
@@ -352,7 +353,7 @@ impl<S: AssetAccounting, A: PolicyAccounting> Asset<S, A> for AssetV1 {
             H20Guards::ensure_token_role(token, caller, H20TokenRole::Pause)?;
         }
         if features.is_empty() {
-            return Err(BasePrecompileError::revert(IH20::EmptyFeatureSet {}));
+            return Err(H20PrecompileError::revert(IH20::EmptyFeatureSet {}));
         }
         let mut next = token.accounting().paused()?;
         for feature in &features {
@@ -378,7 +379,7 @@ impl<S: AssetAccounting, A: PolicyAccounting> Asset<S, A> for AssetV1 {
             H20Guards::ensure_token_role(token, caller, H20TokenRole::Unpause)?;
         }
         if features.is_empty() {
-            return Err(BasePrecompileError::revert(IH20::EmptyFeatureSet {}));
+            return Err(H20PrecompileError::revert(IH20::EmptyFeatureSet {}));
         }
         let mut next = token.accounting().paused()?;
         for feature in &features {
@@ -402,7 +403,7 @@ impl<S: AssetAccounting, A: PolicyAccounting> Asset<S, A> for AssetV1 {
         }
         let supply = token.accounting().total_supply()?;
         if new_cap < supply || new_cap > H20_MAX_SUPPLY_CAP {
-            return Err(BasePrecompileError::revert(IH20::InvalidSupplyCap {
+            return Err(H20PrecompileError::revert(IH20::InvalidSupplyCap {
                 currentSupply: supply,
                 proposedCap: new_cap,
             }));
@@ -493,11 +494,11 @@ impl<S: AssetAccounting, A: PolicyAccounting> Asset<S, A> for AssetV1 {
             let admin = token.accounting().role_admin(role)?;
             H20Guards::ensure_role(token, caller, admin)?;
         }
-        if role == H20TokenRole::DefaultAdmin.id()
-            && token.accounting().has_role(role, account)?
-            && token.accounting().role_member_count(role)? == U256::ONE
+        if role == H20TokenRole::DefaultAdmin.id() &&
+            token.accounting().has_role(role, account)? &&
+            token.accounting().role_member_count(role)? == U256::ONE
         {
-            return Err(BasePrecompileError::revert(IH20::LastAdminCannotRenounce {}));
+            return Err(H20PrecompileError::revert(IH20::LastAdminCannotRenounce {}));
         }
         self.revoke_role_unchecked(token, role, account, caller)
     }
@@ -510,13 +511,13 @@ impl<S: AssetAccounting, A: PolicyAccounting> Asset<S, A> for AssetV1 {
         confirmation: Address,
     ) -> Result<()> {
         if confirmation != caller {
-            return Err(BasePrecompileError::revert(IH20::AccessControlBadConfirmation {}));
+            return Err(H20PrecompileError::revert(IH20::AccessControlBadConfirmation {}));
         }
-        if role == H20TokenRole::DefaultAdmin.id()
-            && token.accounting().has_role(role, caller)?
-            && token.accounting().role_member_count(role)? == U256::ONE
+        if role == H20TokenRole::DefaultAdmin.id() &&
+            token.accounting().has_role(role, caller)? &&
+            token.accounting().role_member_count(role)? == U256::ONE
         {
-            return Err(BasePrecompileError::revert(IH20::LastAdminCannotRenounce {}));
+            return Err(H20PrecompileError::revert(IH20::LastAdminCannotRenounce {}));
         }
         self.revoke_role_unchecked(token, role, caller, caller)
     }
@@ -525,7 +526,7 @@ impl<S: AssetAccounting, A: PolicyAccounting> Asset<S, A> for AssetV1 {
         let admin_role = H20TokenRole::DefaultAdmin.id();
         H20Guards::ensure_role(token, caller, admin_role)?;
         if token.accounting().role_member_count(admin_role)? != U256::ONE {
-            return Err(BasePrecompileError::revert(IH20::NotSoleAdmin {}));
+            return Err(H20PrecompileError::revert(IH20::NotSoleAdmin {}));
         }
         self.revoke_role_unchecked(token, admin_role, caller, caller)?;
         token
@@ -570,7 +571,7 @@ impl<S: AssetAccounting, A: PolicyAccounting> Asset<S, A> for AssetV1 {
         }
         let old_policy_id = self.policy_id(token, policy_scope)?;
         if !token.policy().policy_exists(token.policy_storage(), new_policy_id)? {
-            return Err(BasePrecompileError::revert(IH20::PolicyNotFound {
+            return Err(H20PrecompileError::revert(IH20::PolicyNotFound {
                 policyId: new_policy_id,
             }));
         }
@@ -593,7 +594,7 @@ impl<S: AssetAccounting, A: PolicyAccounting> Asset<S, A> for AssetV1 {
         args: PermitArgs,
     ) -> Result<()> {
         if now > args.deadline {
-            return Err(BasePrecompileError::revert(IH20::ExpiredSignature {
+            return Err(H20PrecompileError::revert(IH20::ExpiredSignature {
                 deadline: args.deadline,
             }));
         }
@@ -617,7 +618,7 @@ impl<S: AssetAccounting, A: PolicyAccounting> Asset<S, A> for AssetV1 {
     ) -> Result<()> {
         self.ensure_operator_role(token, caller, privileged)?;
         if new_multiplier.is_zero() {
-            return Err(BasePrecompileError::revert(IH20Asset::InvalidMultiplier {}));
+            return Err(H20PrecompileError::revert(IH20Asset::InvalidMultiplier {}));
         }
         token.accounting_mut().set_multiplier(new_multiplier)?;
         token.accounting_mut().emit_event(
@@ -635,7 +636,7 @@ impl<S: AssetAccounting, A: PolicyAccounting> Asset<S, A> for AssetV1 {
     ) -> Result<()> {
         self.ensure_metadata_role(token, caller, privileged)?;
         if key.is_empty() {
-            return Err(BasePrecompileError::revert(IH20Asset::InvalidMetadataKey {}));
+            return Err(H20PrecompileError::revert(IH20Asset::InvalidMetadataKey {}));
         }
         token.accounting_mut().set_extra_metadata_value(key.as_str(), value.clone())?;
         token
@@ -659,13 +660,13 @@ impl<S: AssetAccounting, A: PolicyAccounting> Asset<S, A> for AssetV1 {
             H20Guards::ensure_token_role(token, caller, H20TokenRole::Mint)?;
         }
         if recipients.len() != amounts.len() {
-            return Err(BasePrecompileError::revert(IH20Asset::LengthMismatch {
+            return Err(H20PrecompileError::revert(IH20Asset::LengthMismatch {
                 leftLen: U256::from(recipients.len()),
                 rightLen: U256::from(amounts.len()),
             }));
         }
         if recipients.is_empty() {
-            return Err(BasePrecompileError::revert(IH20Asset::EmptyBatch {}));
+            return Err(H20PrecompileError::revert(IH20Asset::EmptyBatch {}));
         }
         for (recipient, amount) in recipients.into_iter().zip(amounts) {
             self.mint(token, caller, recipient, amount, true)?;
@@ -684,7 +685,7 @@ impl<S: AssetAccounting, A: PolicyAccounting> Asset<S, A> for AssetV1 {
     ) -> Result<()> {
         self.ensure_operator_role(token, caller, privileged)?;
         if token.accounting().is_announcement_id_used(id.as_str())? {
-            return Err(BasePrecompileError::revert(IH20Asset::AnnouncementIdAlreadyUsed { id }));
+            return Err(H20PrecompileError::revert(IH20Asset::AnnouncementIdAlreadyUsed { id }));
         }
         token.accounting_mut().mark_announcement_id_used(id.as_str())?;
         token
@@ -754,7 +755,7 @@ impl<S: AssetAccounting, A: PolicyAccounting> Asset<S, A> for AssetV1 {
     fn to_scaled_balance(&self, token: &H20AssetToken<S, A>, balance: U256) -> Result<U256> {
         let multiplier = token.accounting().multiplier()?;
         let product =
-            balance.checked_mul(multiplier).ok_or_else(BasePrecompileError::under_overflow)?;
+            balance.checked_mul(multiplier).ok_or_else(H20PrecompileError::under_overflow)?;
         Ok(product / H20AssetStorage::WAD)
     }
 
@@ -762,7 +763,7 @@ impl<S: AssetAccounting, A: PolicyAccounting> Asset<S, A> for AssetV1 {
         let multiplier = token.accounting().multiplier()?;
         let product = balance
             .checked_mul(H20AssetStorage::WAD)
-            .ok_or_else(BasePrecompileError::under_overflow)?;
+            .ok_or_else(H20PrecompileError::under_overflow)?;
         Ok(product / multiplier)
     }
 
@@ -787,7 +788,7 @@ mod tests {
 
     use alloy_primitives::{Address, B256, LogData, U256, keccak256};
     use alloy_sol_types::SolEvent;
-    use h20_precompile_storage::{BasePrecompileError, Result};
+    use h20_precompile_storage::{H20PrecompileError, Result};
     use k256::ecdsa::SigningKey;
 
     use crate::{
@@ -1166,7 +1167,7 @@ mod tests {
             LOGIC.transfer(&mut tok, ALICE, Address::ZERO, U256::from(1u64), true).unwrap_err();
         assert_eq!(
             err,
-            BasePrecompileError::revert(IH20::InvalidReceiver { receiver: Address::ZERO })
+            H20PrecompileError::revert(IH20::InvalidReceiver { receiver: Address::ZERO })
         );
     }
 
@@ -1178,7 +1179,7 @@ mod tests {
         let err = LOGIC.transfer(&mut tok, ALICE, BOB, U256::from(1u64), true).unwrap_err();
         assert_eq!(
             err,
-            BasePrecompileError::revert(IH20::ContractPaused {
+            H20PrecompileError::revert(IH20::ContractPaused {
                 feature: IH20::PausableFeature::TRANSFER,
             })
         );
@@ -1232,7 +1233,7 @@ mod tests {
         let err = LOGIC.mint(&mut tok, ADMIN, BOB, U256::from(100u64), true).unwrap_err();
         assert_eq!(
             err,
-            BasePrecompileError::revert(IH20::SupplyCapExceeded {
+            H20PrecompileError::revert(IH20::SupplyCapExceeded {
                 cap: U256::from(50u64),
                 attempted: U256::from(100u64),
             })
@@ -1245,7 +1246,7 @@ mod tests {
         let err = LOGIC.mint(&mut tok, ALICE, BOB, U256::from(1u64), false).unwrap_err();
         assert_eq!(
             err,
-            BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+            H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
                 account: ALICE,
                 neededRole: H20TokenRole::Mint.id(),
             })
@@ -1261,7 +1262,7 @@ mod tests {
         let err = LOGIC.burn(&mut tok, ALICE, U256::from(1u64)).unwrap_err();
         assert_eq!(
             err,
-            BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+            H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
                 account: ALICE,
                 neededRole: H20TokenRole::Burn.id(),
             })
@@ -1315,7 +1316,7 @@ mod tests {
         let err = LOGIC
             .revoke_role(&mut tok, ADMIN, H20TokenRole::DefaultAdmin.id(), ADMIN, true)
             .unwrap_err();
-        assert_eq!(err, BasePrecompileError::revert(IH20::LastAdminCannotRenounce {}));
+        assert_eq!(err, H20PrecompileError::revert(IH20::LastAdminCannotRenounce {}));
     }
 
     #[test]
@@ -1348,7 +1349,7 @@ mod tests {
         let err = LOGIC.policy_id(&tok, scope).unwrap_err();
         assert_eq!(
             err,
-            BasePrecompileError::revert(IH20::UnsupportedPolicyType { policyScope: scope })
+            H20PrecompileError::revert(IH20::UnsupportedPolicyType { policyScope: scope })
         );
     }
 
@@ -1372,7 +1373,7 @@ mod tests {
         let err = LOGIC.permit(&mut tok, CHAIN_ID, U256::from(11u64), args).unwrap_err();
         assert_eq!(
             err,
-            BasePrecompileError::revert(IH20::ExpiredSignature { deadline: U256::from(10u64) })
+            H20PrecompileError::revert(IH20::ExpiredSignature { deadline: U256::from(10u64) })
         );
     }
 
@@ -1404,7 +1405,7 @@ mod tests {
         tok.accounting_mut().set_multiplier(U256::MAX / U256::from(2u64) + U256::ONE).unwrap();
         assert_eq!(
             LOGIC.to_scaled_balance(&tok, U256::from(2u64)).unwrap_err(),
-            BasePrecompileError::under_overflow()
+            H20PrecompileError::under_overflow()
         );
     }
 
@@ -1415,7 +1416,7 @@ mod tests {
             LOGIC.update_multiplier(&mut tok, ALICE, H20AssetStorage::WAD, false).unwrap_err();
         assert_eq!(
             err,
-            BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+            H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
                 account: ALICE,
                 neededRole: AssetV1::OPERATOR_ROLE,
             })
@@ -1426,7 +1427,7 @@ mod tests {
     fn update_multiplier_rejects_zero() {
         let mut tok = token();
         let err = LOGIC.update_multiplier(&mut tok, ADMIN, U256::ZERO, true).unwrap_err();
-        assert_eq!(err, BasePrecompileError::revert(IH20Asset::InvalidMultiplier {}));
+        assert_eq!(err, H20PrecompileError::revert(IH20Asset::InvalidMultiplier {}));
     }
 
     #[test]
@@ -1467,7 +1468,7 @@ mod tests {
             .unwrap_err();
         assert_eq!(
             err,
-            BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+            H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
                 account: ALICE,
                 neededRole: H20TokenRole::Mint.id(),
             })
@@ -1479,7 +1480,7 @@ mod tests {
         let mut tok = token();
         grant(&mut tok, H20TokenRole::Mint.id(), ALICE);
         let err = LOGIC.batch_mint(&mut tok, ALICE, vec![], vec![], false).unwrap_err();
-        assert_eq!(err, BasePrecompileError::revert(IH20Asset::EmptyBatch {}));
+        assert_eq!(err, H20PrecompileError::revert(IH20Asset::EmptyBatch {}));
     }
 
     #[test]
@@ -1491,7 +1492,7 @@ mod tests {
             .unwrap_err();
         assert_eq!(
             err,
-            BasePrecompileError::revert(IH20Asset::LengthMismatch {
+            H20PrecompileError::revert(IH20Asset::LengthMismatch {
                 leftLen: U256::ONE,
                 rightLen: U256::from(2u64),
             })
@@ -1508,7 +1509,7 @@ mod tests {
             .unwrap_err();
         assert_eq!(
             err,
-            BasePrecompileError::revert(IH20::ContractPaused {
+            H20PrecompileError::revert(IH20::ContractPaused {
                 feature: IH20::PausableFeature::MINT
             })
         );
@@ -1544,7 +1545,7 @@ mod tests {
         let err = LOGIC
             .update_extra_metadata(&mut tok, ADMIN, String::new(), "v".to_string(), true)
             .unwrap_err();
-        assert_eq!(err, BasePrecompileError::revert(IH20Asset::InvalidMetadataKey {}));
+        assert_eq!(err, H20PrecompileError::revert(IH20Asset::InvalidMetadataKey {}));
     }
 
     #[test]
@@ -1555,7 +1556,7 @@ mod tests {
             .unwrap_err();
         assert_eq!(
             err,
-            BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+            H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
                 account: ALICE,
                 neededRole: H20TokenRole::Metadata.id(),
             })
@@ -1584,7 +1585,7 @@ mod tests {
         let err = LOGIC
             .begin_announce(&mut tok, ADMIN, id.clone(), String::new(), String::new(), true)
             .unwrap_err();
-        assert_eq!(err, BasePrecompileError::revert(IH20Asset::AnnouncementIdAlreadyUsed { id }));
+        assert_eq!(err, H20PrecompileError::revert(IH20Asset::AnnouncementIdAlreadyUsed { id }));
     }
 
     #[test]
@@ -1595,7 +1596,7 @@ mod tests {
             .unwrap_err();
         assert_eq!(
             err,
-            BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+            H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
                 account: ALICE,
                 neededRole: AssetV1::OPERATOR_ROLE,
             })

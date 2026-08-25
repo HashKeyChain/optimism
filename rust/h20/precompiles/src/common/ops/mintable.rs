@@ -1,6 +1,6 @@
 use alloy_primitives::{Address, B256, U256};
 use alloy_sol_types::SolEvent;
-use h20_precompile_storage::{BasePrecompileError, Result};
+use h20_precompile_storage::{H20PrecompileError, Result};
 
 use crate::{H20Guards, H20PolicyType, H20TokenRole, IH20, Token, TokenAccounting};
 
@@ -16,15 +16,15 @@ pub trait Mintable: Token {
             H20Guards::ensure_token_role::<Self>(self, caller, H20TokenRole::Mint)?;
         }
         if to == Address::ZERO {
-            return Err(BasePrecompileError::revert(IH20::InvalidReceiver { receiver: to }));
+            return Err(H20PrecompileError::revert(IH20::InvalidReceiver { receiver: to }));
         }
         H20Guards::ensure_policy_type::<Self>(self, H20PolicyType::MintReceiver, to)?;
         let supply = self.accounting().total_supply()?;
         let cap = self.accounting().supply_cap()?;
         let new_supply =
-            supply.checked_add(amount).ok_or_else(BasePrecompileError::under_overflow)?;
+            supply.checked_add(amount).ok_or_else(H20PrecompileError::under_overflow)?;
         if new_supply > cap {
-            return Err(BasePrecompileError::revert(IH20::SupplyCapExceeded {
+            return Err(H20PrecompileError::revert(IH20::SupplyCapExceeded {
                 cap,
                 attempted: new_supply,
             }));
@@ -32,7 +32,7 @@ pub trait Mintable: Token {
         self.accounting_mut().set_total_supply(new_supply)?;
         let to_balance = self.accounting().balance_of(to)?;
         let new_balance =
-            to_balance.checked_add(amount).ok_or_else(BasePrecompileError::under_overflow)?;
+            to_balance.checked_add(amount).ok_or_else(H20PrecompileError::under_overflow)?;
         self.accounting_mut().set_balance(to, new_balance)?;
         self.accounting_mut()
             .emit_event(IH20::Transfer { from: Address::ZERO, to, amount }.encode_log_data())
@@ -55,11 +55,11 @@ pub trait Mintable: Token {
 #[cfg(test)]
 mod tests {
     use alloy_primitives::{Address, U256};
-    use h20_precompile_storage::BasePrecompileError;
+    use h20_precompile_storage::H20PrecompileError;
     use rstest::rstest;
 
     use crate::{
-        H20PausableFeature, H20PolicyType, H20TokenRole, FakePolicyAccounting, IH20,
+        FakePolicyAccounting, H20PausableFeature, H20PolicyType, H20TokenRole, IH20,
         InMemoryTokenAccounting, Mintable, PolicyRegistryStorage, TestToken, Token,
         TokenAccounting,
     };
@@ -98,7 +98,7 @@ mod tests {
 
         assert_eq!(
             token.mint(CALLER, Address::ZERO, U256::ONE, true).unwrap_err(),
-            BasePrecompileError::revert(IH20::InvalidReceiver { receiver: Address::ZERO })
+            H20PrecompileError::revert(IH20::InvalidReceiver { receiver: Address::ZERO })
         );
     }
 
@@ -119,7 +119,7 @@ mod tests {
 
         assert_eq!(
             token.mint(CALLER, ALICE, U256::from(51u64), true).unwrap_err(),
-            BasePrecompileError::revert(IH20::SupplyCapExceeded {
+            H20PrecompileError::revert(IH20::SupplyCapExceeded {
                 cap: U256::from(50u64),
                 attempted: U256::from(51u64),
             })
@@ -154,7 +154,7 @@ mod tests {
 
         assert_eq!(
             token.mint(CALLER, ALICE, U256::ONE, true).unwrap_err(),
-            BasePrecompileError::revert(IH20::ContractPaused {
+            H20PrecompileError::revert(IH20::ContractPaused {
                 feature: IH20::PausableFeature::MINT,
             })
         );
@@ -171,7 +171,7 @@ mod tests {
 
         assert_eq!(
             token.mint(CALLER, ALICE, U256::ONE, true).unwrap_err(),
-            BasePrecompileError::revert(IH20::ContractPaused {
+            H20PrecompileError::revert(IH20::ContractPaused {
                 feature: IH20::PausableFeature::MINT,
             })
         );
@@ -187,7 +187,7 @@ mod tests {
 
         assert_eq!(
             token.mint(CALLER, ALICE, U256::ONE, true).unwrap_err(),
-            BasePrecompileError::revert(IH20::PolicyForbids {
+            H20PrecompileError::revert(IH20::PolicyForbids {
                 policyScope: H20PolicyType::MintReceiver.id(),
                 policyId: PolicyRegistryStorage::ALWAYS_BLOCK_ID,
             })
@@ -201,7 +201,7 @@ mod tests {
         ALICE,        // to
         false,        // privileged
         false,        // policy_blocks
-        BasePrecompileError::revert(IH20::ContractPaused { feature: IH20::PausableFeature::MINT })
+        H20PrecompileError::revert(IH20::ContractPaused { feature: IH20::PausableFeature::MINT })
     )]
     #[case::paused_privileged_gets_pause_error(
         true,         // paused
@@ -209,7 +209,7 @@ mod tests {
         ALICE,        // to
         true,         // privileged
         false,        // policy_blocks
-        BasePrecompileError::revert(IH20::ContractPaused { feature: IH20::PausableFeature::MINT })
+        H20PrecompileError::revert(IH20::ContractPaused { feature: IH20::PausableFeature::MINT })
     )]
     #[case::role_before_zero_addr_for_non_privileged(
         false,        // paused
@@ -217,7 +217,7 @@ mod tests {
         Address::ZERO,// to
         false,        // privileged
         false,        // policy_blocks
-        BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+        H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
             account: CALLER,
             neededRole: H20TokenRole::Mint.id(),
         })
@@ -228,7 +228,7 @@ mod tests {
         Address::ZERO,// to
         true,         // privileged
         true,         // policy_blocks
-        BasePrecompileError::revert(IH20::InvalidReceiver { receiver: Address::ZERO })
+        H20PrecompileError::revert(IH20::InvalidReceiver { receiver: Address::ZERO })
     )]
     fn mint_guard_ordering(
         #[case] paused: bool,
@@ -236,7 +236,7 @@ mod tests {
         #[case] to: Address,
         #[case] privileged: bool,
         #[case] policy_blocks: bool,
-        #[case] expected_error: BasePrecompileError,
+        #[case] expected_error: H20PrecompileError,
     ) {
         let mut accounting = InMemoryTokenAccounting::new(TOKEN_ADDR);
         if paused {

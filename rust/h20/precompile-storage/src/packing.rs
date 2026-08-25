@@ -4,13 +4,13 @@
 //! enabling efficient packing of multiple small values into single 32-byte slots.
 //!
 //! Storage layout is described by the [`Layout`](crate::provider::Layout) enum:
-//! - `Layout::Bytes(N)` -- primitive types that fit in N bytes (1-32). Types with N < 32
-//!   are packable: multiple values can share a single 32-byte slot.
-//! - `Layout::Slots(N)` -- types that span N full slots and cannot be packed. This includes
-//!   structs and dynamic types (e.g. `Mapping`, `Vec`), but also fixed-size arrays whose
-//!   element type is small (<=16 bytes). For those arrays `N = calc_packed_slot_count(len,
-//!   elem_bytes)`, and individual elements within each slot are still packed using
-//!   `extract_from_word` / `insert_into_word`.
+//! - `Layout::Bytes(N)` -- primitive types that fit in N bytes (1-32). Types with N < 32 are
+//!   packable: multiple values can share a single 32-byte slot.
+//! - `Layout::Slots(N)` -- types that span N full slots and cannot be packed. This includes structs
+//!   and dynamic types (e.g. `Mapping`, `Vec`), but also fixed-size arrays whose element type is
+//!   small (<=16 bytes). For those arrays `N = calc_packed_slot_count(len, elem_bytes)`, and
+//!   individual elements within each slot are still packed using `extract_from_word` /
+//!   `insert_into_word`.
 //!
 //! ## Solidity Compatibility
 //!
@@ -89,7 +89,7 @@ pub fn extract_from_word<T: FromWord + StorableType>(
     );
 
     if offset + bytes > 32 {
-        return Err(crate::error::BasePrecompileError::Fatal(format!(
+        return Err(crate::error::H20PrecompileError::Fatal(format!(
             "Value of {} bytes at offset {} would span slot boundary (max offset: {})",
             bytes,
             offset,
@@ -117,7 +117,7 @@ pub fn insert_into_word<T: FromWord + StorableType>(
     );
 
     if offset + bytes > 32 {
-        return Err(crate::error::BasePrecompileError::Fatal(format!(
+        return Err(crate::error::H20PrecompileError::Fatal(format!(
             "Value of {} bytes at offset {} would span slot boundary (max offset: {})",
             bytes,
             offset,
@@ -138,7 +138,7 @@ pub fn insert_into_word<T: FromWord + StorableType>(
 #[inline]
 pub fn delete_from_word(current: U256, offset: usize, bytes: usize) -> Result<U256> {
     if offset + bytes > 32 {
-        return Err(crate::error::BasePrecompileError::Fatal(format!(
+        return Err(crate::error::H20PrecompileError::Fatal(format!(
             "Value of {} bytes at offset {} would span slot boundary (max offset: {})",
             bytes,
             offset,

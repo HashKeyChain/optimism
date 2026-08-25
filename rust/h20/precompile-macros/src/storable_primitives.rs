@@ -81,7 +81,7 @@ fn gen_to_word_impl(type_path: &TokenStream, strategy: &StorableConversionStrate
                 }
                 #[inline]
                 fn from_word(word: ::alloy_primitives::U256) -> ::h20_precompile_storage::Result<Self> {
-                    word.try_into().map_err(|_| ::h20_precompile_storage::BasePrecompileError::under_overflow())
+                    word.try_into().map_err(|_| ::h20_precompile_storage::H20PrecompileError::under_overflow())
                 }
             }
         },
@@ -94,7 +94,7 @@ fn gen_to_word_impl(type_path: &TokenStream, strategy: &StorableConversionStrate
                 #[inline]
                 fn from_word(word: ::alloy_primitives::U256) -> ::h20_precompile_storage::Result<Self> {
                     if word > ::alloy_primitives::U256::from(::alloy_primitives::aliases::#ty::MAX) {
-                        return Err(::h20_precompile_storage::BasePrecompileError::under_overflow());
+                        return Err(::h20_precompile_storage::H20PrecompileError::under_overflow());
                     }
                     Ok(word.to::<Self>())
                 }
@@ -109,7 +109,7 @@ fn gen_to_word_impl(type_path: &TokenStream, strategy: &StorableConversionStrate
                 #[inline]
                 fn from_word(word: ::alloy_primitives::U256) -> ::h20_precompile_storage::Result<Self> {
                     let unsigned: #unsigned_type = word.try_into()
-                        .map_err(|_| ::h20_precompile_storage::BasePrecompileError::under_overflow())?;
+                        .map_err(|_| ::h20_precompile_storage::H20PrecompileError::under_overflow())?;
                     Ok(unsigned as Self)
                 }
             }
@@ -123,7 +123,7 @@ fn gen_to_word_impl(type_path: &TokenStream, strategy: &StorableConversionStrate
                 #[inline]
                 fn from_word(word: ::alloy_primitives::U256) -> ::h20_precompile_storage::Result<Self> {
                     if word > ::alloy_primitives::U256::from(::alloy_primitives::aliases::#unsigned_type::MAX) {
-                        return Err(::h20_precompile_storage::BasePrecompileError::under_overflow());
+                        return Err(::h20_precompile_storage::H20PrecompileError::under_overflow());
                     }
                     let unsigned_val = word.to::<::alloy_primitives::aliases::#unsigned_type>();
                     Ok(Self::from_raw(unsigned_val))
@@ -552,8 +552,8 @@ fn gen_struct_array_load(struct_type: &TokenStream, array_size: usize) -> TokenS
             let elem_slot = base_slot.checked_add(
                 ::alloy_primitives::U256::from(i).checked_mul(
                     ::alloy_primitives::U256::from(<#struct_type as ::h20_precompile_storage::StorableType>::SLOTS)
-                ).ok_or(::h20_precompile_storage::BasePrecompileError::SlotOverflow)?
-            ).ok_or(::h20_precompile_storage::BasePrecompileError::SlotOverflow)?;
+                ).ok_or(::h20_precompile_storage::H20PrecompileError::SlotOverflow)?
+            ).ok_or(::h20_precompile_storage::H20PrecompileError::SlotOverflow)?;
             result[i] = <#struct_type as ::h20_precompile_storage::Storable>::load(storage, elem_slot, ::h20_precompile_storage::LayoutCtx::FULL)?;
         }
         Ok(result)
@@ -566,8 +566,8 @@ fn gen_struct_array_store(struct_type: &TokenStream) -> TokenStream {
             let elem_slot = base_slot.checked_add(
                 ::alloy_primitives::U256::from(i).checked_mul(
                     ::alloy_primitives::U256::from(<#struct_type as ::h20_precompile_storage::StorableType>::SLOTS)
-                ).ok_or(::h20_precompile_storage::BasePrecompileError::SlotOverflow)?
-            ).ok_or(::h20_precompile_storage::BasePrecompileError::SlotOverflow)?;
+                ).ok_or(::h20_precompile_storage::H20PrecompileError::SlotOverflow)?
+            ).ok_or(::h20_precompile_storage::H20PrecompileError::SlotOverflow)?;
             <#struct_type as ::h20_precompile_storage::Storable>::store(elem, storage, elem_slot, ::h20_precompile_storage::LayoutCtx::FULL)?;
         }
         Ok(())

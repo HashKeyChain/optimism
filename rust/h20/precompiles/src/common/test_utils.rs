@@ -11,9 +11,9 @@ use h20_precompile_storage::Result;
 use crate::{
     Burnable, Configurable, Mintable, PackedPolicy, Pausable, Permittable, PolicyAccounting,
     PolicyRegistryLogic, PolicyRegistryStorage, PolicyVersion, RoleManaged, Token, Transferable,
+    common::{H20_MAX_SUPPLY_CAP, TokenAccounting},
     h20_asset::{AssetAccounting, H20AssetStorage},
     h20_stablecoin::{H20StablecoinToken, StablecoinAccounting},
-    common::{H20_MAX_SUPPLY_CAP, TokenAccounting},
 };
 
 /// Convenience alias: [`H20StablecoinToken`] wired with both in-memory fakes.

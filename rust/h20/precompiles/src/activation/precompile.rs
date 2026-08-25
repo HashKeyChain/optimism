@@ -6,7 +6,7 @@ use h20_precompile_macros::precompile;
 
 use crate::{
     ActivationAdminConfig, ActivationRegistryStorage, PrecompileCallObserver,
-    macros::base_precompile,
+    macros::h20_precompile,
 };
 
 /// Entry point for the activation registry precompile.
@@ -56,7 +56,7 @@ impl ActivationRegistry {
     where
         O: PrecompileCallObserver,
     {
-        base_precompile!("ActivationRegistry", |ctx, calldata| {
+        h20_precompile!("ActivationRegistry", |ctx, calldata| {
             let observer = observer.clone();
             ActivationRegistryStorage::new(ctx).dispatch_with_observer(
                 ctx,

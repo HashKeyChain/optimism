@@ -1,4 +1,4 @@
-//! Derives for Base H20 storage accounting ports.
+//! Derives for H20 storage accounting ports.
 
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -45,7 +45,7 @@ fn expand_token(input: DeriveInput) -> syn::Result<TokenStream> {
                 policy_scope: ::alloy_primitives::B256,
             ) -> ::h20_precompile_storage::Result<crate::H20PolicyType> {
                 crate::H20PolicyType::from_id(policy_scope).ok_or_else(|| {
-                    ::h20_precompile_storage::BasePrecompileError::revert(
+                    ::h20_precompile_storage::H20PrecompileError::revert(
                         crate::IH20::UnsupportedPolicyType { policyScope: policy_scope },
                     )
                 })
@@ -168,7 +168,7 @@ fn expand_token(input: DeriveInput) -> syn::Result<TokenStream> {
                 let current = self.h20.nonce(owner)?;
                 let next = current
                     .checked_add(::alloy_primitives::U256::ONE)
-                    .ok_or_else(::h20_precompile_storage::BasePrecompileError::under_overflow)?;
+                    .ok_or_else(::h20_precompile_storage::H20PrecompileError::under_overflow)?;
                 self.h20.set_nonce(owner, next)
             }
 

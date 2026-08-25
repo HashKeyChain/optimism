@@ -2,7 +2,7 @@ use alloc::vec::Vec;
 
 use alloy_primitives::{Address, U256};
 use alloy_sol_types::SolEvent;
-use h20_precompile_storage::{BasePrecompileError, Result};
+use h20_precompile_storage::{H20PrecompileError, Result};
 
 use crate::{H20Guards, H20PausableFeature, H20TokenRole, IH20, Token, TokenAccounting};
 
@@ -47,7 +47,7 @@ pub trait Pausable: Token {
             H20Guards::ensure_token_role::<Self>(self, caller, H20TokenRole::Pause)?;
         }
         if features.is_empty() {
-            return Err(BasePrecompileError::revert(IH20::EmptyFeatureSet {}));
+            return Err(H20PrecompileError::revert(IH20::EmptyFeatureSet {}));
         }
         let current = self.accounting().paused()?;
         let mut next = current;
@@ -73,7 +73,7 @@ pub trait Pausable: Token {
             H20Guards::ensure_token_role::<Self>(self, caller, H20TokenRole::Unpause)?;
         }
         if features.is_empty() {
-            return Err(BasePrecompileError::revert(IH20::EmptyFeatureSet {}));
+            return Err(H20PrecompileError::revert(IH20::EmptyFeatureSet {}));
         }
         let mut next = self.accounting().paused()?;
         for feature in &features {
@@ -90,10 +90,10 @@ mod tests {
     use alloc::vec;
 
     use alloy_primitives::Address;
-    use h20_precompile_storage::BasePrecompileError;
+    use h20_precompile_storage::H20PrecompileError;
 
     use crate::{
-        H20PausableFeature, H20TokenRole, FakePolicyAccounting, IH20, InMemoryTokenAccounting,
+        FakePolicyAccounting, H20PausableFeature, H20TokenRole, IH20, InMemoryTokenAccounting,
         Pausable, TestToken, Token,
     };
 
@@ -153,8 +153,8 @@ mod tests {
     #[test]
     fn paused_features_returns_active_features_in_abi_order() {
         let mut accounting = InMemoryTokenAccounting::new(TOKEN_ADDR);
-        accounting.paused = H20PausableFeature::mask(IH20::PausableFeature::TRANSFER)
-            | H20PausableFeature::mask(IH20::PausableFeature::BURN);
+        accounting.paused = H20PausableFeature::mask(IH20::PausableFeature::TRANSFER) |
+            H20PausableFeature::mask(IH20::PausableFeature::BURN);
         let token = TestToken::with_storage_and_policy(accounting, FakePolicyAccounting::new());
 
         assert_eq!(
@@ -169,7 +169,7 @@ mod tests {
 
         assert_eq!(
             token.pause(CALLER, vec![], true).unwrap_err(),
-            BasePrecompileError::revert(IH20::EmptyFeatureSet {})
+            H20PrecompileError::revert(IH20::EmptyFeatureSet {})
         );
     }
 
@@ -179,7 +179,7 @@ mod tests {
 
         assert_eq!(
             token.unpause(CALLER, vec![], true).unwrap_err(),
-            BasePrecompileError::revert(IH20::EmptyFeatureSet {})
+            H20PrecompileError::revert(IH20::EmptyFeatureSet {})
         );
     }
 
@@ -189,7 +189,7 @@ mod tests {
 
         assert_eq!(
             token.pause(CALLER, vec![IH20::PausableFeature::TRANSFER], false).unwrap_err(),
-            BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+            H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
                 account: CALLER,
                 neededRole: H20TokenRole::Pause.id(),
             })
@@ -213,7 +213,7 @@ mod tests {
 
         assert_eq!(
             token.unpause(CALLER, vec![IH20::PausableFeature::TRANSFER], false).unwrap_err(),
-            BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+            H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
                 account: CALLER,
                 neededRole: H20TokenRole::Unpause.id(),
             })

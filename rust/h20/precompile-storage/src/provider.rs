@@ -1,4 +1,4 @@
-//! Core storage provider traits for Base native precompiles.
+//! Core storage provider traits for HSK native precompiles.
 //!
 //! Defines [`PrecompileStorageProvider`] (the EVM access boundary),
 //! [`StorageOps`] (per-address slot read/write), and [`ContractStorage`]
@@ -11,7 +11,7 @@ use revm::{
     state::{AccountInfo, Bytecode},
 };
 
-use crate::error::{BasePrecompileError, Result};
+use crate::error::{H20PrecompileError, Result};
 
 /// Ensures bytecode emptiness matches whether the account's code hash is empty.
 ///
@@ -22,7 +22,7 @@ pub fn validate_loaded_code_presence(expected_hash: B256, code: &Bytecode) -> Re
     if expected_empty == code.is_empty() {
         Ok(())
     } else {
-        Err(BasePrecompileError::Fatal(
+        Err(H20PrecompileError::Fatal(
             "loaded account bytecode presence does not match its expected code hash".into(),
         ))
     }
@@ -115,11 +115,11 @@ pub trait PrecompileStorageProvider {
     /// Computes keccak256 and charges the appropriate gas.
     fn metered_keccak256(&mut self, data: &[u8]) -> Result<B256> {
         let num_words =
-            u64::try_from(data.len().div_ceil(32)).map_err(|_| BasePrecompileError::OutOfGas)?;
+            u64::try_from(data.len().div_ceil(32)).map_err(|_| H20PrecompileError::OutOfGas)?;
         let price = KECCAK256WORD
             .checked_mul(num_words)
             .and_then(|w| w.checked_add(KECCAK256))
-            .ok_or(BasePrecompileError::OutOfGas)?;
+            .ok_or(H20PrecompileError::OutOfGas)?;
         self.deduct_gas(price)?;
         Ok(keccak256(data))
     }

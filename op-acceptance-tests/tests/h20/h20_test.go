@@ -27,7 +27,7 @@ var (
 	activationRegistryAddress = common.HexToAddress("0x0177FF0000000000000000000000000000000001")
 	policyRegistryAddress     = common.HexToAddress("0x0177FF0000000000000000000000000000000002")
 
-	policyRegistryFeature = common.HexToHash("0xb582ebae03f16fee49a6763f78df482fb11ae73f103ed0d330bbe556aa90a43f")
+	policyRegistryFeature = common.HexToHash("0xeb990450d42b51d856d197d9f14d2dbbdb1c1009c9d71c1b70030176e2a7b119")
 	stablecoinFeature     = common.HexToHash("0x1d9bf0e45406178504b576379f1b1f1df199c332d720d52ed3428174aaa0a72d")
 	assetFeature          = common.HexToHash("0x31fe2e6b9ae93370c9571d5608bad10a6edd111118ffef1c3cb7c8623c6cc2e0")
 	coreStorageRoot       = common.HexToHash("0x79a254405ca90aaaef001c57bda9b239cd737f68ab02f6809b70a3d701ac6100")

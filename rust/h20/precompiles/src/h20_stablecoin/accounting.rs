@@ -9,7 +9,7 @@ use crate::TokenAccounting;
 /// Extends [`TokenAccounting`] with the stablecoin-specific `currency` slot.
 ///
 /// Only [`super::H20StablecoinToken`] requires this bound; default and asset
-/// tokens use the base [`TokenAccounting`] port exclusively.
+/// tokens use the common [`TokenAccounting`] port exclusively.
 pub trait StablecoinAccounting: TokenAccounting {
     /// Returns the stablecoin currency identifier.
     fn currency(&self) -> Result<String>;

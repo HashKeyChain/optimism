@@ -1,6 +1,6 @@
 # HSK H20 core
 
-This directory contains the standalone Base Beryl H20 v1 execution core used by the HSK port.
+This directory contains the standalone HSK H20 v1 execution core used by the HSK port.
 
 ## Scope
 
@@ -10,7 +10,7 @@ This directory contains the standalone Base Beryl H20 v1 execution core used by 
 
 The execution core remains independent of OP hardfork selection. M4 adds the adjacent `config` crate and connects this core to the OP EVM through `alloy-op-evm::H20OpPrecompiles` and `H20OpEvmFactory`.
 
-Only Base Beryl H20 v1 is supported. The crate does not include TxContext, NonceManager, EIP-8130, state-backed ActivationRegistry administration or Cobalt execution behavior. `setAdmin(address)` is not part of the Beryl ABI and its selector remains an unknown-selector revert.
+Only HSK H20 v1 is supported. The crate does not include TxContext, NonceManager, EIP-8130, state-backed ActivationRegistry administration or Cobalt execution behavior. `setAdmin(address)` is not part of the Beryl ABI and its selector remains an unknown-selector revert.
 
 ## Source baseline
 
@@ -27,7 +27,9 @@ The source directory structure and the four Base golden suites are preserved. In
 - removing non-Beryl precompile/provider modules and ActivationRegistry admin rotation;
 - compatibility with the pinned Optimism REVM 41 / Alloy EVM 0.37.1 workspace.
 
-Canonical Base namespaces, addresses, feature identifiers, ABI selectors, storage layouts, gas accounting, logs, revert bytes and golden state hashes remain unchanged for Beryl behavior.
+H20 preserves the upstream Beryl execution semantics, ABI behavior, storage field ordering, gas
+accounting, logs and revert bytes. HSK-specific namespaces, feature identifiers, singleton and
+dynamic addresses intentionally differ and are frozen by adjacent H20 tests.
 
 ## M4 integration
 

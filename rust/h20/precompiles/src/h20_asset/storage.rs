@@ -136,8 +136,8 @@ mod tests {
 
         StorageCtx::enter(&mut storage, |ctx| {
             let token = H20AssetStorage::from_address(TOKEN, ctx);
-            let multiplier_slot = ASSET_ROOT
-                + U256::from(__packing_h20_asset_extension_storage::MULTIPLIER_LOC.offset_slots);
+            let multiplier_slot = ASSET_ROOT +
+                U256::from(__packing_h20_asset_extension_storage::MULTIPLIER_LOC.offset_slots);
 
             assert_eq!(ctx.sload(TOKEN, multiplier_slot).unwrap(), U256::ZERO);
             assert_eq!(token.multiplier().unwrap(), H20AssetStorage::WAD);
@@ -153,8 +153,8 @@ mod tests {
             let mut token = H20AssetStorage::from_address(TOKEN, ctx);
             token.set_multiplier(configured_multiplier).unwrap();
 
-            let multiplier_slot = ASSET_ROOT
-                + U256::from(__packing_h20_asset_extension_storage::MULTIPLIER_LOC.offset_slots);
+            let multiplier_slot = ASSET_ROOT +
+                U256::from(__packing_h20_asset_extension_storage::MULTIPLIER_LOC.offset_slots);
 
             assert_eq!(ctx.sload(TOKEN, multiplier_slot).unwrap(), configured_multiplier);
             assert_eq!(token.multiplier().unwrap(), configured_multiplier);
@@ -191,12 +191,12 @@ mod tests {
             token.asset.used_announcement_ids.at_mut(&announcement_id).write(true).unwrap();
             token.asset.extra_metadata.at_mut(&metadata_key).write(metadata_value.clone()).unwrap();
 
-            let announcement_slot = ASSET_ROOT
-                + U256::from(
+            let announcement_slot = ASSET_ROOT +
+                U256::from(
                     __packing_h20_asset_extension_storage::USED_ANNOUNCEMENT_IDS_LOC.offset_slots,
                 );
-            let metadata_slot = ASSET_ROOT
-                + U256::from(
+            let metadata_slot = ASSET_ROOT +
+                U256::from(
                     __packing_h20_asset_extension_storage::EXTRA_METADATA_LOC.offset_slots,
                 );
 

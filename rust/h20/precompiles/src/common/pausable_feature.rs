@@ -1,7 +1,7 @@
 //! Pause-bit helpers for H20 tokens.
 
 use alloy_primitives::U256;
-use h20_precompile_storage::{BasePrecompileError, Result};
+use h20_precompile_storage::{H20PrecompileError, Result};
 
 use crate::IH20;
 
@@ -13,10 +13,10 @@ impl H20PausableFeature {
     /// Returns an enum-conversion panic when `feature` is outside the H20 pause enum.
     pub const fn ensure_valid(feature: IH20::PausableFeature) -> Result<()> {
         match feature {
-            IH20::PausableFeature::TRANSFER
-            | IH20::PausableFeature::MINT
-            | IH20::PausableFeature::BURN => Ok(()),
-            IH20::PausableFeature::__Invalid => Err(BasePrecompileError::enum_conversion_error()),
+            IH20::PausableFeature::TRANSFER |
+            IH20::PausableFeature::MINT |
+            IH20::PausableFeature::BURN => Ok(()),
+            IH20::PausableFeature::__Invalid => Err(H20PrecompileError::enum_conversion_error()),
         }
     }
 

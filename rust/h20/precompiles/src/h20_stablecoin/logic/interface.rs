@@ -6,7 +6,7 @@ use alloy_primitives::{Address, B256, U256};
 use h20_precompile_storage::Result;
 
 use crate::{
-    H20StablecoinToken, Eip712Domain, IH20, PermitArgs, PolicyAccounting, StablecoinAccounting,
+    Eip712Domain, H20StablecoinToken, IH20, PermitArgs, PolicyAccounting, StablecoinAccounting,
     Token,
 };
 
@@ -45,7 +45,7 @@ pub trait Stablecoin<S: StablecoinAccounting, A: PolicyAccounting> {
     /// Emits a `Memo` event attributed to `caller`.
     ///
     /// The memo-decorated ABI calls (`transferWithMemo`, `mintWithMemo`, …) are composed
-    /// by the dispatcher as the base operation followed by this event, so the memo semantics
+    /// by the dispatcher as the core operation followed by this event, so the memo semantics
     /// stay version-defined without widening every operation's signature.
     fn emit_memo(
         &self,

@@ -1,6 +1,6 @@
-# base-precompile-macros
+# h20-precompile-macros
 
-Procedural macros for type-safe EVM storage abstractions for Base native precompiles.
+Procedural macros for type-safe EVM storage abstractions for HSK native precompiles.
 
 ## Macros
 

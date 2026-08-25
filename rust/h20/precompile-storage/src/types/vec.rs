@@ -11,7 +11,7 @@ use alloc::vec::Vec;
 use alloy_primitives::{Address, U256, keccak256};
 
 use crate::{
-    error::{BasePrecompileError, Result},
+    error::{H20PrecompileError, Result},
     packing::{PackedSlot, calc_element_loc, calc_packed_slot_count, create_element_mask},
     provider::{Handler, Layout, LayoutCtx, Storable, StorableType, StorageOps},
     types::{HandlerCache, Slot},
@@ -88,7 +88,7 @@ where
                 storage.store(
                     data_start
                         .checked_add(U256::from(slot_idx))
-                        .ok_or(BasePrecompileError::SlotOverflow)?,
+                        .ok_or(H20PrecompileError::SlotOverflow)?,
                     U256::ZERO,
                 )?;
             }
@@ -96,7 +96,7 @@ where
             for elem_idx in 0..length {
                 let elem_slot = data_start
                     .checked_add(U256::from(elem_idx * T::SLOTS))
-                    .ok_or(BasePrecompileError::SlotOverflow)?;
+                    .ok_or(H20PrecompileError::SlotOverflow)?;
                 T::delete(storage, elem_slot, LayoutCtx::FULL)?;
             }
         }
@@ -200,14 +200,14 @@ where
             (
                 data_start
                     .checked_add(U256::from(location.offset_slots))
-                    .ok_or(BasePrecompileError::SlotOverflow)?,
+                    .ok_or(H20PrecompileError::SlotOverflow)?,
                 LayoutCtx::packed(location.offset_bytes),
             )
         } else {
             (
                 data_start
                     .checked_add(U256::from(index * T::SLOTS))
-                    .ok_or(BasePrecompileError::SlotOverflow)?,
+                    .ok_or(H20PrecompileError::SlotOverflow)?,
                 LayoutCtx::FULL,
             )
         };
@@ -234,7 +234,7 @@ where
     {
         let length = self.len()?;
         if length >= Self::max_index() {
-            return Err(BasePrecompileError::Fatal("Vec is at max capacity".into()));
+            return Err(H20PrecompileError::Fatal("Vec is at max capacity".into()));
         }
         let mut elem_slot =
             Self::try_compute_handler(self.data_slot(), self.address, self.storage, length)?;
@@ -298,7 +298,7 @@ where
             if boundary_slot_end > new_len {
                 let boundary_slot_addr = data_start
                     .checked_add(U256::from(new_len / elems_per_slot))
-                    .ok_or(BasePrecompileError::SlotOverflow)?;
+                    .ok_or(H20PrecompileError::SlotOverflow)?;
                 let current = self.storage.sload(self.address, boundary_slot_addr)?;
                 let mut combined_clear_mask = U256::ZERO;
                 for index in new_len..boundary_slot_end {
@@ -317,7 +317,7 @@ where
             for slot_idx in first_full_tail_slot..last_slot {
                 let slot_addr = data_start
                     .checked_add(U256::from(slot_idx))
-                    .ok_or(BasePrecompileError::SlotOverflow)?;
+                    .ok_or(H20PrecompileError::SlotOverflow)?;
                 self.storage.sstore(self.address, slot_addr, U256::ZERO)?;
             }
         } else {
@@ -358,7 +358,7 @@ where
     #[inline]
     pub(crate) fn at_with_len(&self, index: usize, len: usize) -> Result<&T::Handler<'a>> {
         if index >= len {
-            return Err(BasePrecompileError::Fatal(
+            return Err(H20PrecompileError::Fatal(
                 "vec index out of bounds: position invariant violated".into(),
             ));
         }
@@ -376,7 +376,7 @@ where
         len: usize,
     ) -> Result<&mut T::Handler<'a>> {
         if index >= len {
-            return Err(BasePrecompileError::Fatal(
+            return Err(H20PrecompileError::Fatal(
                 "vec index out of bounds: position invariant violated".into(),
             ));
         }
@@ -391,7 +391,7 @@ where
 fn load_checked_len<S: StorageOps>(storage: &S, slot: U256) -> Result<usize> {
     let raw = storage.load(slot)?;
     if raw > U256::from(u32::MAX) {
-        return Err(BasePrecompileError::under_overflow());
+        return Err(H20PrecompileError::under_overflow());
     }
     Ok(raw.to::<usize>())
 }
@@ -417,9 +417,8 @@ where
     let mut current_offset = 0;
 
     for slot_idx in 0..slot_count {
-        let slot_addr = data_start
-            .checked_add(U256::from(slot_idx))
-            .ok_or(BasePrecompileError::SlotOverflow)?;
+        let slot_addr =
+            data_start.checked_add(U256::from(slot_idx)).ok_or(H20PrecompileError::SlotOverflow)?;
         let slot_value = storage.load(slot_addr)?;
         let slot_packed = PackedSlot(slot_value);
 
@@ -458,9 +457,8 @@ where
     let slot_count = calc_packed_slot_count(elements.len(), byte_count);
 
     for slot_idx in 0..slot_count {
-        let slot_addr = data_start
-            .checked_add(U256::from(slot_idx))
-            .ok_or(BasePrecompileError::SlotOverflow)?;
+        let slot_addr =
+            data_start.checked_add(U256::from(slot_idx)).ok_or(H20PrecompileError::SlotOverflow)?;
         let start_elem = slot_idx * elements_per_slot;
         let end_elem = (start_elem + elements_per_slot).min(elements.len());
         let slot_value = build_packed_slot(&elements[start_elem..end_elem], byte_count)?;
@@ -492,7 +490,7 @@ where
     for index in 0..length {
         let elem_slot = data_start
             .checked_add(U256::from(index * T::SLOTS))
-            .ok_or(BasePrecompileError::SlotOverflow)?;
+            .ok_or(H20PrecompileError::SlotOverflow)?;
         result.push(T::load(storage, elem_slot, LayoutCtx::FULL)?);
     }
     Ok(result)
@@ -506,7 +504,7 @@ where
     for (idx, elem) in elements.iter().enumerate() {
         let elem_slot = data_start
             .checked_add(U256::from(idx * T::SLOTS))
-            .ok_or(BasePrecompileError::SlotOverflow)?;
+            .ok_or(H20PrecompileError::SlotOverflow)?;
         elem.store(storage, elem_slot, LayoutCtx::FULL)?;
     }
     Ok(())
@@ -621,13 +619,13 @@ mod tests {
             let handler = VecHandler::<u32>::new(U256::ZERO, address, ctx);
 
             len_slot.write(U256::from(0x0004000000000000u64)).unwrap();
-            assert_eq!(handler.len(), Err(BasePrecompileError::under_overflow()));
+            assert_eq!(handler.len(), Err(H20PrecompileError::under_overflow()));
 
             len_slot.write(U256::from(u32::MAX)).unwrap();
             assert_eq!(handler.len().unwrap(), u32::MAX as usize);
 
             len_slot.write(U256::from(u32::MAX as u64 + 1)).unwrap();
-            assert_eq!(handler.len(), Err(BasePrecompileError::under_overflow()));
+            assert_eq!(handler.len(), Err(H20PrecompileError::under_overflow()));
         });
     }
 

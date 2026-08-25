@@ -5,7 +5,7 @@ use core::marker::PhantomData;
 use alloy_primitives::{Address, U256};
 
 use crate::{
-    error::{BasePrecompileError, Result},
+    error::{H20PrecompileError, Result},
     packing::FieldLocation,
     provider::{Handler, LayoutCtx, Storable, StorableType, StorageOps},
     storage_ctx::StorageCtx,
@@ -50,7 +50,7 @@ impl<'a, T> Slot<'a, T> {
         Ok(Self {
             slot: base_slot
                 .checked_add(U256::from_limbs([offset_slots as u64, 0, 0, 0]))
-                .ok_or(BasePrecompileError::SlotOverflow)?,
+                .ok_or(H20PrecompileError::SlotOverflow)?,
             ctx: LayoutCtx::FULL,
             address,
             storage,
@@ -73,7 +73,7 @@ impl<'a, T> Slot<'a, T> {
         Ok(Self {
             slot: base_slot
                 .checked_add(U256::from_limbs([loc.offset_slots as u64, 0, 0, 0]))
-                .ok_or(BasePrecompileError::SlotOverflow)?,
+                .ok_or(H20PrecompileError::SlotOverflow)?,
             ctx: LayoutCtx::packed(loc.offset_bytes),
             address,
             storage,

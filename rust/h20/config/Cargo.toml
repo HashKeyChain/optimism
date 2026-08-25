@@ -1,6 +1,6 @@
 [package]
 name = "hsk-h20-config"
-description = "Consensus configuration for HSK Base Beryl H20 v1"
+description = "Consensus configuration for HSK H20 v1"
 version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true

@@ -9,7 +9,7 @@ use revm::{
 };
 
 use crate::{
-    error::BasePrecompileError,
+    error::H20PrecompileError,
     provider::{PrecompileStorageProvider, validate_loaded_code_presence},
 };
 
@@ -108,9 +108,9 @@ impl PrecompileStorageProvider for HashMapStorageProvider {
         self.origin
     }
 
-    fn set_code(&mut self, address: Address, code: Bytecode) -> Result<(), BasePrecompileError> {
+    fn set_code(&mut self, address: Address, code: Bytecode) -> Result<(), H20PrecompileError> {
         if self.is_static {
-            return Err(BasePrecompileError::StaticCallViolation);
+            return Err(H20PrecompileError::StaticCallViolation);
         }
 
         let code_len = code.len();
@@ -133,7 +133,7 @@ impl PrecompileStorageProvider for HashMapStorageProvider {
         &mut self,
         address: Address,
         f: &mut dyn FnMut(&AccountInfo),
-    ) -> Result<(), BasePrecompileError> {
+    ) -> Result<(), H20PrecompileError> {
         let account = self.accounts.entry(address).or_default();
         f(&*account);
         Ok(())
@@ -143,7 +143,7 @@ impl PrecompileStorageProvider for HashMapStorageProvider {
         &mut self,
         address: Address,
         f: &mut dyn FnMut(&Bytecode),
-    ) -> Result<(), BasePrecompileError> {
+    ) -> Result<(), H20PrecompileError> {
         let empty = Bytecode::default();
         let (expected_hash, code) =
             self.accounts.get(&address).map_or((B256::ZERO, &empty), |account| {
@@ -159,9 +159,9 @@ impl PrecompileStorageProvider for HashMapStorageProvider {
         address: Address,
         key: U256,
         value: U256,
-    ) -> Result<(), BasePrecompileError> {
+    ) -> Result<(), H20PrecompileError> {
         if self.is_static {
-            return Err(BasePrecompileError::StaticCallViolation);
+            return Err(H20PrecompileError::StaticCallViolation);
         }
         let old = self.internals.get(&(address, key)).copied().unwrap_or(U256::ZERO);
         self.counter_sstore += 1;
@@ -180,35 +180,35 @@ impl PrecompileStorageProvider for HashMapStorageProvider {
         address: Address,
         key: U256,
         value: U256,
-    ) -> Result<(), BasePrecompileError> {
+    ) -> Result<(), H20PrecompileError> {
         if self.is_static {
-            return Err(BasePrecompileError::StaticCallViolation);
+            return Err(H20PrecompileError::StaticCallViolation);
         }
         self.transient.insert((address, key), value);
         Ok(())
     }
 
-    fn emit_event(&mut self, address: Address, event: LogData) -> Result<(), BasePrecompileError> {
+    fn emit_event(&mut self, address: Address, event: LogData) -> Result<(), H20PrecompileError> {
         if self.is_static {
-            return Err(BasePrecompileError::StaticCallViolation);
+            return Err(H20PrecompileError::StaticCallViolation);
         }
         self.events.entry(address).or_default().push(event);
         Ok(())
     }
 
-    fn sload(&mut self, address: Address, key: U256) -> Result<U256, BasePrecompileError> {
+    fn sload(&mut self, address: Address, key: U256) -> Result<U256, H20PrecompileError> {
         if self.fail_on_sload == Some((address, key)) {
-            return Err(BasePrecompileError::Fatal("injected sload failure".into()));
+            return Err(H20PrecompileError::Fatal("injected sload failure".into()));
         }
         self.counter_sload += 1;
         Ok(self.internals.get(&(address, key)).copied().unwrap_or(U256::ZERO))
     }
 
-    fn tload(&mut self, address: Address, key: U256) -> Result<U256, BasePrecompileError> {
+    fn tload(&mut self, address: Address, key: U256) -> Result<U256, H20PrecompileError> {
         Ok(self.transient.get(&(address, key)).copied().unwrap_or(U256::ZERO))
     }
 
-    fn deduct_gas(&mut self, gas: u64) -> Result<(), BasePrecompileError> {
+    fn deduct_gas(&mut self, gas: u64) -> Result<(), H20PrecompileError> {
         self.gas_deducted = self.gas_deducted.saturating_add(gas);
         Ok(())
     }
@@ -216,12 +216,12 @@ impl PrecompileStorageProvider for HashMapStorageProvider {
     fn metered_keccak256(
         &mut self,
         data: &[u8],
-    ) -> core::result::Result<alloy_primitives::B256, BasePrecompileError> {
+    ) -> core::result::Result<alloy_primitives::B256, H20PrecompileError> {
         self.counter_keccak256 += 1;
         Ok(alloy_primitives::keccak256(data))
     }
 
-    fn deduct_state_gas(&mut self, gas: u64) -> Result<(), BasePrecompileError> {
+    fn deduct_state_gas(&mut self, gas: u64) -> Result<(), H20PrecompileError> {
         // No gas limit in the test provider; just track the cumulative amount.
         self.state_gas_used = self.state_gas_used.saturating_add(gas);
         Ok(())
@@ -387,7 +387,8 @@ impl HashMapStorageProvider {
         self.counter_sstore
     }
 
-    /// Returns the total gas deducted via [`PrecompileStorageProvider::deduct_gas`] (test-utils only).
+    /// Returns the total gas deducted via [`PrecompileStorageProvider::deduct_gas`] (test-utils
+    /// only).
     pub const fn gas_deducted(&self) -> u64 {
         self.gas_deducted
     }
@@ -482,7 +483,7 @@ mod tests {
 
         let error = p.with_account_code(ADDR, &mut |_| callback_invoked = true).unwrap_err();
 
-        assert!(matches!(error, BasePrecompileError::Fatal(_)));
+        assert!(matches!(error, H20PrecompileError::Fatal(_)));
         assert!(!callback_invoked);
         assert!(p.accounts.get(&ADDR).is_some_and(|account| account.code.is_none()));
     }
@@ -512,7 +513,7 @@ mod tests {
         p.set_static(true);
         let code = Bytecode::new_raw([0x60u8, 0x00].as_ref().into());
 
-        assert_eq!(p.set_code(Address::ZERO, code), Err(BasePrecompileError::StaticCallViolation),);
+        assert_eq!(p.set_code(Address::ZERO, code), Err(H20PrecompileError::StaticCallViolation),);
         // No state gas must have been charged.
         assert_eq!(p.state_gas_used(), 0);
     }

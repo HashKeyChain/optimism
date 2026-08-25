@@ -1,6 +1,6 @@
-# base-precompile-storage
+# h20-precompile-storage
 
-EVM storage abstractions and runtime traits for Base native precompiles.
+EVM storage abstractions and runtime traits for HSK native precompiles.
 
 ## Slot Derivation Rules
 

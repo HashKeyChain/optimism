@@ -1,4 +1,4 @@
-#![doc = "Base Beryl H20 v1 core precompiles for HSK."]
+#![doc = "HSK H20 v1 core precompiles for HSK."]
 #![cfg_attr(not(test), warn(unused_crate_dependencies))]
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -20,9 +20,9 @@ pub use activation::{
 
 mod common;
 pub use common::{
-    H20_MAX_SUPPLY_CAP, H20CoreStorage, H20Guards, H20PausableFeature, H20PolicyType, H20TokenRole,
-    Burnable, Configurable, Eip712Domain, IH20, Mintable, Pausable, PermitArgs, Permittable,
-    RoleManaged, Token, TokenAccounting, Transferable,
+    Burnable, Configurable, Eip712Domain, H20_MAX_SUPPLY_CAP, H20CoreStorage, H20Guards,
+    H20PausableFeature, H20PolicyType, H20TokenRole, IH20, Mintable, Pausable, PermitArgs,
+    Permittable, RoleManaged, Token, TokenAccounting, Transferable,
 };
 #[cfg(any(test, feature = "test-utils"))]
 pub use common::{FakePolicyAccounting, InMemoryTokenAccounting, TestStablecoinToken, TestToken};
@@ -52,8 +52,8 @@ pub use h20_stablecoin::{
 
 mod h20_factory;
 pub use h20_factory::{
-    H20Factory, H20FactoryStorage, H20Variant, CommonParams, Factory, FactoryV1, FactoryVersion,
-    FactoryVersions, IH20Factory, TokenCreateParams,
+    CommonParams, Factory, FactoryV1, FactoryVersion, FactoryVersions, H20Factory,
+    H20FactoryStorage, H20Variant, IH20Factory, TokenCreateParams,
 };
 
 mod policy;

@@ -13,13 +13,13 @@ use alloc::string::ToString;
 use crate::H20Spec;
 use alloy_primitives::{Bytes, U256};
 use alloy_sol_types::{SolCall, SolInterface, SolValue};
-use h20_precompile_storage::{BasePrecompileError, StorageCtx};
+use h20_precompile_storage::{H20PrecompileError, StorageCtx};
 use revm::precompile::PrecompileResult;
 
 use crate::{
-    AssetAccounting, AssetV1, AssetVersion, AssetVersions, H20AssetStorage, H20AssetToken,
-    H20PolicyType, H20TokenRole, BerylAuxiliaryMetrics, BerylCallRecorder, BerylMetricLabels,
-    BerylSelector,
+    AssetAccounting, AssetV1, AssetVersion, AssetVersions, BerylAuxiliaryMetrics,
+    BerylCallRecorder, BerylMetricLabels, BerylSelector, H20AssetStorage, H20AssetToken,
+    H20PolicyType, H20TokenRole,
     IH20::{self, IH20Calls as C},
     IH20Asset::{self, IH20AssetCalls as SC},
     NoopPrecompileCallObserver, PermitArgs, PolicyAccounting, PrecompileCallObserver,
@@ -52,33 +52,32 @@ impl<S: AssetAccounting, A: PolicyAccounting> H20AssetToken<S, A> {
             BerylCallRecorder::start(observer.clone(), BerylMetricLabels::h20_asset_call(calldata));
         if !ctx.call_value().is_zero() {
             return recorder
-                .record_base_error_result(ctx, BasePrecompileError::revert(IH20::NonPayable {}));
+                .record_h20_error_result(ctx, H20PrecompileError::revert(IH20::NonPayable {}));
         }
         if let Err(error) = recorder.deduct_calldata_gas(ctx, calldata) {
-            return recorder.record_base_error_result(ctx, error);
+            return recorder.record_h20_error_result(ctx, error);
         }
         // Gate by hardfork: resolve the active version once. `None` is unreachable in practice —
         // the precompile is only installed from Beryl — but we revert defensively.
         let Some(version) = AssetVersions::from_spec(upgrade) else {
-            return recorder
-                .record_base_error_result(ctx, BasePrecompileError::Revert(Bytes::new()));
+            return recorder.record_h20_error_result(ctx, H20PrecompileError::Revert(Bytes::new()));
         };
         // Ensure the token has been deployed (has bytecode at its address).
         match version.implementation().is_initialized(self) {
             Ok(true) => {}
             Ok(false) => {
                 return recorder
-                    .record_base_error_result(ctx, BasePrecompileError::Revert(Bytes::new()));
+                    .record_h20_error_result(ctx, H20PrecompileError::Revert(Bytes::new()));
             }
-            Err(error) => return recorder.record_base_error_result(ctx, error),
+            Err(error) => return recorder.record_h20_error_result(ctx, error),
         }
-        recorder.record_base_result(ctx, self.route(ctx, calldata, version, false, observer), |b| b)
+        recorder.record_h20_result(ctx, self.route(ctx, calldata, version, false, observer), |b| b)
     }
 
     /// Grants `role` to `account` without checking caller authorization.
     ///
-    /// The one token-level mutation the factory needs at bootstrap, when no admin exists yet and the
-    /// authorized [`Asset::grant_role`](crate::Asset) path is not yet reachable. Pinned to
+    /// The one token-level mutation the factory needs at bootstrap, when no admin exists yet and
+    /// the authorized [`Asset::grant_role`](crate::Asset) path is not yet reachable. Pinned to
     /// [`AssetV1`], the token's introduction version.
     // TODO: When the factory gains fork threading, remove this and pull versions into the factory.
     pub fn grant_role_unchecked(
@@ -104,12 +103,12 @@ impl<S: AssetAccounting, A: PolicyAccounting> H20AssetToken<S, A> {
         O: PrecompileCallObserver,
     {
         // Asset-specific and overridden selectors are caught here first.
-        if let Some(selector) = BerylSelector::selector(calldata)
-            && IH20Asset::IH20AssetCalls::valid_selector(selector)
+        if let Some(selector) = BerylSelector::selector(calldata) &&
+            IH20Asset::IH20AssetCalls::valid_selector(selector)
         {
             let call =
                 IH20Asset::IH20AssetCalls::abi_decode_validate(calldata).map_err(|error| {
-                    BasePrecompileError::AbiDecodeFailed { selector, error: error.to_string() }
+                    H20PrecompileError::AbiDecodeFailed { selector, error: error.to_string() }
                 })?;
             let label = call.as_label();
             let asset_observer = observer.clone();
@@ -423,28 +422,29 @@ impl<S: AssetAccounting, A: PolicyAccounting> H20AssetToken<S, A> {
         logic.begin_announce(self, caller, id.clone(), call.description, call.uri, privileged)?;
 
         // Each internal call is dispatched via `route`, a direct Rust function call. Unlike the
-        // base-std Solidity reference which routes each `internalCalls` entry through a DELEGATECALL
-        // (~100 gas opcode overhead + memory expansion), the native precompile replaces the entire
-        // EVM execution path so per-opcode call overhead does not apply. The cheaper batched cost is
-        // intentional: the native precompile pays for the storage work of each sub-call (the same
-        // SLOAD/SSTORE operations as the Solidity reference) but not for EVM call-frame overhead
-        // that exists only in the interpreter.
+        // base-std Solidity reference which routes each `internalCalls` entry through a
+        // DELEGATECALL (~100 gas opcode overhead + memory expansion), the native precompile
+        // replaces the entire EVM execution path so per-opcode call overhead does not
+        // apply. The cheaper batched cost is intentional: the native precompile pays for
+        // the storage work of each sub-call (the same SLOAD/SSTORE operations as the
+        // Solidity reference) but not for EVM call-frame overhead that exists only in the
+        // interpreter.
         for call in &internal_calls {
             let call_bytes: &[u8] = call.as_ref();
             if call_bytes.len() < 4 {
-                return Err(BasePrecompileError::revert(IH20Asset::InternalCallMalformed {
+                return Err(H20PrecompileError::revert(IH20Asset::InternalCallMalformed {
                     call: call.clone(),
                 }));
             }
             if call_bytes[..4] == IH20Asset::announceCall::SELECTOR {
-                return Err(BasePrecompileError::revert(IH20Asset::AnnouncementInProgress {}));
+                return Err(H20PrecompileError::revert(IH20Asset::AnnouncementInProgress {}));
             }
             self.route(ctx, call_bytes, version, privileged, NoopPrecompileCallObserver).map_err(
                 |err| {
                     if err.is_system_error() {
                         err
                     } else {
-                        BasePrecompileError::revert(IH20Asset::InternalCallFailed {
+                        H20PrecompileError::revert(IH20Asset::InternalCallFailed {
                             call: call.clone(),
                         })
                     }
@@ -468,10 +468,10 @@ mod tests {
 
     use crate::{
         ActivationAdminConfig, ActivationFeature, ActivationRegistryStorage, AssetAccounting,
-        AssetV1, AssetVersion, H20AssetStorage, H20AssetToken, H20TokenRole, BerylErrorKind,
-        FakePolicyAccounting, IH20, IH20Asset, InMemoryTokenAccounting, NoopPrecompileCallObserver,
-        PolicyVersion, PrecompileCallMetric, PrecompileCallObserver, PrecompileCallOutcome,
-        PrecompileCallStatus, Token, TokenAccounting,
+        AssetV1, AssetVersion, BerylErrorKind, FakePolicyAccounting, H20AssetStorage,
+        H20AssetToken, H20TokenRole, IH20, IH20Asset, InMemoryTokenAccounting,
+        NoopPrecompileCallObserver, PolicyVersion, PrecompileCallMetric, PrecompileCallObserver,
+        PrecompileCallOutcome, PrecompileCallStatus, Token, TokenAccounting,
     };
 
     type TestAssetToken = H20AssetToken<InMemoryTokenAccounting, FakePolicyAccounting>;
@@ -652,7 +652,7 @@ mod tests {
 
         let err = call_asset(&mut token, ALICE, calldata).unwrap_err();
 
-        assert_eq!(err, h20_precompile_storage::BasePrecompileError::under_overflow());
+        assert_eq!(err, h20_precompile_storage::H20PrecompileError::under_overflow());
     }
 
     /// A non-system revert produced by an inner `announce` call must be wrapped as
@@ -676,7 +676,7 @@ mod tests {
 
         assert_eq!(
             err,
-            h20_precompile_storage::BasePrecompileError::revert(IH20Asset::InternalCallFailed {
+            h20_precompile_storage::H20PrecompileError::revert(IH20Asset::InternalCallFailed {
                 call: inner_call
             })
         );

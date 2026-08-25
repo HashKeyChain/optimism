@@ -79,7 +79,7 @@ where
 mod tests {
     use alloy_primitives::{Address, address};
 
-    use crate::{H20Variant, BerylLookup};
+    use crate::{BerylLookup, H20Variant};
 
     #[test]
     fn lookup_only_matches_structurally_valid_h20_addresses() {

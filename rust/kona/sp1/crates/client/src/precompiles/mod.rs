@@ -108,7 +108,7 @@ impl OpZkvmPrecompiles {
         }
     }
 
-    /// Adds Base Beryl H20 v1 while retaining ZKVM acceleration for canonical precompiles.
+    /// Adds HSK H20 v1 while retaining ZKVM acceleration for canonical precompiles.
     pub fn with_h20(mut self, config: H20Config, timestamp: u64) -> Self {
         self.h20_config = config;
         self.timestamp = timestamp;
@@ -202,9 +202,10 @@ where
 
     #[inline]
     fn contains(&self, address: &Address) -> bool {
-        self.h20_precompiles
-            .as_ref()
-            .map_or_else(|| self.inner.contains(address), |installed| installed.get(address).is_some())
+        self.h20_precompiles.as_ref().map_or_else(
+            || self.inner.contains(address),
+            |installed| installed.get(address).is_some(),
+        )
     }
 }
 

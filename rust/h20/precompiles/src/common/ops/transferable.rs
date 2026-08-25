@@ -1,6 +1,6 @@
 use alloy_primitives::{Address, B256, U256};
 use alloy_sol_types::SolEvent;
-use h20_precompile_storage::{BasePrecompileError, Result};
+use h20_precompile_storage::{H20PrecompileError, Result};
 
 use crate::{H20Guards, H20PolicyType, IH20, Token, TokenAccounting};
 
@@ -37,10 +37,10 @@ pub trait Transferable: Token {
         privileged: bool,
     ) -> Result<()> {
         if to == Address::ZERO {
-            return Err(BasePrecompileError::revert(IH20::InvalidReceiver { receiver: to }));
+            return Err(H20PrecompileError::revert(IH20::InvalidReceiver { receiver: to }));
         }
         if from == Address::ZERO {
-            return Err(BasePrecompileError::revert(IH20::InvalidSender { sender: from }));
+            return Err(H20PrecompileError::revert(IH20::InvalidSender { sender: from }));
         }
         if !privileged {
             H20Guards::ensure_policy_type::<Self>(self, H20PolicyType::TransferSender, from)?;
@@ -48,18 +48,18 @@ pub trait Transferable: Token {
         }
         let from_balance = self.accounting().balance_of(from)?;
         if from_balance < amount {
-            return Err(BasePrecompileError::revert(IH20::InsufficientBalance {
+            return Err(H20PrecompileError::revert(IH20::InsufficientBalance {
                 sender: from,
                 balance: from_balance,
                 needed: amount,
             }));
         }
         let new_from_balance =
-            from_balance.checked_sub(amount).ok_or_else(BasePrecompileError::under_overflow)?;
+            from_balance.checked_sub(amount).ok_or_else(H20PrecompileError::under_overflow)?;
         self.accounting_mut().set_balance(from, new_from_balance)?;
         let to_balance = self.accounting().balance_of(to)?;
         let new_to_balance =
-            to_balance.checked_add(amount).ok_or_else(BasePrecompileError::under_overflow)?;
+            to_balance.checked_add(amount).ok_or_else(H20PrecompileError::under_overflow)?;
         self.accounting_mut().set_balance(to, new_to_balance)?;
         self.accounting_mut().emit_event(IH20::Transfer { from, to, amount }.encode_log_data())
     }
@@ -82,15 +82,15 @@ pub trait Transferable: Token {
     ) -> Result<()> {
         H20Guards::ensure_not_paused::<Self>(self, IH20::PausableFeature::TRANSFER)?;
         if to == Address::ZERO {
-            return Err(BasePrecompileError::revert(IH20::InvalidReceiver { receiver: to }));
+            return Err(H20PrecompileError::revert(IH20::InvalidReceiver { receiver: to }));
         }
         if from == Address::ZERO {
-            return Err(BasePrecompileError::revert(IH20::InvalidSender { sender: from }));
+            return Err(H20PrecompileError::revert(IH20::InvalidSender { sender: from }));
         }
         let allowance = self.accounting().allowance(from, spender)?;
         let is_infinite = allowance == U256::MAX;
         if !is_infinite && allowance < amount {
-            return Err(BasePrecompileError::revert(IH20::InsufficientAllowance {
+            return Err(H20PrecompileError::revert(IH20::InsufficientAllowance {
                 spender,
                 allowance,
                 needed: amount,
@@ -109,10 +109,10 @@ pub trait Transferable: Token {
     /// Sets `spender`'s allowance from `owner` to `amount`. Emits `Approval`.
     fn approve(&mut self, owner: Address, spender: Address, amount: U256) -> Result<()> {
         if owner == Address::ZERO {
-            return Err(BasePrecompileError::revert(IH20::InvalidApprover { approver: owner }));
+            return Err(H20PrecompileError::revert(IH20::InvalidApprover { approver: owner }));
         }
         if spender == Address::ZERO {
-            return Err(BasePrecompileError::revert(IH20::InvalidSpender { spender }));
+            return Err(H20PrecompileError::revert(IH20::InvalidSpender { spender }));
         }
         self.accounting_mut().set_allowance(owner, spender, amount)?;
         self.accounting_mut()
@@ -151,11 +151,11 @@ pub trait Transferable: Token {
 mod tests {
     use alloy_primitives::{Address, B256, U256};
     use alloy_sol_types::SolEvent;
-    use h20_precompile_storage::BasePrecompileError;
+    use h20_precompile_storage::H20PrecompileError;
     use rstest::rstest;
 
     use crate::{
-        H20PausableFeature, H20PolicyType, FakePolicyAccounting, IH20, InMemoryTokenAccounting,
+        FakePolicyAccounting, H20PausableFeature, H20PolicyType, IH20, InMemoryTokenAccounting,
         PolicyRegistryStorage, TestToken, Token, TokenAccounting, Transferable,
     };
 
@@ -231,7 +231,7 @@ mod tests {
 
         assert_eq!(
             token.transfer(Address::ZERO, BOB, U256::ONE, false).unwrap_err(),
-            BasePrecompileError::revert(IH20::InvalidSender { sender: Address::ZERO })
+            H20PrecompileError::revert(IH20::InvalidSender { sender: Address::ZERO })
         );
     }
 
@@ -241,7 +241,7 @@ mod tests {
 
         assert_eq!(
             token.transfer(ALICE, Address::ZERO, U256::ONE, false).unwrap_err(),
-            BasePrecompileError::revert(IH20::InvalidReceiver { receiver: Address::ZERO })
+            H20PrecompileError::revert(IH20::InvalidReceiver { receiver: Address::ZERO })
         );
     }
 
@@ -251,7 +251,7 @@ mod tests {
 
         assert_eq!(
             token.transfer(ALICE, BOB, U256::from(10u64), false).unwrap_err(),
-            BasePrecompileError::revert(IH20::InsufficientBalance {
+            H20PrecompileError::revert(IH20::InsufficientBalance {
                 sender: ALICE,
                 balance: U256::from(5u64),
                 needed: U256::from(10u64),
@@ -275,7 +275,7 @@ mod tests {
 
         assert_eq!(
             token.approve(Address::ZERO, SPENDER, U256::ONE).unwrap_err(),
-            BasePrecompileError::revert(IH20::InvalidApprover { approver: Address::ZERO })
+            H20PrecompileError::revert(IH20::InvalidApprover { approver: Address::ZERO })
         );
     }
 
@@ -285,7 +285,7 @@ mod tests {
 
         assert_eq!(
             token.approve(ALICE, Address::ZERO, U256::ONE).unwrap_err(),
-            BasePrecompileError::revert(IH20::InvalidSpender { spender: Address::ZERO })
+            H20PrecompileError::revert(IH20::InvalidSpender { spender: Address::ZERO })
         );
     }
 
@@ -319,7 +319,7 @@ mod tests {
 
         assert_eq!(
             token.transfer_from(SPENDER, ALICE, BOB, U256::from(10u64), false).unwrap_err(),
-            BasePrecompileError::revert(IH20::InsufficientAllowance {
+            H20PrecompileError::revert(IH20::InsufficientAllowance {
                 spender: SPENDER,
                 allowance: U256::from(5u64),
                 needed: U256::from(10u64),
@@ -347,7 +347,7 @@ mod tests {
 
         assert_eq!(
             token.transfer(ALICE, BOB, U256::ONE, false).unwrap_err(),
-            BasePrecompileError::revert(IH20::ContractPaused {
+            H20PrecompileError::revert(IH20::ContractPaused {
                 feature: IH20::PausableFeature::TRANSFER,
             })
         );
@@ -364,7 +364,7 @@ mod tests {
 
         assert_eq!(
             token.transfer(ALICE, BOB, U256::ONE, false).unwrap_err(),
-            BasePrecompileError::revert(IH20::PolicyForbids {
+            H20PrecompileError::revert(IH20::PolicyForbids {
                 policyScope: H20PolicyType::TransferSender.id(),
                 policyId: PolicyRegistryStorage::ALWAYS_BLOCK_ID,
             })
@@ -382,7 +382,7 @@ mod tests {
 
         assert_eq!(
             token.transfer(ALICE, BOB, U256::ONE, false).unwrap_err(),
-            BasePrecompileError::revert(IH20::PolicyForbids {
+            H20PrecompileError::revert(IH20::PolicyForbids {
                 policyScope: H20PolicyType::TransferReceiver.id(),
                 policyId: PolicyRegistryStorage::ALWAYS_BLOCK_ID,
             })
@@ -401,7 +401,7 @@ mod tests {
 
         assert_eq!(
             token.transfer_from(SPENDER, ALICE, BOB, U256::ONE, false).unwrap_err(),
-            BasePrecompileError::revert(IH20::PolicyForbids {
+            H20PrecompileError::revert(IH20::PolicyForbids {
                 policyScope: H20PolicyType::TransferExecutor.id(),
                 policyId: PolicyRegistryStorage::ALWAYS_BLOCK_ID,
             })
@@ -420,7 +420,7 @@ mod tests {
 
         assert_eq!(
             token.transfer_from(SPENDER, ALICE, BOB, U256::ONE, false).unwrap_err(),
-            BasePrecompileError::revert(IH20::PolicyForbids {
+            H20PrecompileError::revert(IH20::PolicyForbids {
                 policyScope: H20PolicyType::TransferExecutor.id(),
                 policyId: PolicyRegistryStorage::ALWAYS_BLOCK_ID,
             })
@@ -489,7 +489,7 @@ mod tests {
 
         assert_eq!(
             token.transfer_from(SPENDER, ALICE, BOB, U256::ONE, false).unwrap_err(),
-            BasePrecompileError::revert(IH20::InsufficientBalance {
+            H20PrecompileError::revert(IH20::InsufficientBalance {
                 sender: ALICE,
                 balance: U256::ZERO,
                 needed: U256::ONE,
@@ -537,7 +537,7 @@ mod tests {
 
         assert_eq!(
             token.transfer(ALICE, BOB, U256::ONE, false).unwrap_err(),
-            BasePrecompileError::revert(IH20::PolicyForbids {
+            H20PrecompileError::revert(IH20::PolicyForbids {
                 policyScope: H20PolicyType::TransferSender.id(),
                 policyId: POLICY_ID,
             })
@@ -615,7 +615,7 @@ mod tests {
         Address::ZERO, // to
         false,         // privileged
         false,         // sender_blocked
-        BasePrecompileError::revert(IH20::ContractPaused { feature: IH20::PausableFeature::TRANSFER })
+        H20PrecompileError::revert(IH20::ContractPaused { feature: IH20::PausableFeature::TRANSFER })
     )]
     #[case::paused_privileged_still_gets_pause_error(
         true,  // paused
@@ -623,7 +623,7 @@ mod tests {
         BOB,   // to
         true,  // privileged
         false, // sender_blocked
-        BasePrecompileError::revert(IH20::ContractPaused { feature: IH20::PausableFeature::TRANSFER })
+        H20PrecompileError::revert(IH20::ContractPaused { feature: IH20::PausableFeature::TRANSFER })
     )]
     #[case::zero_receiver_before_zero_sender(
         false,         // paused
@@ -631,7 +631,7 @@ mod tests {
         Address::ZERO, // to
         false,         // privileged
         false,         // sender_blocked
-        BasePrecompileError::revert(IH20::InvalidReceiver { receiver: Address::ZERO })
+        H20PrecompileError::revert(IH20::InvalidReceiver { receiver: Address::ZERO })
     )]
     #[case::zero_addr_before_policy(
         false,         // paused
@@ -639,7 +639,7 @@ mod tests {
         Address::ZERO, // to
         false,         // privileged
         true,          // sender_blocked
-        BasePrecompileError::revert(IH20::InvalidReceiver { receiver: Address::ZERO })
+        H20PrecompileError::revert(IH20::InvalidReceiver { receiver: Address::ZERO })
     )]
     #[case::policy_before_balance(
         false, // paused
@@ -647,7 +647,7 @@ mod tests {
         BOB,   // to
         false, // privileged
         true,  // sender_blocked
-        BasePrecompileError::revert(IH20::PolicyForbids {
+        H20PrecompileError::revert(IH20::PolicyForbids {
             policyScope: H20PolicyType::TransferSender.id(),
             policyId: PolicyRegistryStorage::ALWAYS_BLOCK_ID,
         })
@@ -658,7 +658,7 @@ mod tests {
         #[case] to: Address,
         #[case] privileged: bool,
         #[case] sender_blocked: bool,
-        #[case] expected_error: BasePrecompileError,
+        #[case] expected_error: H20PrecompileError,
     ) {
         let mut accounting = InMemoryTokenAccounting::new(TOKEN_ADDR);
         accounting.balances.insert(ALICE, U256::from(10u64));
@@ -681,21 +681,21 @@ mod tests {
         false, // has_allowance
         false, // privileged
         false, // executor_blocked
-        BasePrecompileError::revert(IH20::ContractPaused { feature: IH20::PausableFeature::TRANSFER })
+        H20PrecompileError::revert(IH20::ContractPaused { feature: IH20::PausableFeature::TRANSFER })
     )]
     #[case::paused_privileged_still_gets_pause_error(
         true,  // paused
         true,  // has_allowance
         true,  // privileged
         false, // executor_blocked
-        BasePrecompileError::revert(IH20::ContractPaused { feature: IH20::PausableFeature::TRANSFER })
+        H20PrecompileError::revert(IH20::ContractPaused { feature: IH20::PausableFeature::TRANSFER })
     )]
     #[case::allowance_before_executor_policy(
         false, // paused
         false, // has_allowance
         false, // privileged
         true,  // executor_blocked
-        BasePrecompileError::revert(IH20::InsufficientAllowance {
+        H20PrecompileError::revert(IH20::InsufficientAllowance {
             spender: SPENDER,
             allowance: U256::ZERO,
             needed: U256::ONE,
@@ -706,7 +706,7 @@ mod tests {
         #[case] has_allowance: bool,
         #[case] privileged: bool,
         #[case] executor_blocked: bool,
-        #[case] expected_error: BasePrecompileError,
+        #[case] expected_error: H20PrecompileError,
     ) {
         let mut accounting = InMemoryTokenAccounting::new(TOKEN_ADDR);
         accounting.balances.insert(ALICE, U256::from(10u64));

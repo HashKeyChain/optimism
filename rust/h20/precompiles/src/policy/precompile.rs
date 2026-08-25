@@ -5,7 +5,7 @@ use alloy_evm::precompiles::{DynPrecompile, PrecompilesMap};
 
 use crate::{
     NoopPrecompileCallObserver, PolicyRegistryStorage, PrecompileCallObserver,
-    macros::base_precompile,
+    macros::h20_precompile,
 };
 
 /// EVM entry point for the `PolicyRegistry` precompile.
@@ -37,7 +37,7 @@ impl PolicyRegistryPrecompile {
     where
         O: PrecompileCallObserver,
     {
-        base_precompile!("PolicyRegistryPrecompile", |ctx, calldata| {
+        h20_precompile!("PolicyRegistryPrecompile", |ctx, calldata| {
             let observer = observer.clone();
             PolicyRegistryStorage::new(ctx)
                 .dispatch_with_observer(ctx, &calldata, upgrade, observer)

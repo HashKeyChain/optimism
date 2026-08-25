@@ -1,7 +1,7 @@
 //! Shared authorization and policy guards for H20 token operations.
 
 use alloy_primitives::{Address, B256, U256};
-use h20_precompile_storage::{BasePrecompileError, Result};
+use h20_precompile_storage::{H20PrecompileError, Result};
 
 use crate::{H20PausableFeature, H20PolicyType, H20TokenRole, IH20, Token, TokenAccounting};
 
@@ -24,7 +24,7 @@ impl H20Guards {
         if token.accounting().has_role(role, caller)? {
             Ok(())
         } else {
-            Err(BasePrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
+            Err(H20PrecompileError::revert(IH20::AccessControlUnauthorizedAccount {
                 account: caller,
                 neededRole: role,
             }))
@@ -39,7 +39,7 @@ impl H20Guards {
         if (token.accounting().paused()? & H20PausableFeature::mask(feature)) == U256::ZERO {
             Ok(())
         } else {
-            Err(BasePrecompileError::revert(IH20::ContractPaused { feature }))
+            Err(H20PrecompileError::revert(IH20::ContractPaused { feature }))
         }
     }
 
@@ -64,7 +64,7 @@ impl H20Guards {
         if token.policy().is_authorized(token.policy_storage(), policy_id, account)? {
             Ok(())
         } else {
-            Err(BasePrecompileError::revert(IH20::PolicyForbids {
+            Err(H20PrecompileError::revert(IH20::PolicyForbids {
                 policyScope: policy_scope,
                 policyId: policy_id,
             }))
@@ -78,7 +78,7 @@ impl H20Guards {
         let policy_scope = H20PolicyType::TransferSender.id();
         let policy_id = token.accounting().policy_id(policy_scope)?;
         if token.policy().is_authorized(token.policy_storage(), policy_id, account)? {
-            Err(BasePrecompileError::revert(IH20::AccountNotBlocked { account }))
+            Err(H20PrecompileError::revert(IH20::AccountNotBlocked { account }))
         } else {
             Ok(())
         }
@@ -88,10 +88,10 @@ impl H20Guards {
 #[cfg(test)]
 mod tests {
     use alloy_primitives::Address;
-    use h20_precompile_storage::BasePrecompileError;
+    use h20_precompile_storage::H20PrecompileError;
 
     use crate::{
-        H20Guards, H20PolicyType, FakePolicyAccounting, IH20, InMemoryTokenAccounting,
+        FakePolicyAccounting, H20Guards, H20PolicyType, IH20, InMemoryTokenAccounting,
         PolicyRegistryStorage, TestToken,
     };
 
@@ -118,7 +118,7 @@ mod tests {
         assert_eq!(
             H20Guards::ensure_policy_type(&token, H20PolicyType::TransferSender, denied)
                 .unwrap_err(),
-            BasePrecompileError::revert(IH20::PolicyForbids {
+            H20PrecompileError::revert(IH20::PolicyForbids {
                 policyScope: H20PolicyType::TransferSender.id(),
                 policyId: EXTERNAL_POLICY_ID,
             })
@@ -133,7 +133,7 @@ mod tests {
 
         assert_eq!(
             H20Guards::ensure_blocked(&token, allowed).unwrap_err(),
-            BasePrecompileError::revert(IH20::AccountNotBlocked { account: allowed })
+            H20PrecompileError::revert(IH20::AccountNotBlocked { account: allowed })
         );
         H20Guards::ensure_blocked(&token, denied).unwrap();
     }
@@ -157,7 +157,7 @@ mod tests {
 
         assert_eq!(
             H20Guards::ensure_blocked(&token, account).unwrap_err(),
-            BasePrecompileError::revert(IH20::AccountNotBlocked { account })
+            H20PrecompileError::revert(IH20::AccountNotBlocked { account })
         );
     }
 }

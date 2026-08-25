@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 
 use alloy_primitives::{Address, U256};
 use alloy_sol_types::SolEvent;
-use h20_precompile_storage::{BasePrecompileError, Result};
+use h20_precompile_storage::{H20PrecompileError, Result};
 
 use crate::{
     IPolicyRegistry, IPolicyRegistry::PolicyType, PackedPolicy, PolicyAccounting,
@@ -60,7 +60,7 @@ impl PolicyRegistryV1 {
     ) -> Result<PackedPolicy> {
         let packed = PackedPolicy::from_raw(storage.read_policy_word(policy_id)?);
         if !packed.exists() {
-            return Err(BasePrecompileError::revert(IPolicyRegistry::PolicyNotFound {}));
+            return Err(H20PrecompileError::revert(IPolicyRegistry::PolicyNotFound {}));
         }
         Ok(packed)
     }
@@ -68,7 +68,7 @@ impl PolicyRegistryV1 {
     /// Reverts `BatchSizeTooLarge` when a membership batch exceeds the limit.
     fn require_account_batch_size(accounts: &[Address]) -> Result<()> {
         if accounts.len() > Self::MAX_ACCOUNTS_PER_BATCH {
-            return Err(BasePrecompileError::revert(IPolicyRegistry::BatchSizeTooLarge {
+            return Err(H20PrecompileError::revert(IPolicyRegistry::BatchSizeTooLarge {
                 maxBatchSize: U256::from(Self::MAX_ACCOUNTS_PER_BATCH),
             }));
         }
@@ -85,7 +85,7 @@ impl PolicyRegistryV1 {
         let packed = self.require_custom(storage, policy_id)?;
         let caller = storage.caller();
         if packed.admin() != caller {
-            return Err(BasePrecompileError::revert(IPolicyRegistry::Unauthorized {}));
+            return Err(H20PrecompileError::revert(IPolicyRegistry::Unauthorized {}));
         }
         Ok((packed, caller))
     }
@@ -93,10 +93,10 @@ impl PolicyRegistryV1 {
     /// Validates policy-creation inputs and returns the raw policy type discriminator.
     fn validate_create_policy_inputs(admin: Address, policy_type: PolicyType) -> Result<u8> {
         if !policy_type.is_valid() {
-            return Err(BasePrecompileError::enum_conversion_error());
+            return Err(H20PrecompileError::enum_conversion_error());
         }
         if admin == Address::ZERO {
-            return Err(BasePrecompileError::revert(IPolicyRegistry::ZeroAddress {}));
+            return Err(H20PrecompileError::revert(IPolicyRegistry::ZeroAddress {}));
         }
         Ok(policy_type.as_discriminant())
     }
@@ -110,7 +110,8 @@ impl PolicyRegistryV1 {
     /// stays frozen with this version — it is an internal bootstrap primitive, not an ABI op.
     ///
     /// Both built-ins have a renounced (zero) admin:
-    /// - [`Self::ALWAYS_ALLOW_ID`] (counter=0, BLOCKLIST): no members blocked — everyone authorized.
+    /// - [`Self::ALWAYS_ALLOW_ID`] (counter=0, BLOCKLIST): no members blocked — everyone
+    ///   authorized.
     /// - [`Self::ALWAYS_BLOCK_ID`] (counter=1, ALLOWLIST): no members allowed — nobody authorized.
     pub(crate) fn ensure_initialized_and_get_counter<S: PolicyAccounting>(
         &self,
@@ -149,7 +150,7 @@ impl PolicyRegistryV1 {
         let counter = self.ensure_initialized_and_get_counter(storage)?;
         let is_counter_overflowed = counter >= Self::COUNTER_MASK;
         if is_counter_overflowed {
-            return Err(BasePrecompileError::under_overflow());
+            return Err(H20PrecompileError::under_overflow());
         }
         storage.write_next_counter(counter + 1)?;
         let policy_id = Self::make_id(policy_type_u8, counter);
@@ -189,11 +190,11 @@ impl PolicyRegistryV1 {
         // Check order matches Solidity canonical: existence → type → admin → batch size.
         let packed = self.require_custom(storage, policy_id)?;
         if Self::policy_id_type(policy_id) != expected_type {
-            return Err(BasePrecompileError::revert(IPolicyRegistry::IncompatiblePolicyType {}));
+            return Err(H20PrecompileError::revert(IPolicyRegistry::IncompatiblePolicyType {}));
         }
         let caller = storage.caller();
         if packed.admin() != caller {
-            return Err(BasePrecompileError::revert(IPolicyRegistry::Unauthorized {}));
+            return Err(H20PrecompileError::revert(IPolicyRegistry::Unauthorized {}));
         }
         Self::require_account_batch_size(accounts)?;
         for account in accounts {
@@ -251,7 +252,7 @@ impl<S: PolicyAccounting> PolicyRegistryLogic<S> for PolicyRegistryV1 {
                 }
                 .encode_log_data(),
             )?,
-            _ => return Err(BasePrecompileError::enum_conversion_error()),
+            _ => return Err(H20PrecompileError::enum_conversion_error()),
         }
         Ok(policy_id)
     }
@@ -283,11 +284,11 @@ impl<S: PolicyAccounting> PolicyRegistryLogic<S> for PolicyRegistryV1 {
         let packed = self.require_custom(storage, policy_id)?;
         let pending = storage.read_pending_admin(policy_id)?;
         if pending == Address::ZERO {
-            return Err(BasePrecompileError::revert(IPolicyRegistry::NoPendingAdmin {}));
+            return Err(H20PrecompileError::revert(IPolicyRegistry::NoPendingAdmin {}));
         }
         let caller = storage.caller();
         if pending != caller {
-            return Err(BasePrecompileError::revert(IPolicyRegistry::Unauthorized {}));
+            return Err(H20PrecompileError::revert(IPolicyRegistry::Unauthorized {}));
         }
         let previous_admin = packed.admin();
         storage.write_policy_word(policy_id, packed.with_admin(caller).into_u256())?;
@@ -423,7 +424,7 @@ mod tests {
 
     use alloy_primitives::{Address, LogData, U256, address};
     use alloy_sol_types::SolEvent;
-    use h20_precompile_storage::{BasePrecompileError, Result};
+    use h20_precompile_storage::{H20PrecompileError, Result};
 
     use crate::{
         IPolicyRegistry, IPolicyRegistry::PolicyType, PolicyAccounting, PolicyRegistryLogic,
@@ -627,7 +628,7 @@ mod tests {
     fn create_policy_zero_admin_reverts() {
         let mut rt = initialized();
         let err = LOGIC.create_policy(&mut rt, Address::ZERO, PolicyType::ALLOWLIST).unwrap_err();
-        assert_eq!(err, BasePrecompileError::revert(IPolicyRegistry::ZeroAddress {}));
+        assert_eq!(err, H20PrecompileError::revert(IPolicyRegistry::ZeroAddress {}));
     }
 
     #[test]
@@ -646,7 +647,7 @@ mod tests {
         let mut rt = initialized();
         rt.next_counter = PolicyRegistryV1::COUNTER_MASK;
         let err = LOGIC.create_policy(&mut rt, ADMIN, PolicyType::ALLOWLIST).unwrap_err();
-        assert_eq!(err, BasePrecompileError::under_overflow());
+        assert_eq!(err, H20PrecompileError::under_overflow());
     }
 
     #[test]
@@ -656,7 +657,7 @@ mod tests {
         let id = LOGIC.create_policy(&mut rt, ADMIN, PolicyType::ALLOWLIST).unwrap();
         assert_eq!(id & PolicyRegistryV1::COUNTER_MASK, PolicyRegistryV1::COUNTER_MASK - 1);
         let err = LOGIC.create_policy(&mut rt, ADMIN, PolicyType::ALLOWLIST).unwrap_err();
-        assert_eq!(err, BasePrecompileError::under_overflow());
+        assert_eq!(err, H20PrecompileError::under_overflow());
     }
 
     #[test]
@@ -723,7 +724,7 @@ mod tests {
         let err = LOGIC.update_allowlist(&mut rt, id, true, accounts).unwrap_err();
         assert_eq!(
             err,
-            BasePrecompileError::revert(IPolicyRegistry::BatchSizeTooLarge {
+            H20PrecompileError::revert(IPolicyRegistry::BatchSizeTooLarge {
                 maxBatchSize: U256::from(PolicyRegistryV1::MAX_ACCOUNTS_PER_BATCH),
             })
         );
@@ -760,7 +761,7 @@ mod tests {
         let mut rt = initialized();
         let id = create_blocklist(&mut rt);
         let err = LOGIC.update_allowlist(&mut rt, id, true, vec![ALICE]).unwrap_err();
-        assert!(matches!(err, BasePrecompileError::Revert(_)));
+        assert!(matches!(err, H20PrecompileError::Revert(_)));
     }
 
     // --- BLOCKLIST membership ---
@@ -787,7 +788,7 @@ mod tests {
         let mut rt = initialized();
         let id = create_allowlist(&mut rt);
         let err = LOGIC.update_blocklist(&mut rt, id, true, vec![ALICE]).unwrap_err();
-        assert!(matches!(err, BasePrecompileError::Revert(_)));
+        assert!(matches!(err, H20PrecompileError::Revert(_)));
     }
 
     #[test]
@@ -798,7 +799,7 @@ mod tests {
         let err = LOGIC.update_blocklist(&mut rt, id, true, accounts).unwrap_err();
         assert_eq!(
             err,
-            BasePrecompileError::revert(IPolicyRegistry::BatchSizeTooLarge {
+            H20PrecompileError::revert(IPolicyRegistry::BatchSizeTooLarge {
                 maxBatchSize: U256::from(PolicyRegistryV1::MAX_ACCOUNTS_PER_BATCH),
             })
         );
@@ -810,7 +811,7 @@ mod tests {
         let id = create_blocklist(&mut rt);
         set_caller(&mut rt, ALICE);
         let err = LOGIC.update_allowlist(&mut rt, id, true, vec![BOB]).unwrap_err();
-        assert_eq!(err, BasePrecompileError::revert(IPolicyRegistry::IncompatiblePolicyType {}));
+        assert_eq!(err, H20PrecompileError::revert(IPolicyRegistry::IncompatiblePolicyType {}));
     }
 
     #[test]
@@ -819,7 +820,7 @@ mod tests {
         let id = create_allowlist(&mut rt);
         set_caller(&mut rt, ALICE);
         let err = LOGIC.update_blocklist(&mut rt, id, true, vec![BOB]).unwrap_err();
-        assert_eq!(err, BasePrecompileError::revert(IPolicyRegistry::IncompatiblePolicyType {}));
+        assert_eq!(err, H20PrecompileError::revert(IPolicyRegistry::IncompatiblePolicyType {}));
     }
 
     // --- createPolicyWithAccounts ---
@@ -873,7 +874,7 @@ mod tests {
             .unwrap_err();
         assert_eq!(
             err,
-            BasePrecompileError::revert(IPolicyRegistry::BatchSizeTooLarge {
+            H20PrecompileError::revert(IPolicyRegistry::BatchSizeTooLarge {
                 maxBatchSize: U256::from(PolicyRegistryV1::MAX_ACCOUNTS_PER_BATCH),
             })
         );
@@ -886,7 +887,7 @@ mod tests {
         let err = LOGIC
             .create_policy_with_accounts(&mut rt, Address::ZERO, PolicyType::ALLOWLIST, accounts)
             .unwrap_err();
-        assert_eq!(err, BasePrecompileError::revert(IPolicyRegistry::ZeroAddress {}));
+        assert_eq!(err, H20PrecompileError::revert(IPolicyRegistry::ZeroAddress {}));
     }
 
     #[test]
@@ -896,7 +897,7 @@ mod tests {
         let err = LOGIC
             .create_policy_with_accounts(&mut rt, ADMIN, PolicyType::__Invalid, accounts)
             .unwrap_err();
-        assert_eq!(err, BasePrecompileError::enum_conversion_error());
+        assert_eq!(err, H20PrecompileError::enum_conversion_error());
     }
 
     #[test]
@@ -928,7 +929,7 @@ mod tests {
         let mut rt = initialized();
         let id = create_allowlist(&mut rt);
         let err = LOGIC.finalize_update_admin(&mut rt, id).unwrap_err();
-        assert!(matches!(err, BasePrecompileError::Revert(_)));
+        assert!(matches!(err, H20PrecompileError::Revert(_)));
     }
 
     #[test]
@@ -937,7 +938,7 @@ mod tests {
         let id = create_allowlist(&mut rt);
         set_caller(&mut rt, ALICE);
         let err = LOGIC.stage_update_admin(&mut rt, id, NEW_ADMIN).unwrap_err();
-        assert!(matches!(err, BasePrecompileError::Revert(_)));
+        assert!(matches!(err, H20PrecompileError::Revert(_)));
     }
 
     #[test]
@@ -947,7 +948,7 @@ mod tests {
         LOGIC.stage_update_admin(&mut rt, id, NEW_ADMIN).unwrap();
         set_caller(&mut rt, ALICE);
         let err = LOGIC.finalize_update_admin(&mut rt, id).unwrap_err();
-        assert!(matches!(err, BasePrecompileError::Revert(_)));
+        assert!(matches!(err, H20PrecompileError::Revert(_)));
     }
 
     // --- renounceAdmin ---
@@ -958,7 +959,7 @@ mod tests {
         let id = create_allowlist(&mut rt);
         LOGIC.renounce_admin(&mut rt, id).unwrap();
         let err = LOGIC.update_allowlist(&mut rt, id, true, vec![ALICE]).unwrap_err();
-        assert!(matches!(err, BasePrecompileError::Revert(_)));
+        assert!(matches!(err, H20PrecompileError::Revert(_)));
     }
 
     #[test]
@@ -967,7 +968,7 @@ mod tests {
         let id = create_allowlist(&mut rt);
         set_caller(&mut rt, ALICE);
         let err = LOGIC.renounce_admin(&mut rt, id).unwrap_err();
-        assert!(matches!(err, BasePrecompileError::Revert(_)));
+        assert!(matches!(err, H20PrecompileError::Revert(_)));
     }
 
     #[test]
@@ -975,7 +976,7 @@ mod tests {
         let mut rt = initialized();
         for policy_id in [PolicyRegistryV1::ALWAYS_ALLOW_ID, PolicyRegistryV1::ALWAYS_BLOCK_ID] {
             let err = LOGIC.stage_update_admin(&mut rt, policy_id, ALICE).unwrap_err();
-            assert!(matches!(err, BasePrecompileError::Revert(_)));
+            assert!(matches!(err, H20PrecompileError::Revert(_)));
         }
     }
 

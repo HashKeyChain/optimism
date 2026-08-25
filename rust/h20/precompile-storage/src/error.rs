@@ -13,11 +13,11 @@ use revm::{
     precompile::{PrecompileError, PrecompileHalt, PrecompileOutput, PrecompileResult},
 };
 
-/// Top-level error type for all Base native precompile operations.
+/// Top-level error type for all H20 native precompile operations.
 #[derive(
     Debug, Clone, PartialEq, Eq, thiserror::Error, derive_more::From, derive_more::TryInto,
 )]
-pub enum BasePrecompileError {
+pub enum H20PrecompileError {
     /// EVM panic (arithmetic under/overflow, out-of-bounds access, enum conversion).
     #[error("Panic({0:?})")]
     Panic(PanicKind),
@@ -61,7 +61,7 @@ pub enum BasePrecompileError {
     Fatal(String),
 }
 
-impl From<JournalLoadError<revm::context::ErasedError>> for BasePrecompileError {
+impl From<JournalLoadError<revm::context::ErasedError>> for H20PrecompileError {
     fn from(value: JournalLoadError<revm::context::ErasedError>) -> Self {
         match value {
             JournalLoadError::DBError(e) => Self::Fatal(e.to_string()),
@@ -70,10 +70,10 @@ impl From<JournalLoadError<revm::context::ErasedError>> for BasePrecompileError 
     }
 }
 
-/// Result type alias for Base native precompile operations.
-pub type Result<T> = result::Result<T, BasePrecompileError>;
+/// Result type alias for H20 native precompile operations.
+pub type Result<T> = result::Result<T, H20PrecompileError>;
 
-impl BasePrecompileError {
+impl H20PrecompileError {
     /// Returns true if this error must be propagated rather than turned into a revert.
     pub const fn is_system_error(&self) -> bool {
         matches!(self, Self::OutOfGas | Self::Fatal(_) | Self::Panic(_) | Self::SlotOverflow)
@@ -137,7 +137,7 @@ impl BasePrecompileError {
     }
 }
 
-/// Extension trait to convert `Result<T, BasePrecompileError>` into a [`PrecompileResult`].
+/// Extension trait to convert `Result<T, H20PrecompileError>` into a [`PrecompileResult`].
 ///
 /// Prefer [`StorageCtx::result_output`] over calling this trait directly — it reads all gas
 /// accounting fields from the context automatically. Use this trait only when the context is not
@@ -150,7 +150,7 @@ pub trait IntoPrecompileResult<T> {
     /// accounting under the EIP-3529 cap (`gas_used / 5`).
     ///
     /// On error, `gas_refunded` is not propagated: refunds are only meaningful on successful
-    /// execution and the error arm delegates to [`BasePrecompileError::into_precompile_result`].
+    /// execution and the error arm delegates to [`H20PrecompileError::into_precompile_result`].
     fn into_precompile_result(
         self,
         gas: u64,
@@ -189,7 +189,7 @@ mod tests {
     fn delegate_call_not_allowed_encodes_to_typed_revert() {
         let expected: Bytes = DelegateCallNotAllowed {}.abi_encode().into();
         let result =
-            BasePrecompileError::revert(DelegateCallNotAllowed {}).into_precompile_result(0, 0);
+            H20PrecompileError::revert(DelegateCallNotAllowed {}).into_precompile_result(0, 0);
         let output = result.unwrap();
         assert!(output.is_revert());
         assert_eq!(output.bytes, expected);
@@ -216,9 +216,9 @@ mod tests {
 
     #[test]
     fn into_precompile_result_error_path_does_not_expose_refund_field() {
-        // The error path goes through BasePrecompileError::into_precompile_result which
+        // The error path goes through H20PrecompileError::into_precompile_result which
         // does not set gas_refunded (refunds are only meaningful on success).
-        let err: Result<Bytes> = Err(BasePrecompileError::Revert(Bytes::new()));
+        let err: Result<Bytes> = Err(H20PrecompileError::Revert(Bytes::new()));
         let out = err.into_precompile_result(100, 0, 999, |b| b).unwrap();
 
         assert!(out.is_revert());

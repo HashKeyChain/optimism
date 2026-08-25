@@ -1,4 +1,4 @@
-//! Shared business logic for all Base-native token variants.
+//! Shared business logic for all HSK-native token variants.
 
 mod abi;
 pub use abi::IH20;
@@ -8,7 +8,7 @@ pub use core_storage::H20CoreStorage;
 
 mod ops;
 pub use ops::{
-    H20Guards, H20TokenRole, Burnable, Configurable, Eip712Domain, Mintable, Pausable, PermitArgs,
+    Burnable, Configurable, Eip712Domain, H20Guards, H20TokenRole, Mintable, Pausable, PermitArgs,
     Permittable, RoleManaged, Transferable,
 };
 
