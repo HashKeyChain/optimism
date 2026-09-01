@@ -3,6 +3,11 @@
 
 use alloy_primitives::Address;
 
+pub mod networks;
+pub use networks::{
+    H20NetworkConfig, H20NetworkConfigError, PRODUCTION_H20_NETWORKS, network_h20_config,
+};
+
 /// Consensus configuration for HSK H20 v1.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct H20Config {

@@ -91,6 +91,12 @@ pub struct ChainConfig {
     /// Gas paying token metadata. Not consumed by downstream `OPStack` components.
     #[cfg_attr(feature = "serde", serde(rename = "GasPayingToken", alias = "gas_paying_token"))]
     pub gas_paying_token: Option<Address>,
+    /// First L2 timestamp at which HSK H20 v1 is active.
+    #[cfg_attr(feature = "serde", serde(default, skip_serializing_if = "Option::is_none"))]
+    pub h20_time: Option<u64>,
+    /// Static administrator installed by the H20 `ActivationRegistry` precompile.
+    #[cfg_attr(feature = "serde", serde(default, skip_serializing_if = "Option::is_none"))]
+    pub h20_activation_admin: Option<Address>,
     /// Hardfork Config. These values may override the superchain-wide defaults.
     #[cfg_attr(feature = "serde", serde(rename = "hardfork_configuration", alias = "hardforks"))]
     pub hardfork_config: HardForkConfig,
@@ -154,8 +160,8 @@ impl ChainConfig {
             genesis: self.genesis,
             l1_chain_id: self.l1_chain_id,
             l2_chain_id: Chain::from(self.chain_id),
-            h20_time: None,
-            h20_activation_admin: None,
+            h20_time: self.h20_time,
+            h20_activation_admin: self.h20_activation_admin,
             block_time: self.block_time,
             seq_window_size: self.seq_window_size,
             max_sequencer_drift: self.max_sequencer_drift,
@@ -306,6 +312,66 @@ mod tests {
         let cfg = ChainConfig::default();
         let json = serde_json::to_string(&cfg).unwrap();
         assert!(!json.contains("interop"), "expected `interop` key to be omitted; got: {json}");
+    }
+
+    #[test]
+    fn test_chain_config_h20_fields_convert_to_rollup_config() {
+        let admin = Address::repeat_byte(0x11);
+        let config = ChainConfig {
+            h20_time: Some(100),
+            h20_activation_admin: Some(admin),
+            ..Default::default()
+        };
+
+        let rollup = config.as_rollup_config();
+        assert_eq!(rollup.h20_time, Some(100));
+        assert_eq!(rollup.h20_activation_admin, Some(admin));
+        let h20 = rollup.h20_config().expect("complete H20 config must be valid");
+        assert!(!h20.is_active_at(99));
+        assert!(h20.is_active_at(100));
+        assert!(h20.is_active_at(101));
+    }
+
+    #[test]
+    fn test_chain_config_without_h20_fields_keeps_h20_disabled() {
+        let rollup = ChainConfig::default().as_rollup_config();
+        let h20 = rollup.h20_config().expect("missing H20 fields must disable H20");
+        assert!(!h20.is_enabled());
+    }
+
+    #[test]
+    fn test_chain_config_incomplete_h20_fields_are_rejected() {
+        let missing_admin =
+            ChainConfig { h20_time: Some(100), ..Default::default() }.as_rollup_config();
+        assert!(missing_admin.h20_config().is_err());
+
+        let missing_time = ChainConfig {
+            h20_activation_admin: Some(Address::repeat_byte(0x11)),
+            ..Default::default()
+        }
+        .as_rollup_config();
+        assert!(missing_time.h20_config().is_err());
+
+        let zero_admin = ChainConfig {
+            h20_time: Some(100),
+            h20_activation_admin: Some(Address::ZERO),
+            ..Default::default()
+        }
+        .as_rollup_config();
+        assert!(zero_admin.h20_config().is_err());
+    }
+
+    #[test]
+    fn test_chain_config_h20_fields_round_trip_json() {
+        let config = ChainConfig {
+            h20_time: Some(100),
+            h20_activation_admin: Some(Address::repeat_byte(0x11)),
+            ..Default::default()
+        };
+        let json = serde_json::to_string(&config).unwrap();
+        assert!(json.contains("\"h20_time\":100"));
+        assert!(json.contains("\"h20_activation_admin\""));
+        assert_eq!(serde_json::from_str::<ChainConfig>(&json).unwrap(), config);
     }
 
     // Guards the `deny_unknown_fields` attribute on ChainConfig: an otherwise-valid config with one

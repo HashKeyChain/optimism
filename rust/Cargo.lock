@@ -7621,6 +7621,7 @@ dependencies = [
  "alloy-hardforks",
  "alloy-op-hardforks",
  "alloy-primitives",
+ "hsk-h20-config",
  "kona-genesis",
  "lazy_static",
  "serde",

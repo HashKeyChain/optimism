@@ -77,6 +77,7 @@ COPY rust/alloy-op-evm/ /app/rust/alloy-op-evm/
 COPY rust/alloy-op-hardforks/ /app/rust/alloy-op-hardforks/
 COPY rust/op-revm/ /app/rust/op-revm/
 COPY rust/op-version/ /app/rust/op-version/
+COPY rust/h20/ /app/rust/h20/
 # op-reth, revm-ee-tests, and op-reth-test-engine are workspace members but
 # not kona-client dependencies. We need their Cargo.toml files so the
 # workspace resolves.
