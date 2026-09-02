@@ -24,54 +24,70 @@ fn main() {
         println!("cargo:rerun-if-changed={}", committed_etc_dir.join(file).display());
     }
 
-    // If the `KONA_SYNC_SUPERCHAIN` environment variable is _not_ set, then return early.
-    // The committed `etc/depsets.json` snapshot is the authoritative input in this
-    // mode; do not touch it. (Custom-config merges, if enabled, additively layer
-    // on top of the committed snapshot.)
+    // An external registry is a test-only build input and always generates an isolated snapshot in
+    // Cargo's OUT_DIR. KONA_SYNC_SUPERCHAIN retains its existing behavior for maintainers updating
+    // the committed snapshot from the official submodule.
     let custom_configs_dir = custom_configs_dir();
+    let external_registry_dir = external_registry_dir();
     let kona_bind: bool = matches!(env::var("KONA_SYNC_SUPERCHAIN").as_deref(), Ok("1" | "true"));
     println!("cargo:rerun-if-env-changed=KONA_SYNC_SUPERCHAIN");
-    if !kona_bind {
+    if !kona_bind && external_registry_dir.is_none() {
         let etc_dir = prepare_etc_dir(&committed_etc_dir, custom_configs_dir.is_some());
         println!("cargo:rustc-env=KONA_REGISTRY_DIR={}", etc_dir.display());
         merge_custom_configs(custom_configs_dir.as_deref(), &etc_dir);
         return;
     }
 
-    let chain_list_path = committed_etc_dir.join("chainList.json");
-    let configs_path = committed_etc_dir.join("configs.json");
-    let depsets_path = committed_etc_dir.join("depsets.json");
+    let external_registry = external_registry_dir.is_some();
+    let generated_etc_dir = if external_registry {
+        reset_scratch_etc_dir("external-registry-etc")
+    } else {
+        committed_etc_dir.clone()
+    };
+    let chain_list_path = generated_etc_dir.join("chainList.json");
+    let configs_path = generated_etc_dir.join("configs.json");
+    let depsets_path = generated_etc_dir.join("depsets.json");
 
     // Reset the embedded depsets to the empty list before re-deriving from the
     // superchain-registry submodule, so the content is deterministic for the configured
     // inputs and never carries stale entries from a prior build.
     write_depsets(&depsets_path, &[]);
 
-    // Resolve the monorepo root via `git rev-parse --show-toplevel` so we don't
-    // depend on this crate's location inside the workspace.
-    let repo_root = std::process::Command::new("git")
-        .args(["rev-parse", "--show-toplevel"])
-        .output()
-        .expect("failed to run `git rev-parse --show-toplevel`");
-    assert!(repo_root.status.success(), "`git rev-parse --show-toplevel` failed");
-    let repo_root = String::from_utf8(repo_root.stdout).unwrap();
-    let repo_root = repo_root.trim_end();
-
-    // The `superchain-registry` submodule lives at the monorepo root.
-    let superchain_registry = format!("{repo_root}/superchain-registry");
+    // External test profiles are complete inputs and must also work in the reproducible Docker
+    // context, which intentionally has no `.git` directory. Only resolve the monorepo root when
+    // synchronizing from the official submodule.
+    let official_registry;
+    let superchain_registry = if let Some(external) = external_registry_dir.as_deref() {
+        external
+    } else {
+        let repo_root = std::process::Command::new("git")
+            .args(["rev-parse", "--show-toplevel"])
+            .output()
+            .expect("failed to run `git rev-parse --show-toplevel`");
+        assert!(repo_root.status.success(), "`git rev-parse --show-toplevel` failed");
+        let repo_root = String::from_utf8(repo_root.stdout).unwrap();
+        official_registry = PathBuf::from(repo_root.trim_end()).join("superchain-registry");
+        &official_registry
+    };
     assert!(
-        std::path::Path::new(&superchain_registry).exists(),
-        "Git Submodule missing. Please run `just update-superchain-registry-submodule` \
-         from the repo root to initialize it."
+        superchain_registry.is_dir(),
+        "superchain registry directory does not exist: {}. Run `just \
+         update-superchain-registry-submodule` for the official submodule, or set the test-only \
+         KONA_SUPERCHAIN_REGISTRY_DIR input.",
+        superchain_registry.display()
     );
 
     // Copy the `superchain-registry/chainList.json` file into the embedded registry snapshot.
-    let chain_list = format!("{superchain_registry}/chainList.json");
-    fs::copy(chain_list, &chain_list_path).unwrap();
+    let chain_list = superchain_registry.join("chainList.json");
+    println!("cargo:rerun-if-changed={}", chain_list.display());
+    fs::copy(&chain_list, &chain_list_path)
+        .unwrap_or_else(|e| panic!("failed to copy {}: {e}", chain_list.display()));
 
     // Get the `superchain-registry/superchain/configs` directory`
-    let configs_dir = format!("{superchain_registry}/superchain/configs");
-    let configs = std::fs::read_dir(configs_dir).unwrap();
+    let configs_dir = superchain_registry.join("superchain/configs");
+    println!("cargo:rerun-if-changed={}", configs_dir.display());
+    let configs = std::fs::read_dir(&configs_dir)
+        .unwrap_or_else(|e| panic!("failed to read {}: {e}", configs_dir.display()));
 
     // Get all the directories in the `configs` directory
     let mut superchains = Superchains::default();
@@ -86,6 +102,7 @@ fn main() {
             for config_file in config_files {
                 let config_file = config_file.unwrap();
                 let config_file_path = config_file.path();
+                println!("cargo:rerun-if-changed={}", config_file_path.display());
 
                 // Read the `superchain.toml` as the `SuperchainConfig`
                 let config_file_name = config_file.file_name().into_string().unwrap();
@@ -135,9 +152,32 @@ fn main() {
         });
     write_depsets(&depsets_path, &depsets);
 
-    let etc_dir = prepare_etc_dir(&committed_etc_dir, custom_configs_dir.is_some());
+    let etc_dir = if external_registry {
+        generated_etc_dir
+    } else {
+        prepare_etc_dir(&committed_etc_dir, custom_configs_dir.is_some())
+    };
     println!("cargo:rustc-env=KONA_REGISTRY_DIR={}", etc_dir.display());
     merge_custom_configs(custom_configs_dir.as_deref(), &etc_dir);
+}
+
+fn external_registry_dir() -> Option<PathBuf> {
+    println!("cargo:rerun-if-env-changed=KONA_SUPERCHAIN_REGISTRY_DIR");
+    println!("cargo:rerun-if-env-changed=KONA_EXTERNAL_REGISTRY_TEST");
+    let registry_dir = env::var_os("KONA_SUPERCHAIN_REGISTRY_DIR").map(PathBuf::from);
+    let test_enabled = env::var("KONA_EXTERNAL_REGISTRY_TEST").is_ok_and(|value| value == "true");
+    assert_eq!(
+        registry_dir.is_some(),
+        test_enabled,
+        "KONA_SUPERCHAIN_REGISTRY_DIR and KONA_EXTERNAL_REGISTRY_TEST=true must be set together"
+    );
+    let registry_dir = registry_dir?;
+    assert!(
+        registry_dir.is_dir(),
+        "KONA_SUPERCHAIN_REGISTRY_DIR points to {}, which is not a directory",
+        registry_dir.display()
+    );
+    Some(registry_dir)
 }
 
 fn custom_configs_dir() -> Option<PathBuf> {
@@ -148,8 +188,8 @@ fn custom_configs_dir() -> Option<PathBuf> {
     println!("cargo:rerun-if-env-changed=KONA_CUSTOM_CONFIGS_TEST");
     println!("cargo:rustc-check-cfg=cfg(kona_custom_configs, values(\"true\"))");
 
-    let enabled = env::var("KONA_CUSTOM_CONFIGS").is_ok_and(|value| value == "true") ||
-        env::var("CARGO_CFG_KONA_CUSTOM_CONFIGS").is_ok_and(|value| value == "true");
+    let enabled = env::var("KONA_CUSTOM_CONFIGS").is_ok_and(|value| value == "true")
+        || env::var("CARGO_CFG_KONA_CUSTOM_CONFIGS").is_ok_and(|value| value == "true");
     if !enabled {
         return None;
     }
@@ -175,14 +215,19 @@ fn prepare_etc_dir(committed_etc_dir: &Path, use_scratch: bool) -> PathBuf {
         return committed_etc_dir.to_path_buf();
     }
 
-    let scratch_etc_dir = PathBuf::from(env::var_os("OUT_DIR").unwrap()).join("registry-etc");
+    let scratch_etc_dir = reset_scratch_etc_dir("registry-etc");
+    for file in ["chainList.json", "configs.json", "depsets.json"] {
+        fs::copy(committed_etc_dir.join(file), scratch_etc_dir.join(file)).unwrap();
+    }
+    scratch_etc_dir
+}
+
+fn reset_scratch_etc_dir(name: &str) -> PathBuf {
+    let scratch_etc_dir = PathBuf::from(env::var_os("OUT_DIR").unwrap()).join(name);
     if scratch_etc_dir.exists() {
         fs::remove_dir_all(&scratch_etc_dir).unwrap();
     }
     fs::create_dir_all(&scratch_etc_dir).unwrap();
-    for file in ["chainList.json", "configs.json", "depsets.json"] {
-        fs::copy(committed_etc_dir.join(file), scratch_etc_dir.join(file)).unwrap();
-    }
     scratch_etc_dir
 }
 
