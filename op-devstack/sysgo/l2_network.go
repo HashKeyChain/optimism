@@ -21,6 +21,7 @@ type L2Network struct {
 	opcmImpl   common.Address
 	mipsImpl   common.Address
 	keys       devkeys.Keys
+	h20Config  *h20RuntimeConfig
 }
 
 func (c *L2Network) Name() string {

@@ -1,12 +1,15 @@
 //! [`PrecompileProvider`] for FPVM-accelerated OP Stack precompiles.
 
 use alloc::{format, string::String};
+use alloy_evm::{Database, precompiles::PrecompilesMap};
+use alloy_op_evm::{H20OpPrecompiles, OpEvmContext};
 use alloy_primitives::Address;
+use hsk_h20_config::H20Config;
 use op_revm::{OpSpecId, precompiles::OpPrecompiles};
 #[cfg(target_os = "zkvm")]
 use revm::precompile::PrecompileId;
 use revm::{
-    context::{Cfg, ContextTr, LocalContextTr},
+    context::{ContextTr, LocalContextTr},
     context_interface::JournalTr,
     handler::{EthPrecompiles, PrecompileProvider, precompile_output_to_interpreter_result},
     interpreter::{CallInput, CallInputs, InterpreterResult},
@@ -78,6 +81,14 @@ pub struct OpZkvmPrecompiles {
     inner: EthPrecompiles,
     /// The [`OpSpecId`] of the precompiles.
     spec: OpSpecId,
+    /// Optional OP+H20 map for the executing block timestamp.
+    h20_precompiles: Option<PrecompilesMap>,
+    /// H20 configuration retained across `set_spec` calls.
+    h20_config: H20Config,
+    /// Executing block timestamp retained across `set_spec` calls.
+    timestamp: u64,
+    /// Static precompile addresses warmed at transaction start.
+    warm_addresses: AddressSet,
 }
 
 impl OpZkvmPrecompiles {
@@ -86,32 +97,57 @@ impl OpZkvmPrecompiles {
     pub fn new_with_spec(spec: OpSpecId) -> Self {
         let precompiles = OpPrecompiles::new_with_spec(spec).precompiles();
 
-        Self { inner: EthPrecompiles { precompiles, spec: spec.into_eth_spec() }, spec }
+        let warm_addresses = precompiles.addresses().copied().collect();
+        Self {
+            inner: EthPrecompiles { precompiles, spec: spec.into_eth_spec() },
+            spec,
+            h20_precompiles: None,
+            h20_config: H20Config::DISABLED,
+            timestamp: 0,
+            warm_addresses,
+        }
+    }
+
+    /// Adds HSK H20 v1 while retaining ZKVM acceleration for canonical precompiles.
+    pub fn with_h20(mut self, config: H20Config, timestamp: u64) -> Self {
+        self.h20_config = config;
+        self.timestamp = timestamp;
+        if config.is_active_at(timestamp) {
+            let installed = H20OpPrecompiles::build(self.spec, config, timestamp);
+            self.warm_addresses = installed.addresses().copied().collect();
+            self.h20_precompiles = Some(installed);
+        }
+        self
     }
 }
 
-impl<CTX> PrecompileProvider<CTX> for OpZkvmPrecompiles
+impl<DB> PrecompileProvider<OpEvmContext<DB>> for OpZkvmPrecompiles
 where
-    CTX: ContextTr<Cfg: Cfg<Spec = OpSpecId>>,
+    DB: Database,
 {
     type Output = InterpreterResult;
 
     #[inline]
-    fn set_spec(&mut self, spec: <CTX::Cfg as Cfg>::Spec) -> bool {
+    fn set_spec(&mut self, spec: OpSpecId) -> bool {
         if spec == self.spec {
             return false;
         }
-        *self = Self::new_with_spec(spec);
+        *self = Self::new_with_spec(spec).with_h20(self.h20_config, self.timestamp);
         true
     }
 
     #[inline]
     fn run(
         &mut self,
-        context: &mut CTX,
+        context: &mut OpEvmContext<DB>,
         inputs: &CallInputs,
     ) -> Result<Option<Self::Output>, String> {
         let Some(precompile) = self.inner.precompiles.get(&inputs.bytecode_address) else {
+            if let Some(installed) = self.h20_precompiles.as_mut() {
+                return <PrecompilesMap as PrecompileProvider<OpEvmContext<DB>>>::run(
+                    installed, context, inputs,
+                );
+            }
             return Ok(None);
         };
 
@@ -161,12 +197,15 @@ where
 
     #[inline]
     fn warm_addresses(&self) -> &AddressSet {
-        self.inner.warm_addresses()
+        &self.warm_addresses
     }
 
     #[inline]
     fn contains(&self, address: &Address) -> bool {
-        self.inner.contains(address)
+        self.h20_precompiles.as_ref().map_or_else(
+            || self.inner.contains(address),
+            |installed| installed.get(address).is_some(),
+        )
     }
 }
 
@@ -174,9 +213,10 @@ where
 mod tests {
     use alloc::vec;
 
-    use op_revm::{DefaultOp, precompiles::bn254_pair};
+    use alloy_op_evm::OpTx;
+    use op_revm::{L1BlockInfo, OpTransaction, precompiles::bn254_pair};
     use revm::{
-        Context,
+        Context, MainContext,
         bytecode::Bytecode,
         context::CfgEnv,
         handler::PrecompileProvider,
@@ -205,7 +245,10 @@ mod tests {
     fn karst_bn254_pairing_wrapper_preserves_halt_gas_semantics() {
         let bad_input_len = bn254_pair::KARST_MAX_INPUT_SIZE + 1;
         let gas_limit = 1_000_000;
-        let mut context = Context::op().with_cfg(CfgEnv::new_with_spec(OpSpecId::KARST));
+        let mut context = Context::mainnet()
+            .with_tx(OpTx(OpTransaction::builder().build_fill()))
+            .with_cfg(CfgEnv::new_with_spec(OpSpecId::KARST))
+            .with_chain(L1BlockInfo::default());
         let mut precompiles = OpZkvmPrecompiles::new_with_spec(OpSpecId::KARST);
 
         let result = precompiles

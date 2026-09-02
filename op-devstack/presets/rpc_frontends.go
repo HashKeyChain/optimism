@@ -211,6 +211,22 @@ func (r *l2ELFrontend) Running() bool {
 	return r.control != nil && r.control.Running()
 }
 
+func (r *l2ELFrontend) SnapshotState(path string) error {
+	snapshotter, ok := r.lifecycle.(interface{ SnapshotState(string) error })
+	if !ok {
+		return fmt.Errorf("L2EL node %s does not support state snapshots", r.Name())
+	}
+	return snapshotter.SnapshotState(path)
+}
+
+func (r *l2ELFrontend) RestoreState(path string) error {
+	snapshotter, ok := r.lifecycle.(interface{ RestoreState(string) error })
+	if !ok {
+		return fmt.Errorf("L2EL node %s does not support state snapshots", r.Name())
+	}
+	return snapshotter.RestoreState(path)
+}
+
 type l2CLFrontend struct {
 	presetCommon
 	chainID          eth.ChainID
@@ -223,6 +239,18 @@ type l2CLFrontend struct {
 	userRPC          string
 	lifecycle        stack.Lifecycle
 	control          stack.ControlledLifecycle
+}
+
+func (r *l2CLFrontend) PauseL1RPC() {
+	control, ok := r.lifecycle.(interface{ PauseL1RPC() })
+	r.require().True(ok, "L2CL node %s does not support L1 RPC fault injection", r.Name())
+	control.PauseL1RPC()
+}
+
+func (r *l2CLFrontend) ResumeL1RPC() {
+	control, ok := r.lifecycle.(interface{ ResumeL1RPC() })
+	r.require().True(ok, "L2CL node %s does not support L1 RPC fault injection", r.Name())
+	control.ResumeL1RPC()
 }
 
 var _ stack.L2CLNode = (*l2CLFrontend)(nil)

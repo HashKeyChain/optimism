@@ -14,6 +14,23 @@ use op_alloy_rpc_types_engine::OpExecutionPayloadEnvelope;
 use std::sync::Arc;
 use tokio::sync::{mpsc, watch};
 
+/// Returns whether the engine should be reset after EL sync completes.
+///
+/// Validators always reset because they do not have a sequencer actor to initialize forkchoice.
+/// Sequencers preserve the existing behavior and only reset when no finalized head is known.
+fn should_reset_after_el_sync(is_validator: bool, finalized_head: L2BlockInfo) -> bool {
+    is_validator || finalized_head == L2BlockInfo::default()
+}
+
+/// Returns whether validator-mode engine initialization must run on this actor step.
+///
+/// Sequencers initialize forkchoice through their sequencer actor. Validators have no such actor,
+/// so their first engine step must enqueue a reset to drive the initial forkchoice update and
+/// complete EL synchronization.
+const fn should_initialize_validator_engine(initialized: bool, is_validator: bool) -> bool {
+    !initialized && is_validator
+}
+
 /// A request handled by the [`EngineActor`].
 #[derive(Debug)]
 pub enum EngineActorRequest {
@@ -44,6 +61,8 @@ where
     derivation_client: DerivationClient,
     /// Whether the EL sync is complete. This should only ever go from false to true.
     el_sync_complete: bool,
+    /// Whether engine initialization has been attempted on the first actor step.
+    initialized: bool,
     /// The last safe head update sent.
     last_safe_head_sent: L2BlockInfo,
     /// A channel to use to relay the current unsafe head.
@@ -80,6 +99,7 @@ where
             client,
             derivation_client,
             el_sync_complete: false,
+            initialized: false,
             engine,
             last_safe_head_sent: L2BlockInfo::default(),
             rollup: config,
@@ -161,10 +181,14 @@ where
     ) -> Result<(), EngineError> {
         self.el_sync_complete = true;
 
-        // Reset the engine if the sync state does not already know about a finalized block.
-        if self.engine.state().sync_state.finalized_head() == L2BlockInfo::default() {
-            // If the sync status is finished, we can reset the engine and start derivation.
-            info!(target: "engine", "Performing initial engine reset");
+        // Validators do not have a sequencer actor to initialize forkchoice, so always reset once
+        // EL sync has completed. Sequencers retain the existing behavior and only reset when the
+        // sync state does not already know about a finalized block.
+        if should_reset_after_el_sync(
+            self.unsafe_head_tx.is_none(),
+            self.engine.state().sync_state.finalized_head(),
+        ) {
+            info!(target: "engine", "Performing post-sync engine reset");
             self.reset().await?;
         } else {
             info!(target: "engine", "finalized head is not default, so not resetting");
@@ -201,6 +225,62 @@ where
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::{should_initialize_validator_engine, should_reset_after_el_sync};
+    use alloy_eips::BlockNumHash;
+    use alloy_primitives::B256;
+    use kona_protocol::{BlockInfo, L2BlockInfo};
+
+    fn non_zero_finalized_head() -> L2BlockInfo {
+        L2BlockInfo {
+            block_info: BlockInfo {
+                number: 1,
+                hash: B256::with_last_byte(1),
+                parent_hash: B256::ZERO,
+                timestamp: 2,
+            },
+            l1_origin: BlockNumHash { number: 1, hash: B256::with_last_byte(2) },
+            seq_num: 0,
+        }
+    }
+
+    #[test]
+    fn validator_resets_without_finalized_head() {
+        assert!(should_reset_after_el_sync(true, L2BlockInfo::default()));
+    }
+
+    #[test]
+    fn validator_resets_with_continuation_finalized_head() {
+        assert!(should_reset_after_el_sync(true, non_zero_finalized_head()));
+    }
+
+    #[test]
+    fn sequencer_resets_without_finalized_head() {
+        assert!(should_reset_after_el_sync(false, L2BlockInfo::default()));
+    }
+
+    #[test]
+    fn sequencer_keeps_existing_forkchoice_with_finalized_head() {
+        assert!(!should_reset_after_el_sync(false, non_zero_finalized_head()));
+    }
+
+    #[test]
+    fn validator_initializes_engine_on_first_step() {
+        assert!(should_initialize_validator_engine(false, true));
+    }
+
+    #[test]
+    fn validator_does_not_initialize_engine_twice() {
+        assert!(!should_initialize_validator_engine(true, true));
+    }
+
+    #[test]
+    fn sequencer_does_not_use_validator_engine_initialization() {
+        assert!(!should_initialize_validator_engine(false, false));
+    }
+}
+
 #[async_trait]
 impl<EngineClient_, DerivationClient> NodeActor for EngineActor<EngineClient_, DerivationClient>
 where
@@ -210,6 +290,16 @@ where
     type Error = EngineError;
 
     async fn step(&mut self) -> Result<(), Self::Error> {
+        let initialize_validator =
+            should_initialize_validator_engine(self.initialized, self.unsafe_head_tx.is_none());
+        if !self.initialized {
+            self.initialized = true;
+        }
+        if initialize_validator {
+            info!(target: "engine", "Performing initial validator engine reset");
+            self.reset().await?;
+        }
+
         // Attempt to drain all outstanding tasks from the engine queue before adding new ones.
         self.drain()
             .await

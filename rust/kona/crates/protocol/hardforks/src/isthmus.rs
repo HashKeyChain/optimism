@@ -57,13 +57,13 @@ impl Isthmus {
     /// The Isthmus L1 Block Deployer Code Hash
     /// See: <https://specs.optimism.io/protocol/isthmus/derivation.html#l1block-deployment>
     pub const L1_BLOCK_DEPLOYER_CODE_HASH: B256 = alloy_primitives::b256!(
-        "0x8e3fe7a416d3e5f3b7be74ddd4e7e58e516fa3f80b67c6d930e3cd7297da4a4b"
+        "0x61f8d705018f105013dda524440781d0093c94862b46e46b7fe02d64c04313f1"
     );
 
     /// The Isthmus Gas Price Oracle Code Hash
     /// See: <https://specs.optimism.io/protocol/isthmus/derivation.html#gaspriceoracle-deployment>
     pub const GAS_PRICE_ORACLE_CODE_HASH: B256 = alloy_primitives::b256!(
-        "0x4d195a9d7caf9fb6d4beaf80de252c626c853afd5868c4f4f8d19c9d301c2679"
+        "0x732c34b4d8d2e05f4326bc8386ae95cec203843beb29a801126bc8a8c7dd58b8"
     );
     /// The Isthmus Operator Fee Vault Code Hash
     /// See: <https://specs.optimism.io/protocol/isthmus/derivation.html#operator-fee-vault-deployment>
@@ -154,7 +154,7 @@ impl Isthmus {
                 to: TxKind::Create,
                 mint: 0,
                 value: U256::ZERO,
-                gas_limit: 425_000,
+                gas_limit: 1_000_000,
                 is_system_transaction: false,
                 input: Self::l1_block_deployment_bytecode(),
             },
@@ -164,7 +164,7 @@ impl Isthmus {
                 to: TxKind::Create,
                 mint: 0,
                 value: U256::ZERO,
-                gas_limit: 1_625_000,
+                gas_limit: 1_750_714,
                 is_system_transaction: false,
                 input: Self::gas_price_oracle_deployment_bytecode(),
             },

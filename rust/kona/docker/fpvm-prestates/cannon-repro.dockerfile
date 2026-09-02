@@ -77,6 +77,7 @@ COPY rust/alloy-op-evm/ /app/rust/alloy-op-evm/
 COPY rust/alloy-op-hardforks/ /app/rust/alloy-op-hardforks/
 COPY rust/op-revm/ /app/rust/op-revm/
 COPY rust/op-version/ /app/rust/op-version/
+COPY rust/h20/ /app/rust/h20/
 # op-reth, revm-ee-tests, and op-reth-test-engine are workspace members but
 # not kona-client dependencies. We need their Cargo.toml files so the
 # workspace resolves.
@@ -97,6 +98,22 @@ ARG KONA_CUSTOM_CONFIGS=false
 COPY --from=kona-custom-configs / /usr/local/kona-custom-configs
 ENV KONA_CUSTOM_CONFIGS=${KONA_CUSTOM_CONFIGS}
 
+# External Registry profiles and H20 overrides are an explicit test-only build path. Empty named
+# contexts keep the normal production build unchanged.
+ARG KONA_EXTERNAL_REGISTRY_TEST=false
+COPY --from=kona-external-registry / /usr/local/kona-external-registry
+ENV KONA_EXTERNAL_REGISTRY_TEST=${KONA_EXTERNAL_REGISTRY_TEST}
+ARG KONA_H20_TEST_OVERRIDE=false
+ARG KONA_H20_TEST_L1_CHAIN_ID=
+ARG KONA_H20_TEST_L2_CHAIN_ID=
+ARG KONA_H20_TEST_ACTIVATION_TIME=
+ARG KONA_H20_TEST_ACTIVATION_ADMIN=
+ENV KONA_H20_TEST_OVERRIDE=${KONA_H20_TEST_OVERRIDE}
+ENV KONA_H20_TEST_L1_CHAIN_ID=${KONA_H20_TEST_L1_CHAIN_ID}
+ENV KONA_H20_TEST_L2_CHAIN_ID=${KONA_H20_TEST_L2_CHAIN_ID}
+ENV KONA_H20_TEST_ACTIVATION_TIME=${KONA_H20_TEST_ACTIVATION_TIME}
+ENV KONA_H20_TEST_ACTIVATION_ADMIN=${KONA_H20_TEST_ACTIVATION_ADMIN}
+
 # --- Layer 5: Build kona-client ELF ---
 # build-kona-client-elf sets CARGO_BUILD_TARGET to the corrected target spec
 # from the source tree, overriding cannon-builder's baked-in spec.
@@ -105,6 +122,9 @@ RUN --mount=type=cache,target=/root/.cargo/registry \
     cd /app/rust && \
     if [ "$KONA_CUSTOM_CONFIGS" = "true" ]; then \
       export KONA_CUSTOM_CONFIGS_DIR=/usr/local/kona-custom-configs; \
+    fi && \
+    if [ "$KONA_EXTERNAL_REGISTRY_TEST" = "true" ]; then \
+      export KONA_SUPERCHAIN_REGISTRY_DIR=/usr/local/kona-external-registry; \
     fi && \
     just build-kona-client-elf ${VARIANT} && \
     cp /app/rust/target/mips64-unknown-none/release-client-lto/${VARIANT} /app/kona-elf

@@ -12,15 +12,22 @@ use alloy_eips::{
     eip2930::{AccessList, AccessListItem},
     eip7702::SignedAuthorization,
 };
-use alloy_evm::RecoveredTx;
-use alloy_primitives::{Address, B64, B256, Bytes, Signature, TxHash, TxKind, U256};
+use alloy_evm::{Evm, EvmEnv, EvmFactory, RecoveredTx};
+use alloy_genesis::Genesis;
+use alloy_primitives::{
+    Address, B64, B256, Bytes, Signature, TxHash, TxKind, U256, address, keccak256,
+};
 use alloy_rpc_types_eth::erc4337::TransactionConditional;
 use op_alloy_consensus::{SDMGasEntry, build_post_exec_tx};
+use op_revm::OpSpecId;
 use reth_basic_payload_builder::PayloadConfig;
 use reth_chainspec::MIN_TRANSACTION_GAS;
-use reth_evm::execute::{BlockBuilder, BlockExecutionError};
+use reth_evm::{
+    ConfigureEvm,
+    execute::{BlockBuilder, BlockExecutionError},
+};
 use reth_optimism_chainspec::{OpChainSpec, OpChainSpecBuilder};
-use reth_optimism_evm::{OpEvmConfig, PostExecMode};
+use reth_optimism_evm::{H20OpEvmFactory, OpEvmConfig, OpTx, PostExecMode};
 use reth_optimism_primitives::{OpPrimitives, OpTransactionSigned};
 use reth_optimism_txpool::{
     OpPooledTransaction, OpPooledTx,
@@ -34,6 +41,11 @@ use reth_payload_util::PayloadTransactionsFixed;
 use reth_primitives_traits::{Account, InMemorySize, SealedHeader};
 use reth_revm::{database::StateProviderDatabase, db::State, test_utils::StateProviderTest};
 use reth_transaction_pool::PoolTransaction;
+use revm::{
+    context::{BlockEnv, CfgEnv},
+    database::{EmptyDB, InMemoryDB},
+    state::AccountInfo,
+};
 use std::{borrow::Cow, cell::Cell, sync::Arc};
 
 fn entries(specs: &[(u64, u64)]) -> Vec<SDMGasEntry> {
@@ -149,6 +161,90 @@ fn payload_builder_ctx(
         cancel: Default::default(),
         best_payload: None,
     }
+}
+
+#[test]
+fn payload_builder_uses_h20_precompiles_at_activation_timestamp() {
+    const FACTORY: Address = address!("0177FF0000000000000000000000000000000000");
+
+    let mut genesis = Genesis::default();
+    genesis.config.extra_fields.insert("h20Time".to_string(), serde_json::json!(1));
+    genesis.config.extra_fields.insert(
+        "h20ActivationAdmin".to_string(),
+        serde_json::json!("0x1111111111111111111111111111111111111111"),
+    );
+    let chain_spec = Arc::new(OpChainSpecBuilder::optimism_mainnet().genesis(genesis).build());
+    let ctx = payload_builder_ctx(chain_spec, 1_000_000);
+    let state_provider = StateProviderTest::default();
+    let mut db = State::builder()
+        .with_database(StateProviderDatabase::new(&state_provider))
+        .with_bundle_update()
+        .build();
+    let factory: &H20OpEvmFactory<OpTx> = ctx.evm_config.evm_factory();
+    assert_eq!(factory.config().activation_time(), Some(1));
+    let evm = factory.create_evm(
+        EmptyDB::default(),
+        EvmEnv::new(
+            CfgEnv::new_with_spec(OpSpecId::BEDROCK),
+            BlockEnv { timestamp: U256::from(1), ..Default::default() },
+        ),
+    );
+    assert!(evm.precompiles().get(&FACTORY).is_some());
+
+    let builder = ctx.block_builder(&mut db).expect("H20 payload builder can be created");
+    drop(builder);
+
+    let mut calldata = Vec::with_capacity(36);
+    calldata.extend_from_slice(&keccak256("isH20(address)")[..4]);
+    calldata.extend_from_slice(&[0u8; 12]);
+    calldata.extend_from_slice(&address!("0177000000000000000000000000000000000000").into_array());
+    let signer = Address::repeat_byte(0x44);
+    let tx = op_pooled_tx_with_input(0, signer, FACTORY, Bytes::from(calldata));
+
+    let mut direct_db = InMemoryDB::default();
+    direct_db.insert_account_info(
+        signer,
+        AccountInfo { balance: U256::MAX, ..Default::default() },
+    );
+    let mut direct_evm = factory.create_evm(
+        direct_db,
+        EvmEnv::new(
+            CfgEnv::new()
+                .with_chain_id(10)
+                .with_spec_and_mainnet_gas_params(OpSpecId::BEDROCK),
+            BlockEnv {
+                timestamp: U256::from(1),
+                gas_limit: 1_000_000,
+                ..Default::default()
+            },
+        ),
+    );
+    let direct_tx = ctx.evm_config.tx_env(tx.clone().into_consensus_with2718());
+    let direct_result = direct_evm.transact_raw(direct_tx).expect("direct H20 simulation succeeds");
+
+    let (active_info, active_hashes) =
+        run_execute_best_transactions_with_ctx(ctx, signer, vec![tx.clone()], None, None);
+
+    let mut pre_fork_genesis = Genesis::default();
+    pre_fork_genesis.config.extra_fields.insert("h20Time".to_string(), serde_json::json!(2));
+    pre_fork_genesis.config.extra_fields.insert(
+        "h20ActivationAdmin".to_string(),
+        serde_json::json!("0x1111111111111111111111111111111111111111"),
+    );
+    let pre_fork_ctx = payload_builder_ctx(
+        Arc::new(OpChainSpecBuilder::optimism_mainnet().genesis(pre_fork_genesis).build()),
+        1_000_000,
+    );
+    let (pre_fork_info, pre_fork_hashes) =
+        run_execute_best_transactions_with_ctx(pre_fork_ctx, signer, vec![tx], None, None);
+
+    assert_eq!(active_hashes.len(), 1);
+    assert_eq!(pre_fork_hashes.len(), 1);
+    assert_eq!(active_info.cumulative_evm_gas_used, direct_result.result.tx_gas_used());
+    assert!(
+        active_info.cumulative_gas_used > pre_fork_info.cumulative_gas_used,
+        "active payload execution must charge H20 precompile gas rather than behave as an empty account"
+    );
 }
 
 /// Signs `tx` with the test signature and wraps it as an [`OpPooledTransaction`] recovered to

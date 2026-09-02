@@ -686,7 +686,10 @@ build-kona-reproducible-prestate-variant VARIANT OUTPUT_DIR:
     set -euo pipefail
 
     MONOREPO_ROOT="{{justfile_directory()}}/.."
-    OUTPUT="{{KONA_DIR}}/{{OUTPUT_DIR}}"
+    OUTPUT="${KONA_PRESTATE_OUTPUT_DIR:-{{KONA_DIR}}/{{OUTPUT_DIR}}}"
+    TEMP_CONTEXTS=()
+    cleanup() { ((${#TEMP_CONTEXTS[@]} == 0)) || rm -rf "${TEMP_CONTEXTS[@]}"; }
+    trap cleanup EXIT
 
     # The Dockerfile always copies from the `kona-custom-configs` named build
     # context, so point it at an empty temp dir when no configs are requested.
@@ -699,15 +702,53 @@ build-kona-reproducible-prestate-variant VARIANT OUTPUT_DIR:
       CUSTOM_CONFIGS_FLAG=true
     else
       CUSTOM_CONFIGS_CONTEXT=$(mktemp -d)
-      trap 'rm -rf "${CUSTOM_CONFIGS_CONTEXT}"' EXIT
+      TEMP_CONTEXTS+=("${CUSTOM_CONFIGS_CONTEXT}")
       CUSTOM_CONFIGS_FLAG=false
     fi
 
-    docker build \
+    if [[ -n "${KONA_SUPERCHAIN_REGISTRY_DIR:-}" ]]; then
+      if [[ ! -d "${KONA_SUPERCHAIN_REGISTRY_DIR}" ]]; then
+        echo "KONA_SUPERCHAIN_REGISTRY_DIR=${KONA_SUPERCHAIN_REGISTRY_DIR} is not a directory" >&2
+        exit 1
+      fi
+      [[ "${KONA_EXTERNAL_REGISTRY_TEST:-}" == true ]] || {
+        echo "KONA_EXTERNAL_REGISTRY_TEST=true is required with KONA_SUPERCHAIN_REGISTRY_DIR" >&2
+        exit 1
+      }
+      EXTERNAL_REGISTRY_CONTEXT="${KONA_SUPERCHAIN_REGISTRY_DIR}"
+      EXTERNAL_REGISTRY_FLAG=true
+    else
+      EXTERNAL_REGISTRY_CONTEXT=$(mktemp -d)
+      TEMP_CONTEXTS+=("${EXTERNAL_REGISTRY_CONTEXT}")
+      EXTERNAL_REGISTRY_FLAG=false
+    fi
+
+    H20_TEST_OVERRIDE_FLAG=${KONA_H20_TEST_OVERRIDE:-false}
+    if [[ "${H20_TEST_OVERRIDE_FLAG}" == true ]]; then
+      [[ "${EXTERNAL_REGISTRY_FLAG}" == true ]] || {
+        echo "KONA_H20_TEST_OVERRIDE=true requires an external Registry test profile" >&2
+        exit 1
+      }
+      for name in KONA_H20_TEST_L1_CHAIN_ID KONA_H20_TEST_L2_CHAIN_ID \
+        KONA_H20_TEST_ACTIVATION_TIME KONA_H20_TEST_ACTIVATION_ADMIN; do
+        [[ -n "${!name:-}" ]] || { echo "$name is required for the H20 test override" >&2; exit 1; }
+      done
+    fi
+
+    DOCKER=${DOCKER_BIN:-docker}
+
+    "$DOCKER" build \
       --platform linux/amd64 \
       --build-arg VARIANT={{VARIANT}} \
       --build-arg KONA_CUSTOM_CONFIGS="${CUSTOM_CONFIGS_FLAG}" \
+      --build-arg KONA_EXTERNAL_REGISTRY_TEST="${EXTERNAL_REGISTRY_FLAG}" \
+      --build-arg KONA_H20_TEST_OVERRIDE="${H20_TEST_OVERRIDE_FLAG}" \
+      --build-arg KONA_H20_TEST_L1_CHAIN_ID="${KONA_H20_TEST_L1_CHAIN_ID:-}" \
+      --build-arg KONA_H20_TEST_L2_CHAIN_ID="${KONA_H20_TEST_L2_CHAIN_ID:-}" \
+      --build-arg KONA_H20_TEST_ACTIVATION_TIME="${KONA_H20_TEST_ACTIVATION_TIME:-}" \
+      --build-arg KONA_H20_TEST_ACTIVATION_ADMIN="${KONA_H20_TEST_ACTIVATION_ADMIN:-}" \
       --build-context kona-custom-configs="${CUSTOM_CONFIGS_CONTEXT}" \
+      --build-context kona-external-registry="${EXTERNAL_REGISTRY_CONTEXT}" \
       --output "$OUTPUT" \
       --progress plain \
       -f "{{KONA_DIR}}/docker/fpvm-prestates/cannon-repro.dockerfile" \

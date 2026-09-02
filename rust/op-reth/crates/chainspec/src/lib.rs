@@ -53,7 +53,7 @@ use alloy_consensus::{BlockHeader, Header, proofs::storage_root_unhashed};
 use alloy_eips::eip7840::BlobParams;
 use alloy_genesis::Genesis;
 use alloy_hardforks::Hardfork;
-use alloy_primitives::{B256, U256, b256};
+use alloy_primitives::{Address, B256, U256, b256};
 use derive_more::{Constructor, Deref, From, Into};
 use reth_chainspec::{
     BaseFeeParams, BaseFeeParamsKind, ChainSpec, ChainSpecBuilder, DepositContract,
@@ -63,6 +63,74 @@ use reth_ethereum_forks::{ChainHardforks, EthereumHardfork, ForkCondition};
 use reth_network_peers::NodeRecord;
 use reth_optimism_primitives::L2_TO_L1_MESSAGE_PASSER_ADDRESS;
 use reth_primitives_traits::{SealedHeader, sync::LazyLock};
+
+pub use hsk_h20_config::H20Config;
+
+/// Genesis config field containing the inclusive H20 activation timestamp.
+pub const H20_TIME_FIELD: &str = "h20Time";
+/// Genesis config field containing the static Beryl `ActivationRegistry` administrator.
+pub const H20_ACTIVATION_ADMIN_FIELD: &str = "h20ActivationAdmin";
+
+/// Chain-spec access to HSK H20 consensus configuration.
+pub trait H20ChainSpec: EthChainSpec {
+    /// Returns the validated H20 configuration.
+    ///
+    /// # Panics
+    ///
+    /// Panics when either H20 genesis field is malformed or only one of the two required fields is
+    /// configured. Invalid consensus configuration must fail node startup rather than silently
+    /// disabling H20.
+    fn h20_config(&self) -> H20Config {
+        h20_config_from_genesis(self.genesis())
+            .unwrap_or_else(|error| panic!("invalid H20 genesis configuration: {error}"))
+    }
+}
+
+impl<T: EthChainSpec + ?Sized> H20ChainSpec for T {}
+
+/// Parses H20 configuration from a genesis `config` object.
+pub fn h20_config_from_genesis(genesis: &Genesis) -> Result<H20Config, H20GenesisConfigError> {
+    use core::str::FromStr;
+
+    let fields = &genesis.config.extra_fields;
+    let activation_time = fields
+        .get(H20_TIME_FIELD)
+        .map(|value| value.as_u64().ok_or(H20GenesisConfigError::InvalidActivationTime))
+        .transpose()?;
+    let activation_admin = fields
+        .get(H20_ACTIVATION_ADMIN_FIELD)
+        .map(|value| {
+            let value = value.as_str().ok_or(H20GenesisConfigError::InvalidAdmin)?;
+            Address::from_str(value).map_err(|_| H20GenesisConfigError::InvalidAdmin)
+        })
+        .transpose()?;
+
+    H20Config::new(activation_time, activation_admin).map_err(H20GenesisConfigError::InvalidConfig)
+}
+
+/// Invalid H20 fields in the genesis chain config.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum H20GenesisConfigError {
+    /// `h20Time` is not an unsigned 64-bit integer.
+    InvalidActivationTime,
+    /// `h20ActivationAdmin` is not a valid address string.
+    InvalidAdmin,
+    /// The pair of H20 fields violates H20 configuration invariants.
+    InvalidConfig(hsk_h20_config::H20ConfigError),
+}
+
+impl core::fmt::Display for H20GenesisConfigError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::InvalidActivationTime => f.write_str("h20Time must be a uint64"),
+            Self::InvalidAdmin => f.write_str("h20ActivationAdmin must be an address string"),
+            Self::InvalidConfig(error) => error.fmt(f),
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for H20GenesisConfigError {}
 
 /// Chain spec builder for a OP stack chain.
 #[derive(Debug, Default, From)]
@@ -548,6 +616,48 @@ mod tests {
     use reth_optimism_forks::{OpHardfork, OpHardforks};
 
     use crate::*;
+
+    #[test]
+    fn h20_genesis_config_is_disabled_when_fields_are_absent() {
+        let genesis = Genesis::default();
+        assert_eq!(h20_config_from_genesis(&genesis).unwrap(), H20Config::DISABLED);
+    }
+
+    #[test]
+    fn h20_genesis_config_parses_time_and_static_admin() {
+        let mut genesis = Genesis::default();
+        genesis
+            .config
+            .extra_fields
+            .insert(H20_TIME_FIELD.to_string(), serde_json::json!(100));
+        genesis.config.extra_fields.insert(
+            H20_ACTIVATION_ADMIN_FIELD.to_string(),
+            serde_json::json!("0x1111111111111111111111111111111111111111"),
+        );
+
+        let config = h20_config_from_genesis(&genesis).unwrap();
+        assert_eq!(config.activation_time(), Some(100));
+        assert_eq!(config.activation_admin(), Some(Address::repeat_byte(0x11)));
+        assert!(!config.is_active_at(99));
+        assert!(config.is_active_at(100));
+    }
+
+    #[test]
+    fn h20_genesis_config_rejects_partial_or_zero_admin_config() {
+        let mut missing_admin = Genesis::default();
+        missing_admin
+            .config
+            .extra_fields
+            .insert(H20_TIME_FIELD.to_string(), serde_json::json!(100));
+        assert!(h20_config_from_genesis(&missing_admin).is_err());
+
+        let mut zero_admin = missing_admin;
+        zero_admin.config.extra_fields.insert(
+            H20_ACTIVATION_ADMIN_FIELD.to_string(),
+            serde_json::json!("0x0000000000000000000000000000000000000000"),
+        );
+        assert!(h20_config_from_genesis(&zero_admin).is_err());
+    }
 
     #[test]
     fn test_storage_root_consistency() {

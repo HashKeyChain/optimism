@@ -152,9 +152,27 @@ mod tests {
     }
 
     const CUSTOM_CONFIGS_TEST_ENABLED: Option<&str> = option_env!("KONA_CUSTOM_CONFIGS_TEST");
+    const EXTERNAL_REGISTRY_TEST_ENABLED: Option<&str> = option_env!("KONA_EXTERNAL_REGISTRY_TEST");
     const CUSTOM_CONFIGS: Option<&str> = option_env!("KONA_CUSTOM_CONFIGS");
     const CUSTOM_CONFIGS_DIR: Option<&str> = option_env!("KONA_CUSTOM_CONFIGS_DIR");
     const CUSTOM_CONFIGS_CFG: bool = cfg!(kona_custom_configs = "true");
+
+    #[test]
+    fn external_registry_is_generated_in_cargo_out_dir() {
+        if EXTERNAL_REGISTRY_TEST_ENABLED != Some("true") {
+            return;
+        }
+        assert_eq!(
+            env!("KONA_REGISTRY_DIR").strip_prefix(env!("OUT_DIR")),
+            Some("/external-registry-etc"),
+            "external Registry fixtures must not overwrite the committed Registry snapshot"
+        );
+        let hsk_chain = OPCHAINS.get(&177).expect("HSK fixture chain config missing");
+        let hsk_rollup = ROLLUP_CONFIGS.get(&177).expect("HSK fixture rollup config missing");
+        assert_eq!(hsk_chain.chain_id, 177);
+        assert_eq!(hsk_rollup.l2_chain_id.id(), 177);
+        assert_eq!(hsk_rollup.l1_chain_id, hsk_chain.l1_chain_id);
+    }
 
     #[test]
     fn custom_chain_is_loaded_when_enabled() {

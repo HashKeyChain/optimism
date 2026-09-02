@@ -13,7 +13,10 @@ extern crate alloc;
 
 use alloc::sync::Arc;
 use alloy_consensus::{BlockHeader, Header};
-use alloy_evm::{EvmFactory, FromRecoveredTx, FromTxWithEncoded, block::BlockExecutorFactory};
+use alloy_evm::{
+    EvmFactory, FromRecoveredTx, FromTxWithEncoded, block::BlockExecutorFactory,
+    precompiles::PrecompilesMap,
+};
 use alloy_op_evm::{
     block::{OpTxEnv, receipt_builder::OpReceiptBuilder},
     evm_env_for_op_block, evm_env_for_op_next_block,
@@ -25,8 +28,8 @@ use op_alloy_consensus::{
 };
 use op_revm::OpSpecId;
 use reth_chainspec::EthChainSpec;
-use reth_evm::{ConfigureEvm, EvmEnv, eth::NextEvmEnvAttributes, precompiles::PrecompilesMap};
-use reth_optimism_chainspec::OpChainSpec;
+use reth_evm::{ConfigureEvm, EvmEnv, eth::NextEvmEnvAttributes};
+use reth_optimism_chainspec::{H20ChainSpec, OpChainSpec};
 use reth_optimism_forks::OpHardforks;
 use reth_optimism_primitives::{DepositReceipt, OpPrimitives};
 use reth_primitives_traits::{NodePrimitives, SealedBlock, SealedHeader, SignedTransaction};
@@ -67,8 +70,8 @@ pub mod tx;
 pub use tx::OpTx;
 
 pub use alloy_op_evm::{
-    OpBlockExecutionCtx, OpBlockExecutorFactory, OpEvm, OpEvmFactory, PostExecMode,
-    PreRefundGasUsed,
+    H20OpEvmFactory, H20OpPrecompiles, OpBlockExecutionCtx, OpBlockExecutorFactory, OpEvm,
+    OpEvmFactory, PostExecMode, PreRefundGasUsed,
     post_exec::{PostExecExecutorExt, WarmingRefundEvent, WarmingRefundKind, WarmingState},
 };
 
@@ -81,7 +84,7 @@ pub struct OpEvmConfig<
     ChainSpec = OpChainSpec,
     N: NodePrimitives = OpPrimitives,
     R = OpRethReceiptBuilder,
-    EvmFactory = OpEvmFactory<OpTx>,
+    EvmFactory = H20OpEvmFactory<OpTx>,
 > {
     /// Inner [`OpBlockExecutorFactory`].
     pub executor_factory: OpBlockExecutorFactory<R, Arc<ChainSpec>, EvmFactory>,
@@ -103,7 +106,7 @@ impl<ChainSpec, N: NodePrimitives, R: Clone, EvmFactory: Clone> Clone
     }
 }
 
-impl<ChainSpec: EthChainSpec<Header = Header> + OpHardforks> OpEvmConfig<ChainSpec> {
+impl<ChainSpec: EthChainSpec<Header = Header> + OpHardforks + H20ChainSpec> OpEvmConfig<ChainSpec> {
     /// Creates a new [`OpEvmConfig`] with the given chain spec for OP chains.
     pub fn optimism(chain_spec: Arc<ChainSpec>) -> Self {
         Self::new(chain_spec, OpRethReceiptBuilder::default())
@@ -125,12 +128,17 @@ impl<ChainSpec, N: NodePrimitives, R, EvmFactory> OpEvmConfig<ChainSpec, N, R, E
     }
 }
 
-impl<ChainSpec: EthChainSpec<Header = Header> + OpHardforks, N: NodePrimitives, R>
+impl<ChainSpec: EthChainSpec<Header = Header> + OpHardforks + H20ChainSpec, N: NodePrimitives, R>
     OpEvmConfig<ChainSpec, N, R>
 {
     /// Creates a new [`OpEvmConfig`] with the given chain spec.
     pub fn new(chain_spec: Arc<ChainSpec>, receipt_builder: R) -> Self {
-        Self::new_with_evm_factory(chain_spec, receipt_builder, OpEvmFactory::<OpTx>::default())
+        let h20_config = chain_spec.h20_config();
+        Self::new_with_evm_factory(
+            chain_spec,
+            receipt_builder,
+            H20OpEvmFactory::<OpTx>::new(h20_config),
+        )
     }
 }
 
@@ -235,9 +243,9 @@ where
                     + FromTxWithEncoded<R::Transaction>
                     + alloy_evm::TransactionEnvMut
                     + OpTxEnv,
-            Precompiles = PrecompilesMap,
             Spec = OpSpecId,
             BlockEnv = BlockEnv,
+            Precompiles = PrecompilesMap,
         > + Debug,
     OpBlockExecutorFactory<R, Arc<ChainSpec>, EvmF>: for<'a> BlockExecutorFactory<
             EvmFactory = EvmF,
@@ -419,13 +427,14 @@ mod tests {
     use alloc::collections::BTreeMap;
     use alloy_consensus::{Block, BlockBody, Header, Receipt, Sealable};
     use alloy_eips::eip7685::Requests;
+    use alloy_evm::Evm;
     use alloy_genesis::Genesis;
     use alloy_primitives::{
-        Address, B256, LogData, bytes,
+        Address, B256, Bytes, LogData, TxKind, address, bytes, keccak256,
         map::{AddressMap, B256Map, HashMap},
     };
     use op_alloy_consensus::{SDMGasEntry, build_post_exec_tx};
-    use op_revm::OpSpecId;
+    use op_revm::{OpSpecId, OpTransaction};
     use reth_chainspec::ChainSpec;
     use reth_evm::execute::ProviderError;
     use reth_execution_types::{
@@ -435,6 +444,10 @@ mod tests {
     use reth_optimism_primitives::{OpBlock, OpPrimitives, OpReceipt, OpTransactionSigned};
     use reth_primitives_traits::{Account, RecoveredBlock, SealedBlock};
     use revm::{
+        context::{
+            TxEnv,
+            result::{ExecutionResult, Output},
+        },
         database::{BundleState, CacheDB},
         database_interface::EmptyDBTyped,
         inspector::NoOpInspector,
@@ -458,6 +471,135 @@ mod tests {
                 )
                 .build(),
         )
+    }
+
+    fn h20_at_timestamp_chain_spec(activation: u64) -> Arc<OpChainSpec> {
+        let mut genesis = Genesis::default();
+        genesis.config.extra_fields.insert("h20Time".to_string(), serde_json::json!(activation));
+        genesis.config.extra_fields.insert(
+            "h20ActivationAdmin".to_string(),
+            serde_json::json!("0x1111111111111111111111111111111111111111"),
+        );
+        Arc::new(
+            OpChainSpecBuilder::default()
+                .chain(10.into())
+                .genesis(genesis)
+                .bedrock_activated()
+                .build(),
+        )
+    }
+
+    #[test]
+    fn all_node_execution_entrypoints_share_the_h20_factory() {
+        const FACTORY: Address = address!("0177FF0000000000000000000000000000000000");
+
+        let config = OpEvmConfig::optimism(h20_at_timestamp_chain_spec(100));
+        let _: &H20OpEvmFactory<OpTx> = config.evm_factory();
+
+        // Block import and historical RPC simulation derive the EVM from the imported header.
+        let before = config
+            .evm_for_block(
+                CacheDB::<EmptyDBTyped<ProviderError>>::default(),
+                &Header { timestamp: 99, gas_limit: 30_000_000, ..Default::default() },
+            )
+            .unwrap();
+        let imported = config
+            .evm_for_block(
+                CacheDB::<EmptyDBTyped<ProviderError>>::default(),
+                &Header { timestamp: 100, gas_limit: 30_000_000, ..Default::default() },
+            )
+            .unwrap();
+
+        assert!(before.precompiles().get(&FACTORY).is_none());
+        assert!(imported.precompiles().get(&FACTORY).is_some());
+
+        // Payload building, pending RPC simulation and flashblocks all use next_evm_env followed by
+        // evm_with_env on this same config instance.
+        let parent = SealedHeader::seal_slow(Header {
+            timestamp: 99,
+            gas_limit: 30_000_000,
+            ..Default::default()
+        });
+        let attributes = OpNextBlockEnvAttributes {
+            timestamp: 100,
+            suggested_fee_recipient: Address::ZERO,
+            prev_randao: B256::ZERO,
+            gas_limit: 30_000_000,
+            parent_beacon_block_root: None,
+            extra_data: Default::default(),
+        };
+        let next_env = config.next_evm_env(&parent, &attributes).unwrap();
+        let built_or_pending = config
+            .evm_with_env(CacheDB::<EmptyDBTyped<ProviderError>>::default(), next_env.clone());
+        assert!(built_or_pending.precompiles().get(&FACTORY).is_some());
+
+        // debug_traceCall/debug_traceTransaction use the inspector constructor with the same env.
+        let traced = config.evm_with_env_and_inspector(
+            CacheDB::<EmptyDBTyped<ProviderError>>::default(),
+            next_env,
+            NoOpInspector {},
+        );
+        assert!(traced.precompiles().get(&FACTORY).is_some());
+    }
+
+    #[test]
+    fn rpc_simulation_and_trace_produce_identical_h20_results() {
+        const FACTORY: Address = address!("0177FF0000000000000000000000000000000000");
+        let config = OpEvmConfig::optimism(h20_at_timestamp_chain_spec(100));
+        let header = Header { timestamp: 100, gas_limit: 30_000_000, ..Default::default() };
+        let evm_env = config.evm_env(&header).unwrap();
+
+        let mut calldata = Vec::with_capacity(36);
+        calldata.extend_from_slice(&keccak256("isH20(address)")[..4]);
+        calldata.extend_from_slice(&[0u8; 12]);
+        calldata
+            .extend_from_slice(&address!("0177000000000000000000000000000000000000").into_array());
+
+        let transaction = || {
+            OpTx(
+                OpTransaction::builder()
+                    .base(
+                        TxEnv::builder()
+                            .caller(Address::repeat_byte(0x11))
+                            .chain_id(Some(10))
+                            .kind(TxKind::Call(FACTORY))
+                            .data(Bytes::from(calldata.clone()))
+                            .gas_limit(1_000_000)
+                            .gas_price(0),
+                    )
+                    .enveloped_tx(Some(Bytes::new()))
+                    .build_fill(),
+            )
+        };
+
+        let mut imported = config
+            .evm_for_block(CacheDB::<EmptyDBTyped<ProviderError>>::default(), &header)
+            .unwrap();
+        let imported_result = imported.transact_raw(transaction()).unwrap();
+
+        let mut simulated =
+            config.evm_with_env(CacheDB::<EmptyDBTyped<ProviderError>>::default(), evm_env.clone());
+        let simulated_result = simulated.transact_raw(transaction()).unwrap();
+
+        let mut traced = config.evm_with_env_and_inspector(
+            CacheDB::<EmptyDBTyped<ProviderError>>::default(),
+            evm_env,
+            NoOpInspector {},
+        );
+        let traced_result = traced.transact_raw(transaction()).unwrap();
+
+        let mut expected = [0u8; 32];
+        expected[31] = 1;
+        match &simulated_result.result {
+            ExecutionResult::Success { output: Output::Call(output), .. } => {
+                assert_eq!(output.as_ref(), expected);
+            }
+            result => panic!("expected successful H20 isH20 call, got {result:?}"),
+        }
+        assert_eq!(imported_result.result, simulated_result.result);
+        assert_eq!(imported_result.state, simulated_result.state);
+        assert_eq!(simulated_result.result, traced_result.result);
+        assert_eq!(simulated_result.state, traced_result.state);
     }
 
     #[test]

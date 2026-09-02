@@ -50,6 +50,8 @@ pub const OP_SEPOLIA_CONFIG: RollupConfig = RollupConfig {
     fjord_max_sequencer_drift: FJORD_MAX_SEQUENCER_DRIFT,
     l1_chain_id: 11155111,
     l2_chain_id: Chain::optimism_sepolia(),
+    h20_time: None,
+    h20_activation_admin: None,
     chain_op_config: OP_SEPOLIA_BASE_FEE_CONFIG,
     alt_da_config: None,
     hardforks: HardForkConfig {

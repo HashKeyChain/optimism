@@ -19,7 +19,9 @@ type KonaNode struct {
 
 	userRPC string
 
-	userProxy *tcpproxy.Proxy
+	userProxy     *tcpproxy.Proxy
+	l1RPCProxy    *tcpproxy.Proxy
+	l1RPCUpstream string
 
 	execPath string
 	args     []string
@@ -29,6 +31,19 @@ type KonaNode struct {
 	p devtest.T
 
 	sub *SubProcess
+}
+
+// PauseL1RPC disconnects existing L1 RPC sessions and rejects new upstream
+// connections while leaving the Kona process running.
+func (k *KonaNode) PauseL1RPC() {
+	k.l1RPCProxy.SetUpstream("127.0.0.1:1")
+	k.l1RPCProxy.DisconnectAll()
+}
+
+// ResumeL1RPC restores Kona's L1 RPC route and forces clients to reconnect.
+func (k *KonaNode) ResumeL1RPC() {
+	k.l1RPCProxy.SetUpstream(k.l1RPCUpstream)
+	k.l1RPCProxy.DisconnectAll()
 }
 
 func (k *KonaNode) Start() {

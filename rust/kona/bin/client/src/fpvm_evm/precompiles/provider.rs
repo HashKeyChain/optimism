@@ -4,14 +4,17 @@ use crate::fpvm_evm::precompiles::{
     ecrecover::ECRECOVER_ADDR, kzg_point_eval::KZG_POINT_EVAL_ADDR,
 };
 use alloc::{string::String, vec, vec::Vec};
+use alloy_evm::{Database, precompiles::PrecompilesMap};
+use alloy_op_evm::{H20OpPrecompiles, OpEvmContext};
 use alloy_primitives::{Address, Bytes};
+use hsk_h20_config::H20Config;
 use kona_preimage::{HintWriterClient, PreimageOracleClient};
 use op_revm::{
     OpSpecId,
     precompiles::{fjord, granite, isthmus, jovian, karst},
 };
 use revm::{
-    context::{Cfg, ContextTr},
+    context::ContextTr,
     handler::{EthPrecompiles, PrecompileProvider},
     interpreter::{CallInputs, Gas, InstructionResult, InterpreterResult},
     precompile::{
@@ -33,6 +36,14 @@ pub struct OpFpvmPrecompiles<H, O> {
     hint_writer: H,
     /// The inner [`PreimageOracleClient`].
     oracle_reader: O,
+    /// Optional OP+H20 map for the executing block timestamp.
+    h20_precompiles: Option<PrecompilesMap>,
+    /// H20 configuration retained across `set_spec` calls.
+    h20_config: H20Config,
+    /// Executing block timestamp retained across `set_spec` calls.
+    timestamp: u64,
+    /// Static precompile addresses warmed at transaction start.
+    warm_addresses: AddressSet,
 }
 
 impl<H, O> OpFpvmPrecompiles<H, O>
@@ -66,6 +77,7 @@ where
             OpSpecId::KARST | OpSpecId::INTEROP => accelerated_karst::<H, O>(),
         };
 
+        let warm_addresses = precompiles.addresses().copied().collect();
         Self {
             inner: EthPrecompiles { precompiles, spec: SpecId::default() },
             accelerated_precompiles: accelerated_precompiles
@@ -75,31 +87,48 @@ where
             spec,
             hint_writer,
             oracle_reader,
+            h20_precompiles: None,
+            h20_config: H20Config::DISABLED,
+            timestamp: 0,
+            warm_addresses,
         }
+    }
+
+    /// Adds HSK H20 v1 while retaining FPVM acceleration for canonical OP precompiles.
+    pub fn with_h20(mut self, config: H20Config, timestamp: u64) -> Self {
+        self.h20_config = config;
+        self.timestamp = timestamp;
+        if config.is_active_at(timestamp) {
+            let installed = H20OpPrecompiles::build(self.spec, config, timestamp);
+            self.warm_addresses = installed.addresses().copied().collect();
+            self.h20_precompiles = Some(installed);
+        }
+        self
     }
 }
 
-impl<CTX, H, O> PrecompileProvider<CTX> for OpFpvmPrecompiles<H, O>
+impl<DB, H, O> PrecompileProvider<OpEvmContext<DB>> for OpFpvmPrecompiles<H, O>
 where
     H: HintWriterClient + Clone + Send + Sync + 'static,
     O: PreimageOracleClient + Clone + Send + Sync + 'static,
-    CTX: ContextTr<Cfg: Cfg<Spec = OpSpecId>>,
+    DB: Database,
 {
     type Output = InterpreterResult;
 
     #[inline]
-    fn set_spec(&mut self, spec: <CTX::Cfg as Cfg>::Spec) -> bool {
+    fn set_spec(&mut self, spec: OpSpecId) -> bool {
         if spec == self.spec {
             return false;
         }
-        *self = Self::new_with_spec(spec, self.hint_writer.clone(), self.oracle_reader.clone());
+        *self = Self::new_with_spec(spec, self.hint_writer.clone(), self.oracle_reader.clone())
+            .with_h20(self.h20_config, self.timestamp);
         true
     }
 
     #[inline]
     fn run(
         &mut self,
-        context: &mut CTX,
+        context: &mut OpEvmContext<DB>,
         inputs: &CallInputs,
     ) -> Result<Option<Self::Output>, String> {
         let mut result = InterpreterResult {
@@ -127,6 +156,10 @@ where
                 let eth_result =
                     (accelerated)(&input, inputs.gas_limit, &self.hint_writer, &self.oracle_reader);
                 PrecompileOutput::from_eth_result(eth_result, inputs.reservoir)
+            } else if let Some(installed) = self.h20_precompiles.as_mut() {
+                return <PrecompilesMap as PrecompileProvider<OpEvmContext<DB>>>::run(
+                    installed, context, inputs,
+                );
             } else if let Some(precompile) = self.inner.precompiles.get(&inputs.bytecode_address) {
                 match precompile.execute(&input, inputs.gas_limit, inputs.reservoir) {
                     Ok(output) => output,
@@ -162,12 +195,15 @@ where
 
     #[inline]
     fn warm_addresses(&self) -> &AddressSet {
-        self.inner.warm_addresses()
+        &self.warm_addresses
     }
 
     #[inline]
     fn contains(&self, address: &Address) -> bool {
-        self.inner.contains(address)
+        self.h20_precompiles.as_ref().map_or_else(
+            || self.inner.contains(address),
+            |installed| installed.get(address).is_some(),
+        )
     }
 }
 
@@ -360,6 +396,43 @@ mod test {
             .with_cfg(revm::context::CfgEnv::new_with_spec(OpSpecId::BEDROCK))
             .with_chain(L1BlockInfo::default())
             .with_db(EmptyDB::new())
+    }
+
+    #[test]
+    fn h20_lookup_is_timestamp_gated_and_dynamic_addresses_are_not_warmed() {
+        const FACTORY: Address =
+            alloy_primitives::address!("0177FF0000000000000000000000000000000000");
+        const DYNAMIC: Address =
+            alloy_primitives::address!("0177000000000000000000000000000000000000");
+        let config = H20Config::new(Some(100), Some(Address::repeat_byte(0x11))).unwrap();
+        let provider = |timestamp| {
+            let (hint_chan, preimage_chan) = (
+                kona_preimage::BidirectionalChannel::new().unwrap(),
+                kona_preimage::BidirectionalChannel::new().unwrap(),
+            );
+            OpFpvmPrecompiles::new_with_spec(
+                OpSpecId::JOVIAN,
+                kona_preimage::HintWriter::new(hint_chan.client),
+                kona_preimage::OracleReader::new(preimage_chan.client),
+            )
+            .with_h20(config, timestamp)
+        };
+
+        let before = provider(99);
+        let active = provider(100);
+        assert!(!<OpFpvmPrecompiles<_, _> as PrecompileProvider<TestContext>>::contains(
+            &before, &FACTORY
+        ));
+        assert!(<OpFpvmPrecompiles<_, _> as PrecompileProvider<TestContext>>::contains(
+            &active, &FACTORY
+        ));
+        assert!(<OpFpvmPrecompiles<_, _> as PrecompileProvider<TestContext>>::contains(
+            &active, &DYNAMIC
+        ));
+        assert!(
+            !<OpFpvmPrecompiles<_, _> as PrecompileProvider<TestContext>>::warm_addresses(&active)
+                .contains(&DYNAMIC)
+        );
     }
 
     /// A mock accelerated precompile function that returns a fixed output.

@@ -1,6 +1,11 @@
 //! Multi-chain, interoperable fault proof program entrypoint.
 
-use alloc::{boxed::Box, sync::Arc};
+use alloc::{
+    boxed::Box,
+    string::{String, ToString},
+    sync::Arc,
+    vec::Vec,
+};
 use alloy_primitives::B256;
 use consolidate::consolidate_dependencies;
 use core::{cmp::Ordering, fmt::Debug};
@@ -50,6 +55,14 @@ pub enum FaultProofProgramError {
     /// Missing a rollup configuration.
     #[error("Missing rollup configuration for chain ID {0}")]
     MissingRollupConfig(u64),
+    /// A rollup config contains an incomplete or invalid H20 configuration.
+    #[error("Invalid H20 consensus configuration for chain {chain_id}: {reason}")]
+    InvalidH20Config {
+        /// L2 chain whose rollup config is invalid.
+        chain_id: u64,
+        /// Validation failure returned by the shared H20 configuration type.
+        reason: String,
+    },
 }
 
 /// Executes the interop fault proof program with the given [PreimageOracleClient] and
@@ -77,8 +90,21 @@ where
         }
     };
 
-    let evm_factory =
-        PostExecEvmFactoryAdapter::new(FpvmOpEvmFactory::new(hint_client, oracle_client));
+    let h20_configs = boot
+        .rollup_configs
+        .iter()
+        .map(|(chain_id, config)| {
+            config.h20_config().map(|h20| (*chain_id, h20)).map_err(|err| {
+                FaultProofProgramError::InvalidH20Config {
+                    chain_id: *chain_id,
+                    reason: err.to_string(),
+                }
+            })
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let evm_factory = PostExecEvmFactoryAdapter::new(
+        FpvmOpEvmFactory::new(hint_client, oracle_client).with_h20_configs(h20_configs),
+    );
 
     // Load in the agreed pre-state from the preimage oracle in order to determine the active
     // sub-problem.

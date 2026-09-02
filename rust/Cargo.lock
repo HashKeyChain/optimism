@@ -558,6 +558,8 @@ dependencies = [
  "alloy-op-hardforks",
  "alloy-primitives",
  "auto_impl",
+ "hsk-h20-config",
+ "hsk-h20-precompiles",
  "op-alloy",
  "op-revm",
  "revm",
@@ -5433,6 +5435,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "h20-precompile-macros"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
+name = "h20-precompile-storage"
+version = "0.1.0"
+dependencies = [
+ "alloy-evm",
+ "alloy-primitives",
+ "alloy-sol-types",
+ "derive_more 2.1.1",
+ "h20-precompile-macros",
+ "proptest",
+ "revm",
+ "rstest",
+ "thiserror 2.0.18",
+ "tracing",
+]
+
+[[package]]
 name = "half"
 version = "2.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5754,6 +5782,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6303bc9732ae41b04cb554b844a762b4115a61bfaa81e3e83050991eeb56863f"
 dependencies = [
  "digest 0.11.3",
+]
+
+[[package]]
+name = "hsk-h20-config"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives",
+]
+
+[[package]]
+name = "hsk-h20-precompiles"
+version = "0.1.0"
+dependencies = [
+ "alloy-evm",
+ "alloy-primitives",
+ "alloy-sol-types",
+ "codspeed-criterion-compat",
+ "h20-precompile-macros",
+ "h20-precompile-storage",
+ "k256",
+ "revm",
+ "rstest",
 ]
 
 [[package]]
@@ -6872,8 +6922,12 @@ dependencies = [
  "alloy-primitives",
  "alloy-rlp",
  "alloy-rpc-types-engine",
+ "alloy-sol-types",
+ "alloy-trie",
  "async-trait",
  "cfg-if",
+ "hsk-h20-config",
+ "hsk-h20-precompiles",
  "kona-derive",
  "kona-driver",
  "kona-executor",
@@ -7062,6 +7116,7 @@ dependencies = [
  "alloy-sol-types",
  "arbitrary",
  "derive_more 2.1.1",
+ "hsk-h20-config",
  "op-revm",
  "rand 0.9.4",
  "serde",
@@ -7566,6 +7621,7 @@ dependencies = [
  "alloy-hardforks",
  "alloy-op-hardforks",
  "alloy-primitives",
+ "hsk-h20-config",
  "kona-genesis",
  "lazy_static",
  "serde",
@@ -7649,9 +7705,12 @@ dependencies = [
  "alloy-primitives",
  "alloy-rlp",
  "alloy-sol-types",
+ "alloy-trie",
  "anyhow",
  "async-trait",
  "cfg-if",
+ "hsk-h20-config",
+ "hsk-h20-precompiles",
  "kona-derive",
  "kona-driver",
  "kona-executor",
@@ -13226,6 +13285,7 @@ dependencies = [
  "alloy-op-hardforks",
  "alloy-primitives",
  "derive_more 2.1.1",
+ "hsk-h20-config",
  "miniz_oxide 0.9.1",
  "op-alloy-consensus",
  "op-alloy-rpc-types",
@@ -13397,6 +13457,7 @@ version = "1.11.3"
 dependencies = [
  "alloy-consensus 2.1.1",
  "alloy-eips 2.1.1",
+ "alloy-genesis",
  "alloy-network 2.1.1",
  "alloy-primitives",
  "alloy-rpc-types",
@@ -13524,6 +13585,7 @@ dependencies = [
  "alloy-consensus 2.1.1",
  "alloy-eips 2.1.1",
  "alloy-evm",
+ "alloy-genesis",
  "alloy-primitives",
  "alloy-rlp",
  "alloy-rpc-types-debug",
@@ -13553,6 +13615,7 @@ dependencies = [
  "reth-transaction-pool",
  "revm",
  "serde",
+ "serde_json",
  "sha2 0.10.9",
  "thiserror 2.0.18",
  "tracing",

@@ -19,6 +19,9 @@ pub use env::{
 pub mod error;
 pub use error::{OpTxError, map_op_err};
 
+pub mod h20;
+pub use h20::{H20OpEvmFactory, H20OpPrecompiles};
+
 use alloy_evm::{Database, Evm, EvmEnv, EvmFactory, IntoTxEnv, precompiles::PrecompilesMap};
 use alloy_primitives::{Address, Bytes};
 use core::{
